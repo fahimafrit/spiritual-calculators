@@ -492,6 +492,11 @@ svg:not(:root) {
 }
 
 .year-tick-dot {
+  fill: var(--color-navy);
+  stroke: none;
+}
+
+.year-tick-dot-mid {
   fill: var(--color-bg);
   stroke: var(--color-navy);
   stroke-width: 1px;
