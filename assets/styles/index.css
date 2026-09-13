@@ -394,6 +394,7 @@ button:hover {
   width: 100%;
   max-width: 800px;
   min-width: 300px;
+  font-family: var(--font-body);
 }
 
 :not(svg) {
@@ -488,6 +489,12 @@ svg:not(:root) {
 .matrix-value-point {
   text-anchor: middle;
   alignment-baseline: middle;
+}
+
+.year-tick-dot {
+  fill: var(--color-bg);
+  stroke: var(--color-navy);
+  stroke-width: 1px;
 }
 
 .age-band-label {
