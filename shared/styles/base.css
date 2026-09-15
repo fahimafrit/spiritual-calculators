@@ -1,0 +1,575 @@
+/* ============================================================
+   shared/styles/base.css
+   Common styles for Destiny Matrix, Compatibility Matrix,
+   and Karmic Tail calculators.
+   Variable naming: chakra colors are named --tone-* here
+   (destiny-matrix.html aliases --chakra-* to these).
+   ============================================================ */
+
+
+:root {
+    --violet-deep: #1a1040;
+    --violet-mid: #2e1a63;
+    --violet-soft: #4a2f8a;
+    --gold: #a9782f;
+    --gold-bright: #c0923f;
+    --ink: #000000;
+    --ink-soft: #000000;
+    --ink-faint: #9ca3af;
+    --surface: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --card-border: rgba(36, 26, 68, 0.10);
+    --line: rgba(36, 26, 68, 0.22);
+    --line-soft: rgba(36, 26, 68, 0.12);
+    --tone-muladhara: #c0392b;
+    --tone-svadhisthana: #d9822b;
+    --tone-manipura: #e0c341;
+    --tone-anahata: #3f9f6a;
+    --tone-vishuddha: #3d8fc0;
+    --tone-ajna: #5b6fd6;
+    --tone-sahasrara: #8e5bd6;
+    --radius: 16px;
+    --shadow: 0 16px 40px rgba(36, 26, 68, 0.10);
+}
+
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 15% 10%, rgba(142, 91, 214, 0.07), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(212, 175, 106, 0.10), transparent 50%),
+        linear-gradient(160deg, #fbfaff 0%, #f6f3fb 50%, #f9f5ee 100%);
+    padding: 48px 16px 80px;
+}
+
+
+h1,
+h2,
+h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+
+.container {
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+
+.page-title {
+    text-align: center;
+    font-size: clamp(32px, 5vw, 48px);
+    margin: 0 0 6px;
+    font-weight: 900;
+    color: #000000;
+}
+
+
+.page-subtitle {
+    text-align: center;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+
+
+/* ── Form ───────────────────────────────────────────── */
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 160px;
+}
+
+
+.field label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #000000;
+}
+
+
+.field input {
+    background: #ffffff;
+    border: 1px solid rgba(36, 26, 68, 0.16);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--ink);
+    font-size: 16px;
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+
+
+.field input::placeholder {
+    color: var(--ink-faint);
+}
+
+
+.field input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15);
+}
+
+
+#submit-btn {
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 28px;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-transform: uppercase;
+}
+
+
+#submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(169, 120, 47, 0.28);
+}
+
+
+.error-output {
+    color: #c0392b;
+    text-align: center;
+    margin-top: 14px;
+    font-size: 14px;
+}
+
+
+.error-output p {
+    margin: 4px 0;
+}
+
+
+
+.display-none {
+    display: none !important;
+}
+
+
+
+/* ── Result header ──────────────────────────────────── */
+.result-wrap {
+    margin-top: 48px;
+}
+
+
+.scroll-reveal {
+    opacity: 0;
+    transform: translateY(46px) scale(0.98);
+    transition: opacity .75s cubic-bezier(0.16, 1, 0.3, 1), transform .75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+.scroll-reveal.revealed {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+
+.item-reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity .55s cubic-bezier(0.16, 1, 0.3, 1), transform .55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+
+.item-reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+
+/* ── Result card — everything (heading, matrix, purposes)
+       lives on one solid white surface, one visible section ──────── */
+.result-card {
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+
+
+.section-divider {
+    border: none;
+    border-top: 1px solid var(--line-soft);
+    margin: 32px 0;
+}
+
+
+
+.output-personal-date {
+    text-align: center;
+    font-size: clamp(20px, 3vw, 28px);
+    margin-bottom: 32px;
+    font-weight: 700;
+}
+
+
+.output-personal-date .gray {
+    color: var(--ink-soft);
+    font-size: 0.7em;
+    display: block;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+}
+
+
+#matrix {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+
+.frame-square,
+.frame-octagon {
+    fill: none;
+    stroke: rgba(36, 26, 68, 0.28);
+    stroke-width: 1.2;
+}
+
+
+.frame-octagon {
+    stroke: rgba(36, 26, 68, 0.45);
+    stroke-width: 1.6;
+}
+
+
+.frame-dash-connector {
+    stroke: rgba(36, 26, 68, 0.28);
+    stroke-dasharray: 4 4;
+}
+
+
+.genline-sahasrara {
+    stroke: var(--tone-sahasrara);
+    stroke-width: 1.6;
+}
+
+
+.genline-muladhara {
+    stroke: var(--tone-muladhara);
+    stroke-width: 1.6;
+}
+
+
+.genline-sahasrara-arrow {
+    fill: var(--tone-sahasrara);
+}
+
+
+.genline-muladhara-arrow {
+    fill: var(--tone-muladhara);
+}
+
+
+.genline-caption {
+    font-size: 9px;
+    fill: #000000;
+    letter-spacing: 0.02em;
+    font-family: 'Nunito', sans-serif;
+}
+
+
+.icon-heart {
+    fill: var(--tone-muladhara);
+}
+
+
+.icon-dollar-text {
+    font-size: 18px;
+    font-weight: 800;
+    fill: var(--tone-anahata);
+    font-family: 'Nunito', sans-serif;
+    text-anchor: middle;
+}
+
+
+
+.age-band-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    fill: #000000;
+    text-anchor: middle;
+}
+
+
+.age-band-label tspan {
+    font-size: 8px;
+    font-weight: 700;
+    fill: #000000;
+}
+
+
+.age-band-label-minor {
+    font-family: 'Nunito', sans-serif;
+    font-size: 8.5px;
+    font-weight: 800;
+    fill: #000000;
+    text-anchor: middle;
+}
+
+
+.age-band-label-minor-sub {
+    font-size: 6px;
+    font-weight: 700;
+    fill: #000000;
+}
+
+
+.age-tick-dot {
+    fill: #ffffff;
+    stroke: #000000;
+    stroke-width: 1.4;
+}
+
+
+.age-tick-dot-fill {
+    fill: #000000;
+}
+
+
+.year-fraction-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 6.3px;
+    fill: #000000;
+    text-anchor: middle;
+}
+
+
+.year-tick-value {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    fill: #000000;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+
+.year-tick-dot {
+    fill: rgba(169, 120, 47, 0.55);
+}
+
+
+
+.point-circle {
+    stroke: rgba(36, 26, 68, 0.14);
+    stroke-width: 1;
+}
+
+
+.point-text {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+
+.text-light {
+    fill: #ffffff;
+}
+
+
+.text-dark {
+    fill: #1a1040;
+}
+
+
+.size-big {
+    font-size: 26px;
+}
+
+
+.size-medium {
+    font-size: 19px;
+}
+
+
+.size-small {
+    font-size: 15px;
+}
+
+
+
+.fill-sahasrara {
+    fill: var(--tone-sahasrara);
+}
+
+
+.fill-ajna {
+    fill: var(--tone-ajna);
+}
+
+
+.fill-vishuddha {
+    fill: var(--tone-vishuddha);
+}
+
+
+.fill-anahata {
+    fill: var(--tone-anahata);
+}
+
+
+.fill-manipura {
+    fill: var(--tone-manipura);
+}
+
+
+.fill-svadhisthana {
+    fill: var(--tone-svadhisthana);
+}
+
+
+.fill-muladhara {
+    fill: var(--tone-muladhara);
+}
+
+
+.fill-neutral {
+    fill: #3a2a70;
+}
+
+
+.fill-neutral-light {
+    fill: #5a4599;
+}
+
+
+
+/* ── Purposes ───────────────────────────────────────── */
+.purposes-card {}
+
+
+.purposes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.purposes-grid {
+    grid-template-columns: 1fr;
+}
+
+
+.purpose-block h3 {
+    font-size: 19px;
+    color: var(--ink);
+    margin: 0 0 4px;
+}
+
+
+.purpose-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+}
+
+
+.base-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(169, 120, 47, 0.12);
+    border: 1px solid var(--gold);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--ink);
+}
+
+
+.purpose-diagram {
+    width: 100%;
+    max-width: 230px;
+    height: auto;
+    display: block;
+}
+
+
+.purpose-node-circle {
+    fill: rgba(169, 120, 47, 0.12);
+    stroke: var(--gold);
+    stroke-width: 1.2;
+}
+
+
+.purpose-node-circle-total {
+    stroke-width: 1.6;
+}
+
+
+.purpose-node-text {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    fill: #000000;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+
+.purpose-node-label {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    fill: #000000;
+    text-anchor: start;
+    dominant-baseline: middle;
+}
+
+
+.purpose-brace {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}

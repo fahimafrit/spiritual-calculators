@@ -1,21 +1,12 @@
 'use strict';
 
-// ─── DATE INPUT BOUNDS ──────────────────────────────────────────────────────
-// Shared by script_person.js and inputs_compatibility.js so the min/max
-// logic — and the "how old is too old" rule — lives in exactly one place.
+/* ════════════════════════════════════════════════════════════════════
+   MATRIX CALCULATION ENGINE
+   Shared by destiny-matrix.html and compatibility-matrix.html.
+   Logic is identical in both — extracted here verbatim so it only
+   has to be maintained in one place.
+   ════════════════════════════════════════════════════════════════════ */
 
-function setDateBounds(inputEl) {
-  const today = new Date();
-  inputEl.setAttribute('max', today.toLocaleDateString('en-CA'));
-}
-
-// ─── CALENDAR VALIDITY ──────────────────────────────────────────────────────
-// `new Date(year, month - 1, day)` silently rolls over invalid dates instead
-// of rejecting them — e.g. new Date(2020, 1, 30) becomes 1 March 2020, not
-// an error, so checking isNaN(date.getFullYear()) never catches it. This
-// compares the constructed Date's components back against what was typed;
-// if JS rolled the date over, they won't match and the date is invalid.
-// Shared by script_person.js and compatibility.js so both use one rule.
 function isValidCalendarDate(parsed, date) {
   if (!parsed || isNaN(date.getTime())) return false;
   return (
@@ -25,50 +16,10 @@ function isValidCalendarDate(parsed, date) {
   );
 }
 
-// ─── RENDER HELPERS ─────────────────────────────────────────────────────────
-// Generic: writes each key/value pair in `values` into the element with a
-// matching id. Used for points, year-band points, and purposes alike —
-// they all follow the same "id maps to a computed number" shape.
-
-function renderValues(values) {
-  for (const [key, value] of Object.entries(values)) {
-    const el = document.getElementById(key);
-    if (el) el.textContent = value;
-  }
-}
-
-function ChartHeart(chartHeart) {
-  const rows = [
-    { keys: ['sahphysics', 'ajphysics', 'vishphysics', 'anahphysics', 'manphysics', 'svadphysics', 'mulphysics'], resultId: 'resultphysics' },
-    { keys: ['sahenergy', 'ajenergy', 'vishenergy', 'anahenergy', 'manenergy', 'svadenergy', 'mulenergy'], resultId: 'resultenergy' },
-    { keys: ['sahemotions', 'ajemotions', 'vishemotions', 'anahemotions', 'manemotions', 'svademotions', 'mulemotions'], resultId: 'resultemotions' },
-  ];
-
-  rows.forEach(({ keys, resultId }) => {
-    let sum = 0;
-    keys.forEach((key) => {
-      const el = document.getElementById(key);
-      if (el) el.textContent = chartHeart[key];
-      sum += chartHeart[key];
-    });
-    const resultEl = document.getElementById(resultId);
-    if (resultEl) resultEl.textContent = reduceNumber(sum);
-  });
-}
-
-// ─── NUMBER REDUCTION ───────────────────────────────────────────────────────
-// Repeats digit-sum reduction until the result is 22 or less. A single pass
-// happens to be enough for every value this engine currently produces, but
-// looping (matching reduceCompatibilityNumber's rule in compatibility.js)
-// makes that a guarantee instead of an assumption that quietly breaks the
-// moment an upstream value is larger than expected.
-
 const reduceNumber = (number) => {
   let num = number;
   while (num > 22) {
-    num = String(num)
-      .split('')
-      .reduce((sum, digit) => sum + Number(digit), 0);
+    num = String(num).split('').reduce((sum, digit) => sum + Number(digit), 0);
   }
   return num;
 };
@@ -81,10 +32,6 @@ const calculateYear = (year) => {
   }
   return reduceNumber(y);
 };
-
-// ─── CORE CALCULATION ENGINE ────────────────────────────────────────────────
-// Pure function: takes the three seed points, returns everything derived
-// from them. No global variables are read or written.
 
 const calculatePoints = (aPoint, bPoint, cPoint) => {
   const dpoint = reduceNumber(aPoint + bPoint + cPoint);
@@ -122,7 +69,6 @@ const calculatePoints = (aPoint, bPoint, cPoint) => {
   const h2point = reduceNumber(hpoint + upoint);
   const h1point = reduceNumber(hpoint + h2point);
 
-  // age-band points along the octagram rays
   const afpoint = reduceNumber(aPoint + fpoint);
   const af1point = reduceNumber(aPoint + afpoint);
   const af2point = reduceNumber(aPoint + af1point);
@@ -180,15 +126,6 @@ const calculatePoints = (aPoint, bPoint, cPoint) => {
   const ha5point = reduceNumber(hapoint + ha4point);
   const ha6point = reduceNumber(ha4point + aPoint);
 
-  const skypoint = reduceNumber(bPoint + dpoint);
-  const earthpoint = reduceNumber(aPoint + cPoint);
-  const perspurpose = reduceNumber(skypoint + earthpoint);
-  const femalepoint = reduceNumber(gpoint + hpoint);
-  const malepoint = reduceNumber(fpoint + ipoint);
-  const socialpurpose = reduceNumber(femalepoint + malepoint);
-  const generalpurpose = reduceNumber(perspurpose + socialpurpose);
-  const planetarypurpose = reduceNumber(socialpurpose + generalpurpose);
-
   const years = {
     afpoint, af1point, af2point, af3point, af4point, af5point, af6point,
     fbpoint, fb1point, fb2point, fb3point, fb4point, fb5point, fb6point,
@@ -199,6 +136,15 @@ const calculatePoints = (aPoint, bPoint, cPoint) => {
     dhpoint, dh1point, dh2point, dh3point, dh4point, dh5point, dh6point,
     hapoint, ha1point, ha2point, ha3point, ha4point, ha5point, ha6point,
   };
+
+  const skypoint = reduceNumber(bPoint + dpoint);
+  const earthpoint = reduceNumber(aPoint + cPoint);
+  const perspurpose = reduceNumber(skypoint + earthpoint);
+  const femalepoint = reduceNumber(gpoint + hpoint);
+  const malepoint = reduceNumber(fpoint + ipoint);
+  const socialpurpose = reduceNumber(femalepoint + malepoint);
+  const generalpurpose = reduceNumber(perspurpose + socialpurpose);
+  const planetarypurpose = reduceNumber(socialpurpose + generalpurpose);
 
   const points = {
     apoint: aPoint, bpoint: bPoint, cpoint: cPoint,
@@ -232,9 +178,3 @@ const calculatePoints = (aPoint, bPoint, cPoint) => {
 
   return { points, purposes, chartHeart, years };
 };
-
-// clears date/name inputs after a successful calculation
-function clearInputs(firstInput, secondInput) {
-  firstInput.value = '';
-  secondInput.value = '';
-}

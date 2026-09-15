@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Destiny Matrix Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../shared/styles/base.css" />
+<style>
+  /* Page-specific: alias chakra names used in markup/JS to the
+     shared --tone-* variables defined in base.css */
+  :root{
+    --chakra-muladhara: var(--tone-muladhara);
+    --chakra-svadhisthana: var(--tone-svadhisthana);
+    --chakra-manipura: var(--tone-manipura);
+    --chakra-anahata: var(--tone-anahata);
+    --chakra-vishuddha: var(--tone-vishuddha);
+    --chakra-ajna: var(--tone-ajna);
+    --chakra-sahasrara: var(--tone-sahasrara);
+  }
+
+
+  .chakra-row-reveal{opacity:0; transform:translateX(-60px); transition:opacity .9s cubic-bezier(0.16,1,0.3,1), transform .9s cubic-bezier(0.16,1,0.3,1);}
+
+
+  .chakra-row-reveal.revealed{opacity:1; transform:translateX(0);}
+
+
+
+  /* ── Octagram ───────────────────────────────────────── */
+  .octagram-card{}
+
+
+
+  /* ── Chakra table ───────────────────────────────────── */
+  .chakra-card{overflow-x:auto;}
+
+
+  .chakra-card h2{text-align:center; margin:0 0 20px; font-size:24px; color:var(--ink);}
+
+
+  table.chakra-table{width:100%; border-collapse:separate; border-spacing:0 6px; min-width:520px;}
+
+
+  .chakra-table th{
+    font-family:'Nunito',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.08em;
+    color:#000000; font-weight:800; padding:6px 10px; text-align:center;
+  }
+
+
+  .chakra-table th:first-child{text-align:left;}
+
+
+  .chakra-row td{background:rgba(36,26,68,0.035); padding:12px 10px; text-align:center; font-size:18px; font-weight:700; color:var(--ink);}
+
+
+  .chakra-row td:first-child{text-align:left; border-radius:10px 0 0 10px;}
+
+
+  .chakra-row td:last-child{border-radius:0 10px 10px 0;}
+
+
+  .chakra-name-pill{
+    display:inline-flex; align-items:center; gap:10px; font-family:'Nunito',sans-serif; font-size:18px; font-weight:700;
+  }
+
+
+  .chakra-dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
+
+
+  .chakra-result-row td{
+    background:linear-gradient(135deg,#fff8ec,#fdf1dc);
+    font-weight:800; font-size:20px; color:var(--gold);
+    border-top:2px solid var(--gold); padding:14px 10px;
+  }
+
+
+  .chakra-result-row td:first-child{
+    text-transform:uppercase; font-size:12.5px; letter-spacing:0.1em; font-family:'Nunito',sans-serif;
+    border-radius:10px 0 0 10px; color:#000000;
+  }
+
+
+  .chakra-result-row td:last-child{border-radius:0 10px 10px 0;}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1 class="page-title">Destiny Matrix Calculator</h1>
+  <p class="page-subtitle">Discover your soul's blueprint</p>
+
+  <div class="form-card">
+    <div class="field">
+      <label for="date">Date of birth</label>
+      <input id="date" type="text" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off" inputmode="numeric" />
+    </div>
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" type="text" placeholder="Your name" />
+    </div>
+    <button id="submit-btn">Create your chart</button>
+  </div>
+  <div class="error-output"></div>
+
+  <div class="result-wrap matrix-container display-none">
+   <div class="result-card">
+    <div class="output-personal-date scroll-reveal"></div>
+    <hr class="section-divider" />
+
+    <div class="octagram-card scroll-reveal">
+      <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
+        <g id="matrix-frame">
+          <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
+          <rect class="frame-square" x="227.87" y="127.54" width="340.16" height="340.16" transform="translate(-158.13 367.16) rotate(-45)"></rect>
+          <path class="frame-octagon" d="M 315.22 15.42 Q 333.7 7.76 352.18 15.42
+                L 519.16 84.62 Q 537.64 92.28 545.30 110.76
+                L 614.51 277.74 Q 622.17 296.22 614.51 314.79
+                L 545.30 482.59 Q 537.64 501.16 519.16 508.73
+                L 352.18 577.11 Q 333.7 584.68 315.22 577.02
+                L 148.24 507.82 Q 129.76 500.16 122.10 481.68
+                L 52.90 314.70 Q 45.24 296.22 52.90 277.74
+                L 122.10 110.76 Q 129.76 92.28 148.24 84.62 Z"></path>
+          <line class="frame-square" x1="333.7" y1="27.76" x2="333.7" y2="564.68"></line>
+          <line class="frame-square" x1="65.24" y1="296.22" x2="602.17" y2="296.22"></line>
+          <g>
+            <line class="genline-sahasrara" x1="442" y1="405" x2="226" y2="189"></line>
+            <polygon class="genline-sahasrara-arrow" points="442 405 429.97 400.05 437.05 392.97"></polygon>
+            <polygon class="genline-sahasrara-arrow" points="226 189 238.03 193.95 230.95 201.03"></polygon>
+          </g>
+          <g>
+            <line class="genline-muladhara" x1="442" y1="189" x2="226" y2="405"></line>
+            <polygon class="genline-muladhara-arrow" points="442 189 437.05 201.03 429.97 193.95"></polygon>
+            <polygon class="genline-muladhara-arrow" points="226 405 230.95 392.97 238.03 400.05"></polygon>
+          </g>
+          <line class="frame-dash-connector" x1="502" y1="297" x2="335" y2="465"></line>
+          <text class="genline-caption" transform="translate(238.77 188.48) rotate(45)">Male generation line</text>
+          <text class="genline-caption" transform="translate(351.7 264.98) rotate(-45)">Female generation line</text>
+
+          <text class="icon-dollar-text" x="411" y="342">$</text>
+
+          <path class="icon-heart" transform="translate(366,376) scale(1.15)"
+            d="M0,3 C0,-2 -6,-2 -6,3 C-6,7 0,11 0,14 C0,11 6,7 6,3 C6,-2 0,-2 0,3 Z"
+            stroke="var(--chakra-muladhara)" stroke-width="2.4" stroke-linejoin="round"></path>
+        </g>
+
+        <!-- Small ring ticks sitting on the octagon edge: 7 per side, middle = hollow circle, others = filled dot -->
+        <g id="age-tick-dots">
+          <circle class="age-tick-dot-fill" cx="61.55" cy="256.87" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="70.2" cy="236.0" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="78.85" cy="215.12" r="3"></circle>
+          <circle class="age-tick-dot" cx="87.5" cy="194.25" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="96.15" cy="173.38" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="104.8" cy="152.5" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="113.45" cy="131.63" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="169.11" cy="75.97" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="189.99" cy="67.32" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="210.86" cy="58.67" r="3"></circle>
+          <circle class="age-tick-dot" cx="231.73" cy="50.02" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="252.6" cy="41.37" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="273.48" cy="32.72" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="294.35" cy="24.07" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="373.05" cy="24.07" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="393.93" cy="32.72" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="414.8" cy="41.37" r="3"></circle>
+          <circle class="age-tick-dot" cx="435.67" cy="50.02" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="456.54" cy="58.67" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="477.41" cy="67.32" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="498.29" cy="75.97" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="553.95" cy="131.63" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="562.6" cy="152.5" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="571.25" cy="173.38" r="3"></circle>
+          <circle class="age-tick-dot" cx="579.9" cy="194.25" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="588.56" cy="215.12" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="597.21" cy="236.0" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="605.86" cy="256.87" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="605.86" cy="335.76" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="597.21" cy="356.74" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="588.56" cy="377.72" r="3"></circle>
+          <circle class="age-tick-dot" cx="579.9" cy="398.69" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="571.25" cy="419.66" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="562.6" cy="440.64" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="553.95" cy="461.62" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="498.29" cy="517.28" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="477.41" cy="525.83" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="456.54" cy="534.37" r="3"></circle>
+          <circle class="age-tick-dot" cx="435.67" cy="542.92" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="414.8" cy="551.47" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="393.93" cy="560.01" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="373.05" cy="568.56" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="294.35" cy="568.37" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="273.48" cy="559.72" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="252.6" cy="551.07" r="3"></circle>
+          <circle class="age-tick-dot" cx="231.73" cy="542.42" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="210.86" cy="533.77" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="189.99" cy="525.12" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="169.11" cy="516.47" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="113.45" cy="460.81" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="104.8" cy="439.94" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="96.15" cy="419.06" r="3"></circle>
+          <circle class="age-tick-dot" cx="87.5" cy="398.19" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="78.85" cy="377.32" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="70.2" cy="356.44" r="3"></circle>
+          <circle class="age-tick-dot-fill" cx="61.55" cy="335.57" r="3"></circle>
+        </g>
+        <!-- Big points (core four + fghi) -->
+        <g id="points-big">
+          <circle class="point-circle fill-sahasrara" cx="79.2" cy="297" r="30"></circle>
+          <text class="point-text text-light size-big" id="apoint" x="79.2" y="299"></text>
+
+          <circle class="point-circle fill-sahasrara" cx="333.7" cy="42" r="30"></circle>
+          <text class="point-text text-light size-big" id="bpoint" x="333.7" y="44"></text>
+
+          <circle class="point-circle fill-muladhara" cx="587.13" cy="297" r="30"></circle>
+          <text class="point-text text-light size-big" id="cpoint" x="587.4" y="299"></text>
+
+          <circle class="point-circle fill-muladhara" cx="332.7" cy="554" r="30"></circle>
+          <text class="point-text text-light size-big" id="dpoint" x="332.7" y="557"></text>
+
+          <circle class="point-circle fill-manipura" cx="334" cy="297" r="30"></circle>
+          <text class="point-text text-dark size-big" id="epoint" x="334" y="299"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="151" cy="114.22" r="30"></circle>
+          <text class="point-text text-light size-big" id="fpoint" x="151" y="116"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="515.1" cy="114.22" r="30"></circle>
+          <text class="point-text text-light size-big" id="gpoint" x="515.1" y="116"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="514.1" cy="479.62" r="30"></circle>
+          <text class="point-text text-light size-big" id="ipoint" x="514.1" y="481"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="153" cy="479.62" r="30"></circle>
+          <text class="point-text text-light size-big" id="hpoint" x="153" y="481"></text>
+        </g>
+
+        <!-- Medium points -->
+        <g id="points-medium">
+          <circle class="point-circle fill-ajna" cx="127.11" cy="297" r="21"></circle>
+          <text class="point-text text-light size-medium" id="opoint" x="127.11" y="299"></text>
+
+          <circle class="point-circle fill-ajna" cx="333.7" cy="90.62" r="21"></circle>
+          <text class="point-text text-light size-medium" id="ppoint" x="333.7" y="93"></text>
+
+          <circle class="point-circle fill-neutral" cx="333" cy="505" r="21"></circle>
+          <text class="point-text text-light size-medium" id="rpoint" x="333" y="507"></text>
+
+          <circle class="point-circle fill-neutral" cx="538.5" cy="297" r="21"></circle>
+          <text class="point-text text-light size-medium" id="qpoint" x="538.5" y="299"></text>
+        </g>
+
+        <!-- Small points -->
+        <g id="points-small">
+          <circle class="point-circle fill-svadhisthana" cx="332.59" cy="466" r="17"></circle>
+          <text class="point-text text-light size-small" id="jpoint" x="332.69" y="468"></text>
+
+          <circle class="point-circle fill-svadhisthana" cx="500" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="npoint" x="500" y="299"></text>
+
+          <circle class="point-circle fill-neutral" cx="418.18" cy="380.69" r="17"></circle>
+          <text class="point-text text-light size-small" id="lpoint" x="418.18" y="383"></text>
+
+          <circle class="point-circle fill-neutral" cx="375" cy="424" r="17"></circle>
+          <text class="point-text text-light size-small" id="kpoint" x="375" y="427"></text>
+
+          <circle class="point-circle fill-neutral" cx="461" cy="338" r="17"></circle>
+          <text class="point-text text-light size-small" id="mpoint" x="461" y="340"></text>
+
+          <circle class="point-circle fill-vishuddha" cx="165.61" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="spoint" x="165.61" y="299"></text>
+
+          <circle class="point-circle fill-vishuddha" cx="333.7" cy="129" r="17"></circle>
+          <text class="point-text text-light size-small" id="tpoint" x="333.7" y="132"></text>
+
+          <circle class="point-circle fill-anahata" cx="245.26" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="wpoint" x="245.26" y="299"></text>
+
+          <circle class="point-circle fill-anahata" cx="333.7" cy="203" r="17"></circle>
+          <text class="point-text text-light size-small" id="xpoint" x="333.7" y="205"></text>
+        </g>
+
+        <!-- Auxiliary points (f1/f2, g1/g2, h1/h2, i1/i2, u, v) -->
+        <g id="points-aux">
+          <circle class="point-circle fill-neutral" cx="212" cy="175.93" r="17"></circle>
+          <text class="point-text text-light size-small" id="f2point" x="212" y="178"></text>
+
+          <circle class="point-circle fill-neutral" cx="184.71" cy="149.53" r="21"></circle>
+          <text class="point-text text-light size-medium" id="f1point" x="184.71" y="152"></text>
+
+          <circle class="point-circle fill-neutral" cx="455.4" cy="177.53" r="17"></circle>
+          <text class="point-text text-light size-small" id="g2point" x="455.4" y="180"></text>
+
+          <circle class="point-circle fill-neutral" cx="480.79" cy="149.13" r="21"></circle>
+          <text class="point-text text-light size-medium" id="g1point" x="480.79" y="152"></text>
+
+          <circle class="point-circle fill-neutral" cx="454.4" cy="416.91" r="17"></circle>
+          <text class="point-text text-light size-small" id="i2point" x="454.4" y="419"></text>
+
+          <circle class="point-circle fill-neutral" cx="479.79" cy="445.31" r="21"></circle>
+          <text class="point-text text-light size-medium" id="i1point" x="479.79" y="448"></text>
+
+          <circle class="point-circle fill-neutral" cx="215" cy="419" r="17"></circle>
+          <text class="point-text text-light size-small" id="h2point" x="215" y="422"></text>
+
+          <circle class="point-circle fill-neutral" cx="188.71" cy="446.7" r="21"></circle>
+          <text class="point-text text-light size-medium" id="h1point" x="188.71" y="449"></text>
+
+          <circle class="point-circle fill-neutral" cx="420.54" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="vpoint" x="420.54" y="299"></text>
+
+          <circle class="point-circle fill-neutral" cx="382" cy="297" r="21"></circle>
+          <text class="point-text text-light size-medium" id="upoint" x="382" y="299"></text>
+        </g>
+
+        <!-- Age-band ring: major/minor age labels + year-fraction sub-labels -->
+        <g id="points-years">
+          <text class="age-band-label" transform="translate(20 295)">0<tspan x="-10" y="10">years</tspan><tspan x="-4" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(100 70)">10<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(330 -22)">20<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(550 70)">30<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(638 295)">40<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(550 515)">50<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(328 610)">60<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+          <text class="age-band-label" transform="translate(100 515)">70<tspan x="-8" y="10">years</tspan><tspan x="-2" y="20">old</tspan></text>
+
+          <text class="age-band-label-minor" transform="translate(97.49 198.76)">5<tspan class="age-band-label-minor-sub" x="8.34" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="8.34" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(232.22 66.42)">15<tspan class="age-band-label-minor-sub" x="13.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="13.9" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(405.8 67.22)">25<tspan class="age-band-label-minor-sub" x="14.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="14.9" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(540.55 204.76)">35<tspan class="age-band-label-minor-sub" x="14.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="14.9" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(542.76 402.12)">45<tspan class="age-band-label-minor-sub" x="14.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="14.9" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(403.8 539.38)">55<tspan class="age-band-label-minor-sub" x="14.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="14.9" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(235.6 539.38)">65<tspan class="age-band-label-minor-sub" x="14.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="14.9" y="0">old</tspan></text>
+          <text class="age-band-label-minor" transform="translate(97.69 400.12)">75<tspan class="age-band-label-minor-sub" x="14.9" y="-6">years</tspan><tspan class="age-band-label-minor-sub" x="14.9" y="0">old</tspan></text>
+
+          <text class="year-fraction-label" transform="translate(80.7 252.94)">1-2.5</text>
+          <text class="year-fraction-label" transform="translate(88.14 234.61)">2.5-3.5</text>
+          <text class="year-fraction-label" transform="translate(95.39 216.23)">3.5-4</text>
+          <text class="year-fraction-label" transform="translate(111.39 179.23)">6-7.5</text>
+          <text class="year-fraction-label" transform="translate(118.39 160.23)">7.5-8.5</text>
+          <text class="year-fraction-label" transform="translate(126.39 143.23)">8.5-9</text>
+          <text class="year-fraction-label" transform="translate(185.55 85.51)">11-12.5</text>
+          <text class="year-fraction-label" transform="translate(204.09 77.79)">12.5-13.5</text>
+          <text class="year-fraction-label" transform="translate(223.38 70.22)">13.5-14</text>
+          <text class="year-fraction-label" transform="translate(259.51 54.83)">16-17.5</text>
+          <text class="year-fraction-label" transform="translate(277.88 47.18)">17.5-18.5</text>
+          <text class="year-fraction-label" transform="translate(296.83 39.52)">18.5-19</text>
+          <text class="year-fraction-label" transform="translate(369 38.52)">21-22.5</text>
+          <text class="year-fraction-label" transform="translate(381.75 47.17)">22.5-23.5</text>
+          <text class="year-fraction-label" transform="translate(406.13 54.83)">23.5-24</text>
+          <text class="year-fraction-label" transform="translate(442.01 70.14)">26-27.5</text>
+          <text class="year-fraction-label" transform="translate(457.01 77.79)">27.5-28.5</text>
+          <text class="year-fraction-label" transform="translate(478.26 85.51)">28.5-29</text>
+          <text class="year-fraction-label" transform="translate(537.75 146.23)">31-32.5</text>
+          <text class="year-fraction-label" transform="translate(538.12 163.23)">32.5-33.5</text>
+          <text class="year-fraction-label" transform="translate(552.78 182.23)">33.5-34</text>
+          <text class="year-fraction-label" transform="translate(567.77 219.23)">36-37.5</text>
+          <text class="year-fraction-label" transform="translate(569.77 237.61)">37.5-38.5</text>
+          <text class="year-fraction-label" transform="translate(582.07 255.94)">38.5-39</text>
+          <text class="year-fraction-label" transform="translate(581.49 345.82)">41-42.5</text>
+          <text class="year-fraction-label" transform="translate(567.89 363.52)">42.5-43.5</text>
+          <text class="year-fraction-label" transform="translate(566.3 382.28)">43.5-44</text>
+          <text class="year-fraction-label" transform="translate(550.66 419.27)">46-47.5</text>
+          <text class="year-fraction-label" transform="translate(537.32 437.69)">47.5-48.5</text>
+          <text class="year-fraction-label" transform="translate(535.7 456.08)">48.5-49</text>
+          <text class="year-fraction-label" transform="translate(367.55 560.01)">58.5-59</text>
+          <text class="year-fraction-label" transform="translate(378.09 552.29)">57.5-58.5</text>
+          <text class="year-fraction-label" transform="translate(396.38 545.68)">56-57.5</text>
+          <text class="year-fraction-label" transform="translate(439.51 529.33)">53.5-54</text>
+          <text class="year-fraction-label" transform="translate(450.88 522.68)">52.5-53.5</text>
+          <text class="year-fraction-label" transform="translate(472.83 515.02)">51-52.5</text>
+          <text class="year-fraction-label" transform="translate(263.01 545.68)">63.5-64</text>
+          <text class="year-fraction-label" transform="translate(280.01 552.29)">62.5-63.5</text>
+          <text class="year-fraction-label" transform="translate(294.26 559.01)">61-62.5</text>
+          <text class="year-fraction-label" transform="translate(82.75 343.82)">78.5-79</text>
+          <text class="year-fraction-label" transform="translate(90.12 361.52)">77.5-78.5</text>
+          <text class="year-fraction-label" transform="translate(97.78 380.28)">76-77.5</text>
+          <text class="year-fraction-label" transform="translate(112.77 417.27)">73.5-74</text>
+          <text class="year-fraction-label" transform="translate(120.77 435.69)">72.5-73.5</text>
+          <text class="year-fraction-label" transform="translate(128.07 454.08)">71-72.5</text>
+          <text class="year-fraction-label" transform="translate(187 514.02)">68.5-69</text>
+          <text class="year-fraction-label" transform="translate(205.75 521.67)">67.5-68.5</text>
+          <text class="year-fraction-label" transform="translate(224.13 529.33)">66-67.5</text>
+
+          <text class="year-tick-value" id="af2point" transform="translate(52 246) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="af1point" transform="translate(60 227.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="af3point" transform="translate(68 209) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="afpoint" transform="translate(76 190.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="af5point" transform="translate(82 172.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="af4point" transform="translate(90 154) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="af6point" transform="translate(98 135.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="fb2point" transform="translate(169 63) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="fb1point" transform="translate(188 55) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="fb3point" transform="translate(206 47) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="fbpoint" transform="translate(224 39) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="fb5point" transform="translate(243 31) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="fb4point" transform="translate(261 23.5) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="fb6point" transform="translate(280 16) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="bg2point" transform="translate(388 16) rotate(22.5)"></text>
+          <text class="year-tick-value" id="bg1point" transform="translate(407 24) rotate(22.5)"></text>
+          <text class="year-tick-value" id="bg3point" transform="translate(426 32) rotate(22.5)"></text>
+          <text class="year-tick-value" id="bgpoint" transform="translate(444 40) rotate(22.5)"></text>
+          <text class="year-tick-value" id="bg5point" transform="translate(463 48) rotate(22.5)"></text>
+          <text class="year-tick-value" id="bg4point" transform="translate(481 55) rotate(22.5)"></text>
+          <text class="year-tick-value" id="bg6point" transform="translate(500 63) rotate(22.5)"></text>
+          <text class="year-tick-value" id="gc2point" transform="translate(570 135) rotate(67.5)"></text>
+          <text class="year-tick-value" id="gc1point" transform="translate(578 153.5) rotate(67.5)"></text>
+          <text class="year-tick-value" id="gc3point" transform="translate(586 172) rotate(67.5)"></text>
+          <text class="year-tick-value" id="gcpoint" transform="translate(594 190.5) rotate(67.5)"></text>
+          <text class="year-tick-value" id="gc5point" transform="translate(602 209) rotate(67.5)"></text>
+          <text class="year-tick-value" id="gc4point" transform="translate(610 227.5) rotate(67.5)"></text>
+          <text class="year-tick-value" id="gc6point" transform="translate(618 246) rotate(67.5)"></text>
+          <text class="year-tick-value" id="ci2point" transform="translate(615 348) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="ci1point" transform="translate(607 367) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="ci3point" transform="translate(599 385.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="cipoint" transform="translate(591 404) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="ci5point" transform="translate(583 422.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="ci4point" transform="translate(575 441) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="ci6point" transform="translate(567 459.5) rotate(-67.5)"></text>
+          <text class="year-tick-value" id="id2point" transform="translate(496 532) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="id1point" transform="translate(477.5 540) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="id3point" transform="translate(459.5 548) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="idpoint" transform="translate(441 555.5) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="id5point" transform="translate(422.5 563) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="id4point" transform="translate(404 571) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="id6point" transform="translate(385 578.5) rotate(-22.5)"></text>
+          <text class="year-tick-value" id="dh2point" transform="translate(282 578.5) rotate(22.5)"></text>
+          <text class="year-tick-value" id="dh1point" transform="translate(263.5 571) rotate(22.5)"></text>
+          <text class="year-tick-value" id="dh3point" transform="translate(244.5 563) rotate(22.5)"></text>
+          <text class="year-tick-value" id="dhpoint" transform="translate(226 555.5) rotate(22.5)"></text>
+          <text class="year-tick-value" id="dh5point" transform="translate(207 548) rotate(22.5)"></text>
+          <text class="year-tick-value" id="dh4point" transform="translate(188.5 540) rotate(22.5)"></text>
+          <text class="year-tick-value" id="dh6point" transform="translate(170 532) rotate(22.5)"></text>
+          <text class="year-tick-value" id="ha2point" transform="translate(97 459) rotate(67.5)"></text>
+          <text class="year-tick-value" id="ha1point" transform="translate(89 441) rotate(67.5)"></text>
+          <text class="year-tick-value" id="ha3point" transform="translate(81 423) rotate(67.5)"></text>
+          <text class="year-tick-value" id="hapoint" transform="translate(73 405) rotate(67.5)"></text>
+          <text class="year-tick-value" id="ha5point" transform="translate(65 386.5) rotate(67.5)"></text>
+          <text class="year-tick-value" id="ha4point" transform="translate(57 368) rotate(67.5)"></text>
+          <text class="year-tick-value" id="ha6point" transform="translate(49 349.5) rotate(67.5)"></text>
+        </g>
+      </svg>
+    </div>
+    <hr class="section-divider" />
+
+    <div class="chakra-card">
+      <h2>Chakra Table</h2>
+      <table class="chakra-table">
+        <thead>
+          <tr><th>Chakra</th><th>Physics</th><th>Energy</th><th>Emotions</th></tr>
+        </thead>
+        <tbody id="chakra-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+    <hr class="section-divider" />
+
+    <div class="purposes-card">
+      <div class="purposes-grid">
+        <div class="purpose-block">
+          <h3 class="item-reveal" style="transition-delay:0.00s">Personal purpose</h3>
+          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Soul searching, balance of feminine and masculine qualities, abilities, skills</p>
+          <svg class="purpose-diagram item-reveal" style="transition-delay:0.36s" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
+            <text class="purpose-node-label" x="2" y="25">Sky</text>
+            <circle class="purpose-node-circle" cx="66" cy="25" r="18"></circle>
+            <text class="purpose-node-text" id="skypoint" x="66" y="26"></text>
+
+            <text class="purpose-node-label" x="2" y="80">Earth</text>
+            <circle class="purpose-node-circle" cx="66" cy="80" r="18"></circle>
+            <text class="purpose-node-text" id="earthpoint" x="66" y="81"></text>
+
+            <path class="purpose-brace" d="M84,25 H109 V80 M84,80 H109 M109,52.5 H144"></path>
+
+            <circle class="purpose-node-circle purpose-node-circle-total" cx="166" cy="52.5" r="20"></circle>
+            <text class="purpose-node-text" id="perspurpose" x="166" y="53.5"></text>
+          </svg>
+        </div>
+        <div class="purpose-block">
+          <h3 class="item-reveal" style="transition-delay:0.00s">Purpose for society &amp; genus</h3>
+          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Tasks for genus, results and recognition in society</p>
+          <svg class="purpose-diagram item-reveal" style="transition-delay:0.36s" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
+            <text class="purpose-node-label" x="12" y="25">M</text>
+            <circle class="purpose-node-circle" cx="66" cy="25" r="18"></circle>
+            <text class="purpose-node-text" id="malepoint" x="66" y="26"></text>
+
+            <text class="purpose-node-label" x="12" y="80">F</text>
+            <circle class="purpose-node-circle" cx="66" cy="80" r="18"></circle>
+            <text class="purpose-node-text" id="femalepoint" x="66" y="81"></text>
+
+            <path class="purpose-brace" d="M84,25 H109 V80 M84,80 H109 M109,52.5 H144"></path>
+
+            <circle class="purpose-node-circle purpose-node-circle-total" cx="166" cy="52.5" r="20"></circle>
+            <text class="purpose-node-text" id="socialpurpose" x="166" y="53.5"></text>
+          </svg>
+        </div>
+        <div class="purpose-block">
+          <h3 class="item-reveal" style="transition-delay:0.00s">General purpose</h3>
+          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Spiritual path, global task, where is the divine in me?</p>
+          <span class="base-circle item-reveal" style="transition-delay:0.36s" id="generalpurpose"></span>
+        </div>
+        <div class="purpose-block">
+          <h3 class="item-reveal" style="transition-delay:0.00s">Planetary purpose</h3>
+          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Global soul purpose</p>
+          <span class="base-circle item-reveal" style="transition-delay:0.36s" id="planetarypurpose"></span>
+        </div>
+      </div>
+    </div>
+   </div>
+  </div>
+</div>
+
+
+
+<script src="../shared/engine/calculations.js"></script>
+<script>
+'use strict';
+
+function renderValues(values) {
+  for (const [key, value] of Object.entries(values)) {
+    const el = document.getElementById(key);
+    if (el) el.textContent = value;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CHAKRA TABLE RENDERING
+   ════════════════════════════════════════════════════════════════════ */
+
+const CHAKRAS = [
+  { key: 'sah', name: 'Sahasrara', color: 'var(--chakra-sahasrara)' },
+  { key: 'aj',  name: 'Ajna',      color: 'var(--chakra-ajna)' },
+  { key: 'vish',name: 'Vishuddha', color: 'var(--chakra-vishuddha)' },
+  { key: 'anah',name: 'Anahata',   color: 'var(--chakra-anahata)' },
+  { key: 'man', name: 'Manipura',  color: 'var(--chakra-manipura)' },
+  { key: 'svad',name: 'Svadhisthana', color: 'var(--chakra-svadhisthana)' },
+  { key: 'mul', name: 'Muladhara', color: 'var(--chakra-muladhara)' },
+];
+
+function buildChakraTable() {
+  const tbody = document.getElementById('chakra-tbody');
+  let html = '';
+  CHAKRAS.forEach(({ key, name, color }, i) => {
+    html += `<tr class="chakra-row chakra-row-reveal" style="transition-delay:${(i * 0.09).toFixed(2)}s">
+      <td><span class="chakra-name-pill"><span class="chakra-dot" style="background:${color}; color:${color};"></span>${name}</span></td>
+      <td id="${key}physics"></td>
+      <td id="${key}energy"></td>
+      <td id="${key}emotions"></td>
+    </tr>`;
+  });
+  html += `<tr class="chakra-result-row chakra-row-reveal" style="transition-delay:${(CHAKRAS.length * 0.09).toFixed(2)}s">
+    <td>Result</td>
+    <td id="resultphysics"></td>
+    <td id="resultenergy"></td>
+    <td id="resultemotions"></td>
+  </tr>`;
+  tbody.innerHTML = html;
+}
+buildChakraTable();
+
+function renderChakraTable(chartHeart) {
+  const rows = [
+    { keys: ['sahphysics','ajphysics','vishphysics','anahphysics','manphysics','svadphysics','mulphysics'], resultId: 'resultphysics' },
+    { keys: ['sahenergy','ajenergy','vishenergy','anahenergy','manenergy','svadenergy','mulenergy'], resultId: 'resultenergy' },
+    { keys: ['sahemotions','ajemotions','vishemotions','anahemotions','manemotions','svademotions','mulemotions'], resultId: 'resultemotions' },
+  ];
+  rows.forEach(({ keys, resultId }) => {
+    let sum = 0;
+    keys.forEach((key) => {
+      const el = document.getElementById(key);
+      if (el) el.textContent = chartHeart[key];
+      sum += chartHeart[key];
+    });
+    const resultEl = document.getElementById(resultId);
+    if (resultEl) resultEl.textContent = reduceNumber(sum);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM / UI WIRING
+   ════════════════════════════════════════════════════════════════════ */
+
+const dateInput = document.getElementById('date');
+const nameInput = document.getElementById('name');
+const container = document.querySelector('.matrix-container');
+const btnAnswer = document.getElementById('submit-btn');
+const errorOutput = document.querySelector('.error-output');
+const outputDate = document.querySelector('.output-personal-date');
+
+function titleCase(str) {
+  return str.replace(/^[a-zа-яё]|[\- ][a-zа-яё]/g, (a) => a.toUpperCase());
+}
+
+function maskDateInput(evt) {
+  const input = evt.target;
+  let digits = input.value.replace(/\D/g, '').slice(0, 8);
+  let formatted = digits;
+  if (digits.length >= 4) {
+    formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  } else if (digits.length >= 2) {
+    formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  input.value = formatted;
+}
+dateInput.addEventListener('input', maskDateInput);
+
+function parseDdMmYyyy(value) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+  const [, dd, mm, yyyy] = match;
+  return { day: +dd, month: +mm, year: +yyyy };
+}
+
+function validate(date, name, parsed, dateIsValid) {
+  let errorMessage = '';
+  const today = new Date();
+  const nameValid = new RegExp('^[а-яё\\- ]*[a-z\\- ]*$', 'i');
+
+  if (name === '' || !parsed || !dateIsValid) {
+    errorMessage += `<p>Date is not valid or one of the fields is empty. Use dd/mm/yyyy.</p>`;
+  }
+  if (parsed && dateIsValid && (date > today)) {
+    errorMessage += `<p>Date can't be in the future.</p>`;
+  }
+  if (!nameValid.test(name)) {
+    errorMessage += `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: Anna, Anna-Maria, Anna Maria.</p>`;
+  }
+  return errorMessage !== '' ? errorMessage : true;
+}
+
+function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
+  const parsed = parseDdMmYyyy(calculationDate);
+  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
+  const dateIsValid = isValidCalendarDate(parsed, date);
+  const response = validate(date, name, parsed, dateIsValid);
+
+  outputDate.innerHTML = '';
+  errorOutput.innerHTML = '';
+
+  if (response !== true) {
+    errorOutput.innerHTML = response;
+    container.classList.add('display-none');
+    return;
+  }
+
+  const fullDate = `${String(parsed.day).padStart(2, '0')}.${String(parsed.month).padStart(2, '0')}.${parsed.year}`;
+  outputDate.innerHTML = `${titleCase(name)}'s <span class="gray">Destiny Matrix Chart — Date of Birth: ${fullDate}</span>`;
+
+  container.classList.remove('display-none');
+  container.scrollIntoView({ behavior: 'smooth' });
+
+  const apoint = reduceNumber(parsed.day);
+  const bpoint = parsed.month;
+  const cpoint = calculateYear(parsed.year);
+
+  const person = calculatePoints(apoint, bpoint, cpoint);
+
+  renderValues(person.points);
+  renderChakraTable(person.chartHeart);
+  renderValues(person.purposes);
+  renderValues(person.years);
+
+  // Personal/society purpose headings, descriptions, and structures fire together
+  // by group, regardless of scroll position — not tied to the scroll observer.
+  const itemRevealEls = document.querySelectorAll('.item-reveal');
+  itemRevealEls.forEach((el) => el.classList.remove('revealed'));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      itemRevealEls.forEach((el) => el.classList.add('revealed'));
+    });
+  });
+
+  // Chakra table rows: reveal all of them together the moment any part of the
+  // table becomes visible, rather than each row waiting for its own turn to
+  // scroll into view. Re-observing forces a fresh intersection check even if
+  // the card was already on screen from a previous calculation.
+  const chakraRows = document.querySelectorAll('.chakra-row-reveal');
+  chakraRows.forEach((el) => el.classList.remove('revealed'));
+  if (chakraCardEl) {
+    rowRevealObserver.unobserve(chakraCardEl);
+    rowRevealObserver.observe(chakraCardEl);
+  }
+
+  // Same page, no reload/new page — just swap the shareable URL in place.
+  // Everything is recalculated client-side from the URL, nothing is stored server-side.
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('dob', calculationDate.replace(/\//g, '-'));
+    url.searchParams.set('name', name);
+    window.history.pushState({}, '', url);
+  }
+
+  dateInput.value = '';
+  nameInput.value = '';
+}
+
+btnAnswer.addEventListener('click', (evt) => {
+  evt.preventDefault();
+  runCalculation(dateInput.value, nameInput.value);
+});
+
+nameInput.addEventListener('keydown', (evt) => {
+  if (evt.key === 'Enter') btnAnswer.click();
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   SCROLL-REVEAL — result cards fade/slide in as they enter the viewport
+   ════════════════════════════════════════════════════════════════════ */
+
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('revealed');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.scroll-reveal').forEach((el) => revealObserver.observe(el));
+
+// Chakra table: the card itself has no animation of its own — it's purely a
+// trigger. The instant any part of it is on screen, every row (already
+// carrying its own transition-delay for the left-to-right sweep) is revealed
+// together, so a half-visible table still finishes its animation in full.
+const chakraCardEl = document.querySelector('.chakra-card');
+const rowRevealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      const rows = entry.target.querySelectorAll('.chakra-row-reveal');
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          rows.forEach((el) => el.classList.add('revealed'));
+        });
+      });
+    }
+  });
+}, { threshold: 0.05 });
+
+if (chakraCardEl) rowRevealObserver.observe(chakraCardEl);
+
+// If the page is opened with ?dob=DD-MM-YYYY&name=... in the URL (e.g. a
+// shared link), fill the inputs and calculate immediately — no click required.
+(function calculateFromUrlIfPresent() {
+  const params = new URLSearchParams(window.location.search);
+  const dFromUrl = params.get('dob');
+  const nameFromUrl = params.get('name');
+
+  if (dFromUrl && nameFromUrl) {
+    const dobFromUrl = dFromUrl.replace(/-/g, '/');
+    dateInput.value = dobFromUrl;
+    nameInput.value = nameFromUrl;
+    runCalculation(dobFromUrl, nameFromUrl, { updateUrl: false });
+  }
+})();
+</script>
+</body>
+</html>
