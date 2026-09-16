@@ -85,8 +85,60 @@
 
 
   .chakra-result-row td:last-child{border-radius:0 10px 10px 0;}
+
+
+  /* ── Interpretation reading ────────────────────────── */
+  .reading-card h2{text-align:center; margin:0 0 8px; font-size:24px; color:var(--ink);}
+
+  .reading-status{text-align:center; color:var(--ink-faint); font-size:14px; margin:0 0 24px;}
+  .reading-status:empty{display:none;}
+
+  details.reading-section{
+    margin:0 0 14px; border:1px solid var(--line-soft); border-radius:12px;
+    overflow:hidden;
+  }
+  details.reading-section:last-child{margin-bottom:0;}
+
+  details.reading-section summary.reading-section-title{
+    cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px;
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:17px; color:var(--ink);
+    padding:16px 20px; margin:0; background:rgba(169,120,47,0.06);
+    border-bottom:1px solid transparent; transition:background .2s ease;
+  }
+  details.reading-section summary.reading-section-title::-webkit-details-marker{display:none;}
+  details.reading-section summary.reading-section-title::marker{content:'';}
+  details.reading-section summary.reading-section-title:hover{background:rgba(169,120,47,0.12);}
+  details.reading-section[open] summary.reading-section-title{border-bottom-color:var(--line-soft);}
+
+  .reading-chevron{
+    display:inline-block; font-size:16px; color:var(--gold);
+    transition:transform .25s cubic-bezier(0.16,1,0.3,1); transform:rotate(0deg);
+  }
+  details.reading-section[open] .reading-chevron{transform:rotate(90deg);}
+
+  .reading-section-body{padding:18px 20px 20px;}
+
+  .reading-tabs{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px;}
+
+  .reading-tab{
+    font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:var(--ink-soft);
+    background:rgba(36,26,68,0.045); border:1px solid transparent; border-radius:999px;
+    padding:7px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    transition:background .2s ease, color .2s ease;
+  }
+  .reading-tab.active{background:var(--gold); color:#ffffff;}
+  .reading-tab:hover:not(.active){background:rgba(169,120,47,0.18);}
+
+  .reading-tab-panel{display:none;}
+  .reading-tab-panel.active{display:block;}
+
+  .reading-subsection-text{color:var(--ink-soft); font-size:15px; line-height:1.65; margin:0 0 12px;}
+  .reading-subsection-text:last-child{margin-bottom:0;}
+
+  .reading-chakra-dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
 </style>
 </head>
+
 <body>
 
 <div class="container">
@@ -507,6 +559,13 @@
         </div>
       </div>
     </div>
+    <hr class="section-divider" />
+
+    <div class="reading-card">
+      <h2>Your Full Reading</h2>
+      <p class="reading-status" id="reading-status"></p>
+      <div id="reading-sections"></div>
+    </div>
    </div>
   </div>
 </div>
@@ -576,6 +635,236 @@ function renderChakraTable(chartHeart) {
     if (resultEl) resultEl.textContent = reduceNumber(sum);
   });
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   INTERPRETATION READING
+   Loads interpretations/destiny-manifest.json once, then fetches each
+   referenced interpretation file on demand (cached after first use) and
+   renders every section's subsections into #reading-sections.
+   ════════════════════════════════════════════════════════════════════ */
+
+const INTERPRETATIONS_BASE = 'interpretations/';
+const readingFileCache = new Map(); // filename -> Promise<parsed JSON>
+let readingManifestPromise = null;
+
+const CHAKRA_FULL_NAME = {
+  sah: 'sahasrara', aj: 'ajna', vish: 'vishuddha', anah: 'anahata',
+  man: 'manipura', svad: 'svadhisthana', mul: 'muladhara',
+};
+
+function loadManifest() {
+  if (!readingManifestPromise) {
+    readingManifestPromise = fetch(INTERPRETATIONS_BASE + 'destiny-manifest.json')
+      .then((res) => {
+        if (!res.ok) throw new Error(`Manifest request failed: ${res.status}`);
+        return res.json();
+      });
+  }
+  return readingManifestPromise;
+}
+
+function loadInterpretationFile(filename) {
+  if (!readingFileCache.has(filename)) {
+    readingFileCache.set(
+      filename,
+      fetch(INTERPRETATIONS_BASE + filename).then((res) => {
+        if (!res.ok) throw new Error(`Failed to load ${filename}: ${res.status}`);
+        return res.json();
+      })
+    );
+  }
+  return readingFileCache.get(filename);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderTabsAndPanels(items) {
+  // items: array of { label (HTML, pre-escaped by caller), contentHtml }
+  const tabs = items.map((item, i) => `
+    <button type="button" class="reading-tab${i === 0 ? ' active' : ''}" data-tab-index="${i}">${item.label}</button>
+  `).join('');
+  const panels = items.map((item, i) => `
+    <div class="reading-tab-panel${i === 0 ? ' active' : ''}" data-tab-index="${i}">${item.contentHtml}</div>
+  `).join('');
+  return `
+    <div class="reading-tabs" role="tablist">${tabs}</div>
+    <div class="reading-tab-panels">${panels}</div>
+  `;
+}
+
+function buildSectionDropdownHtml(section, items) {
+  if (!items || items.length === 0) return null;
+  return `
+    <details class="reading-section" id="reading-${section.id}">
+      <summary class="reading-section-title"><span class="reading-chevron">&#8250;</span>${escapeHtml(section.title)}</summary>
+      <div class="reading-section-body">
+        ${renderTabsAndPanels(items)}
+      </div>
+    </details>
+  `;
+}
+
+/* Standard "arcana" lookup: entries keyed by an integer 1-22. */
+function findArcanaEntry(fileData, value) {
+  if (!Array.isArray(fileData)) return null;
+  return fileData.find((entry) => entry.arcana === value) || null;
+}
+
+/* Cluster lookup (Soul's Journey): entries keyed by a "j-k-l" string. */
+function findClusterEntry(fileData, clusterKey) {
+  if (!Array.isArray(fileData)) return null;
+  return fileData.find((entry) => entry.cluster === clusterKey) || null;
+}
+
+/* Resolve the lookup key for a manifest section from the computed points. */
+function resolveSectionKey(section, person, currentYearArcana) {
+  if (section.lookup === 'cluster') {
+    const values = section.sourcePoints.map((p) => person.points[p]);
+    if (values.some((v) => v === undefined)) return null;
+    return values.join('-');
+  }
+  if (section.lookup === 'arcana') {
+    if (section.derived === 'personalYear') return currentYearArcana;
+    const key = section.sourcePoints[0];
+    if (key in person.points) return person.points[key];
+    if (key in person.purposes) return person.purposes[key];
+    return null;
+  }
+  return null;
+}
+
+/* Each subsection (heading + text) becomes one tab in the dropdown. */
+function buildStandardSectionHtml(section, entry) {
+  if (!entry || !Array.isArray(entry.subsections) || entry.subsections.length === 0) return null;
+  const items = entry.subsections.map((sub) => ({
+    label: escapeHtml(sub.heading),
+    contentHtml: `<p class="reading-subsection-text">${escapeHtml(sub.text)}</p>`,
+  }));
+  return buildSectionDropdownHtml(section, items);
+}
+
+/* Body & Energy Map: one dropdown, one tab per chakra (Physics/Energy/Emotions stacked inside). */
+function buildChakraSectionHtml(section, chakraFileData, chartHeart) {
+  if (!Array.isArray(chakraFileData) || chakraFileData.length === 0) return null;
+
+  const items = [];
+  Object.entries(CHAKRA_FULL_NAME).forEach(([abbrev, fullName]) => {
+    const entry = chakraFileData.find((e) => e.chakra === fullName);
+    if (!entry) return; // this chakra's content not written yet — skip quietly
+
+    const physicsVal = chartHeart[`${abbrev}physics`];
+    const energyVal = chartHeart[`${abbrev}energy`];
+    const emotionsVal = chartHeart[`${abbrev}emotions`];
+
+    const paragraphs = [];
+    if (entry.physics_text) {
+      paragraphs.push(entry.physics_text);
+    } else if (entry.physics && entry.physics[String(physicsVal)]) {
+      paragraphs.push(entry.physics[String(physicsVal)]);
+    }
+    if (entry.energy_text) {
+      paragraphs.push(entry.energy_text);
+    } else if (entry.energy && entry.energy[String(energyVal)]) {
+      paragraphs.push(entry.energy[String(energyVal)]);
+    }
+    if (entry.emotions_text) {
+      paragraphs.push(entry.emotions_text);
+    } else if (entry.emotions && entry.emotions[String(emotionsVal)]) {
+      paragraphs.push(entry.emotions[String(emotionsVal)]);
+    }
+
+    if (paragraphs.length === 0) return;
+
+    const chakraMeta = CHAKRAS.find((c) => c.key === abbrev);
+    const color = chakraMeta ? chakraMeta.color : 'var(--gold)';
+    const label = chakraMeta ? chakraMeta.name : fullName;
+
+    items.push({
+      label: `<span class="reading-chakra-dot" style="background:${color};"></span>${escapeHtml(label)}`,
+      contentHtml: paragraphs.map((p) => `<p class="reading-subsection-text">${escapeHtml(p)}</p>`).join(''),
+    });
+  });
+
+  return buildSectionDropdownHtml(section, items);
+}
+
+
+async function renderSectionForManifestEntry(section, person, currentYearArcana) {
+  try {
+    const fileData = await loadInterpretationFile(section.file);
+
+    if (section.lookup === 'chakra') {
+      return buildChakraSectionHtml(section, fileData, person.chartHeart);
+    }
+
+    const key = resolveSectionKey(section, person, currentYearArcana);
+    if (key === null) return null;
+
+    const entry = section.lookup === 'cluster'
+      ? findClusterEntry(fileData, key)
+      : findArcanaEntry(fileData, key);
+
+    return buildStandardSectionHtml(section, entry);
+  } catch (err) {
+    console.warn(`Reading section "${section.id}" could not be rendered:`, err);
+    return null;
+  }
+}
+
+async function renderReading(person) {
+  const readingContainer = document.getElementById('reading-sections');
+  const statusEl = document.getElementById('reading-status');
+  if (!readingContainer) return;
+
+  readingContainer.innerHTML = '';
+  statusEl.textContent = 'Loading your reading…';
+
+  try {
+    const manifest = await loadManifest();
+    const sections = [...manifest.sections].sort((a, b) => a.order - b.order);
+    const currentYearArcana = calculateYear(new Date().getFullYear());
+
+    const htmlChunks = await Promise.all(
+      sections.map((section) => renderSectionForManifestEntry(section, person, currentYearArcana))
+    );
+
+    const rendered = htmlChunks.filter(Boolean);
+    readingContainer.innerHTML = rendered.join('');
+    statusEl.textContent = rendered.length === 0
+      ? 'Your reading content is being written — check back soon.'
+      : '';
+  } catch (err) {
+    console.warn('Could not load the interpretation manifest:', err);
+    statusEl.textContent = 'Your reading could not be loaded right now.';
+  }
+}
+
+/* Tabs inside each dropdown: one delegated listener on the persistent
+   #reading-sections container handles every section, even after its
+   innerHTML is replaced on a fresh calculation. */
+(function setupReadingTabDelegation() {
+  const readingContainer = document.getElementById('reading-sections');
+  if (!readingContainer) return;
+  readingContainer.addEventListener('click', (evt) => {
+    const tabBtn = evt.target.closest('.reading-tab');
+    if (!tabBtn) return;
+    const tabsEl = tabBtn.parentElement;
+    const panelsEl = tabsEl.nextElementSibling;
+    if (!panelsEl) return;
+    const targetIndex = tabBtn.dataset.tabIndex;
+    tabsEl.querySelectorAll('.reading-tab').forEach((btn) => {
+      btn.classList.toggle('active', btn === tabBtn);
+    });
+    panelsEl.querySelectorAll('.reading-tab-panel').forEach((panel) => {
+      panel.classList.toggle('active', panel.dataset.tabIndex === targetIndex);
+    });
+  });
+})();
 
 /* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
@@ -660,6 +949,7 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
   renderChakraTable(person.chartHeart);
   renderValues(person.purposes);
   renderValues(person.years);
+  renderReading(person);
 
   // Personal/society purpose headings, descriptions, and structures fire together
   // by group, regardless of scroll position — not tied to the scroll observer.

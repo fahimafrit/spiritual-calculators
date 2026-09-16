@@ -1,0 +1,125 @@
+{
+  "sections": [
+    {
+      "id": "core-self",
+      "order": 1,
+      "title": "Your Core Self",
+      "file": "point-a.json",
+      "lookup": "arcana",
+      "sourcePoints": ["apoint"]
+    },
+    {
+      "id": "outer-presence",
+      "order": 2,
+      "title": "Your Outer Presence",
+      "file": "point-b.json",
+      "lookup": "arcana",
+      "sourcePoints": ["bpoint"]
+    },
+    {
+      "id": "souls-journey",
+      "order": 3,
+      "title": "Your Soul's Journey",
+      "file": "karmic-tail.json",
+      "lookup": "cluster",
+      "sourcePoints": ["jpoint", "kpoint", "lpoint"]
+    },
+    {
+      "id": "hidden-talents",
+      "order": 4,
+      "title": "Your Hidden Talents",
+      "file": "point-e.json",
+      "lookup": "arcana",
+      "sourcePoints": ["epoint"]
+    },
+    {
+      "id": "love-energy",
+      "order": 5,
+      "title": "Your Love Energy",
+      "file": "point-f.json",
+      "lookup": "arcana",
+      "sourcePoints": ["fpoint"]
+    },
+    {
+      "id": "relationship-pattern",
+      "order": 6,
+      "title": "Your Relationship Pattern",
+      "file": "point-g.json",
+      "lookup": "arcana",
+      "sourcePoints": ["gpoint"]
+    },
+    {
+      "id": "money-energy",
+      "order": 7,
+      "title": "Your Money Energy",
+      "file": "point-h.json",
+      "lookup": "arcana",
+      "sourcePoints": ["hpoint"]
+    },
+    {
+      "id": "abundance-blocks",
+      "order": 8,
+      "title": "Your Abundance Blocks",
+      "file": "point-i.json",
+      "lookup": "arcana",
+      "sourcePoints": ["ipoint"]
+    },
+    {
+      "id": "life-path",
+      "order": 9,
+      "title": "Your Life Path",
+      "file": "purpose-personal.json",
+      "lookup": "arcana",
+      "sourcePoints": ["perspurpose"]
+    },
+    {
+      "id": "social-mission",
+      "order": 10,
+      "title": "Your Social Mission",
+      "file": "purpose-social.json",
+      "lookup": "arcana",
+      "sourcePoints": ["socialpurpose"]
+    },
+    {
+      "id": "general-purpose",
+      "order": 11,
+      "title": "Your General Purpose",
+      "file": "purpose-general.json",
+      "lookup": "arcana",
+      "sourcePoints": ["generalpurpose"]
+    },
+    {
+      "id": "family-blueprint",
+      "order": 12,
+      "title": "Your Family Blueprint",
+      "file": "point-o-p.json",
+      "lookup": "arcana",
+      "sourcePoints": ["opoint"],
+      "note": "point-o-p.json entries hold one combined narrative (parental imprint + masculine line + feminine line) keyed by a single arcana number. Keyed off opoint since the written entries read the two lines as one family story rather than two independent lookups."
+    },
+    {
+      "id": "year-energy",
+      "order": 14,
+      "title": "Your Current Year Energy",
+      "file": "year.json",
+      "lookup": "arcana",
+      "sourcePoints": ["yearpoint"],
+      "derived": "personalYear"
+    },
+    {
+      "id": "body-energy-map",
+      "order": 15,
+      "title": "Your Body and Energy Map",
+      "file": "chakras.json",
+      "lookup": "chakra"
+    },
+    {
+      "id": "legacy",
+      "order": 16,
+      "title": "Your Legacy",
+      "file": "purpose-planetary.json",
+      "lookup": "arcana",
+      "sourcePoints": ["planetarypurpose"]
+    }
+  ]
+}
