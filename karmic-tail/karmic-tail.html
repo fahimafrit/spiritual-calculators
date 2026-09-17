@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Karmic Tail Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../shared/styles/base.css" />
+<style>
+  /* ── Karmic tail highlight on the octagram ─────────────────────── */
+  .karmic-tail-spine{
+    stroke: var(--gold-bright);
+    stroke-width: 3;
+    stroke-linecap: round;
+    opacity: 0.55;
+  }
+
+  .karmic-tail-glow{
+    fill: rgba(169, 120, 47, 0.12);
+    stroke: var(--gold-bright);
+    stroke-width: 1.4;
+    stroke-dasharray: 3 3;
+  }
+
+  .karmic-tail-caption{
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 12.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    fill: var(--gold);
+    text-anchor: middle;
+  }
+
+  /* ── Result: three positions + shadow/integrated/practical ──────── */
+  .karmic-card h2{ text-align:center; margin:0 0 4px; font-size:24px; color:var(--ink); }
+  .karmic-card-sub{ text-align:center; color:var(--ink-soft); font-size:14px; margin:0 0 28px; }
+
+  .karmic-triplet-badge{
+    display:block; text-align:center; margin:0 0 28px;
+  }
+  .karmic-triplet-badge span{
+    display:inline-block; padding:8px 18px; border-radius:999px;
+    background: rgba(169,120,47,0.10); border:1px solid var(--gold);
+    font-weight:800; letter-spacing:0.04em; color:var(--ink);
+  }
+
+  .karmic-position{
+    border:1px solid var(--line-soft); border-radius:12px;
+    padding:18px 20px; margin:0 0 14px;
+    background: rgba(36,26,68,0.02);
+  }
+  .karmic-position:last-of-type{ margin-bottom: 24px; }
+
+  .karmic-position-heading{
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:14px;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--gold);
+    margin:0 0 8px;
+  }
+  .karmic-position-heading .arcana-name{
+    color: var(--ink); text-transform:none; letter-spacing:normal;
+  }
+  .karmic-position p{ margin:0; font-size:15px; line-height:1.65; color:var(--ink-soft); }
+
+  .karmic-summary-grid{
+    display:grid; grid-template-columns: 1fr; gap:14px;
+  }
+  .karmic-summary-block{
+    border-radius:12px; padding:16px 18px;
+  }
+  .karmic-summary-block h3{
+    margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;
+    font-family:'Nunito',sans-serif; font-weight:800;
+  }
+  .karmic-summary-block p{ margin:0; font-size:14.5px; line-height:1.6; color:var(--ink-soft); }
+
+  .karmic-summary-block.shadow{ background: rgba(192,57,43,0.06); }
+  .karmic-summary-block.shadow h3{ color:#c0392b; }
+
+  .karmic-summary-block.integrated{ background: rgba(63,159,106,0.08); }
+  .karmic-summary-block.integrated h3{ color:#2e7d54; }
+
+  .karmic-summary-block.practical{ background: rgba(91,111,214,0.07); }
+  .karmic-summary-block.practical h3{ color:#4655b0; }
+
+  .karmic-cta{
+    margin-top:28px; text-align:center; padding:22px;
+    border-radius:12px; background:linear-gradient(135deg,#fff8ec,#fdf1dc);
+    border:1px solid var(--gold);
+  }
+  .karmic-cta p{ margin:0 0 12px; font-size:14.5px; color:var(--ink); }
+  .karmic-cta a{
+    display:inline-block; background:linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color:#ffffff; text-decoration:none; font-weight:800; font-size:14px;
+    letter-spacing:0.03em; text-transform:uppercase; padding:12px 24px; border-radius:10px;
+  }
+
+  .karmic-status{ text-align:center; color:var(--ink-faint); font-size:14px; margin:0 0 16px; }
+  .karmic-status:empty{ display:none; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1 class="page-title">Karmic Tail Calculator</h1>
+  <p class="page-subtitle">Uncover the pattern your soul carried in</p>
+
+  <div class="form-card">
+    <div class="field">
+      <label for="date">Date of birth</label>
+      <input id="date" type="text" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off" inputmode="numeric" />
+    </div>
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" type="text" placeholder="Your name" />
+    </div>
+    <button id="submit-btn">Reveal my karmic tail</button>
+  </div>
+  <div class="error-output"></div>
+
+  <div class="result-wrap matrix-container display-none">
+   <div class="result-card">
+    <div class="output-personal-date scroll-reveal"></div>
+    <hr class="section-divider" />
+
+    <div class="octagram-card scroll-reveal">
+      <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
+        <g id="matrix-frame">
+          <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
+          <rect class="frame-square" x="227.87" y="127.54" width="340.16" height="340.16" transform="translate(-158.13 367.16) rotate(-45)"></rect>
+          <path class="frame-octagon" d="M 315.22 15.42 Q 333.7 7.76 352.18 15.42
+                L 519.16 84.62 Q 537.64 92.28 545.30 110.76
+                L 614.51 277.74 Q 622.17 296.22 614.51 314.79
+                L 545.30 482.59 Q 537.64 501.16 519.16 508.73
+                L 352.18 577.11 Q 333.7 584.68 315.22 577.02
+                L 148.24 507.82 Q 129.76 500.16 122.10 481.68
+                L 52.90 314.70 Q 45.24 296.22 52.90 277.74
+                L 122.10 110.76 Q 129.76 92.28 148.24 84.62 Z"></path>
+          <line class="frame-square" x1="333.7" y1="27.76" x2="333.7" y2="564.68"></line>
+          <line class="frame-square" x1="65.24" y1="296.22" x2="602.17" y2="296.22"></line>
+          <g>
+            <line class="genline-sahasrara" x1="442" y1="405" x2="226" y2="189"></line>
+            <polygon class="genline-sahasrara-arrow" points="442 405 429.97 400.05 437.05 392.97"></polygon>
+            <polygon class="genline-sahasrara-arrow" points="226 189 238.03 193.95 230.95 201.03"></polygon>
+          </g>
+          <g>
+            <line class="genline-muladhara" x1="442" y1="189" x2="226" y2="405"></line>
+            <polygon class="genline-muladhara-arrow" points="442 189 437.05 201.03 429.97 193.95"></polygon>
+            <polygon class="genline-muladhara-arrow" points="226 405 230.95 392.97 238.03 400.05"></polygon>
+          </g>
+          <line class="frame-dash-connector" x1="502" y1="297" x2="335" y2="465"></line>
+          <text class="genline-caption" transform="translate(238.77 188.48) rotate(45)">Male generation line</text>
+          <text class="genline-caption" transform="translate(351.7 264.98) rotate(-45)">Female generation line</text>
+
+          <text class="icon-dollar-text" x="411" y="342">$</text>
+
+          <path class="icon-heart" transform="translate(366,376) scale(1.15)"
+            d="M0,3 C0,-2 -6,-2 -6,3 C-6,7 0,11 0,14 C0,11 6,7 6,3 C6,-2 0,-2 0,3 Z"
+            stroke="var(--chakra-muladhara)" stroke-width="2.4" stroke-linejoin="round"></path>
+        </g>
+
+        <!-- Karmic tail emphasis: a soft spine + glow rings around j/r/d,
+             the three points stacked at the bottom of the chart. Drawn
+             before the point groups so it sits behind them. -->
+        <g id="karmic-tail-highlight">
+          <line class="karmic-tail-spine" x1="333.4" y1="327" x2="332.7" y2="554"></line>
+          <circle class="karmic-tail-glow" cx="332.69" cy="466" r="23"></circle>
+          <circle class="karmic-tail-glow" cx="333" cy="505" r="27"></circle>
+          <circle class="karmic-tail-glow" cx="332.7" cy="554" r="36"></circle>
+          <text class="karmic-tail-caption" x="332.7" y="608">Your Karmic Tail</text>
+        </g>
+
+        <!-- Big points (core four + fghi) -->
+        <g id="points-big">
+          <circle class="point-circle fill-sahasrara" cx="79.2" cy="297" r="30"></circle>
+          <text class="point-text text-light size-big" id="apoint" x="79.2" y="299"></text>
+
+          <circle class="point-circle fill-sahasrara" cx="333.7" cy="42" r="30"></circle>
+          <text class="point-text text-light size-big" id="bpoint" x="333.7" y="44"></text>
+
+          <circle class="point-circle fill-muladhara" cx="587.13" cy="297" r="30"></circle>
+          <text class="point-text text-light size-big" id="cpoint" x="587.4" y="299"></text>
+
+          <circle class="point-circle fill-muladhara" cx="332.7" cy="554" r="30"></circle>
+          <text class="point-text text-light size-big" id="dpoint" x="332.7" y="557"></text>
+
+          <circle class="point-circle fill-manipura" cx="334" cy="297" r="30"></circle>
+          <text class="point-text text-dark size-big" id="epoint" x="334" y="299"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="151" cy="114.22" r="30"></circle>
+          <text class="point-text text-light size-big" id="fpoint" x="151" y="116"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="515.1" cy="114.22" r="30"></circle>
+          <text class="point-text text-light size-big" id="gpoint" x="515.1" y="116"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="514.1" cy="479.62" r="30"></circle>
+          <text class="point-text text-light size-big" id="ipoint" x="514.1" y="481"></text>
+
+          <circle class="point-circle fill-neutral-light" cx="153" cy="479.62" r="30"></circle>
+          <text class="point-text text-light size-big" id="hpoint" x="153" y="481"></text>
+        </g>
+
+        <!-- Medium points -->
+        <g id="points-medium">
+          <circle class="point-circle fill-ajna" cx="127.11" cy="297" r="21"></circle>
+          <text class="point-text text-light size-medium" id="opoint" x="127.11" y="299"></text>
+
+          <circle class="point-circle fill-ajna" cx="333.7" cy="90.62" r="21"></circle>
+          <text class="point-text text-light size-medium" id="ppoint" x="333.7" y="93"></text>
+
+          <circle class="point-circle fill-neutral" cx="333" cy="505" r="21"></circle>
+          <text class="point-text text-light size-medium" id="rpoint" x="333" y="507"></text>
+
+          <circle class="point-circle fill-neutral" cx="538.5" cy="297" r="21"></circle>
+          <text class="point-text text-light size-medium" id="qpoint" x="538.5" y="299"></text>
+        </g>
+
+        <!-- Small points -->
+        <g id="points-small">
+          <circle class="point-circle fill-svadhisthana" cx="332.59" cy="466" r="17"></circle>
+          <text class="point-text text-light size-small" id="jpoint" x="332.69" y="468"></text>
+
+          <circle class="point-circle fill-svadhisthana" cx="500" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="npoint" x="500" y="299"></text>
+
+          <circle class="point-circle fill-neutral" cx="418.18" cy="380.69" r="17"></circle>
+          <text class="point-text text-light size-small" id="lpoint" x="418.18" y="383"></text>
+
+          <circle class="point-circle fill-neutral" cx="375" cy="424" r="17"></circle>
+          <text class="point-text text-light size-small" id="kpoint" x="375" y="427"></text>
+
+          <circle class="point-circle fill-neutral" cx="461" cy="338" r="17"></circle>
+          <text class="point-text text-light size-small" id="mpoint" x="461" y="340"></text>
+
+          <circle class="point-circle fill-vishuddha" cx="165.61" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="spoint" x="165.61" y="299"></text>
+
+          <circle class="point-circle fill-vishuddha" cx="333.7" cy="129" r="17"></circle>
+          <text class="point-text text-light size-small" id="tpoint" x="333.7" y="132"></text>
+
+          <circle class="point-circle fill-anahata" cx="245.26" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="wpoint" x="245.26" y="299"></text>
+
+          <circle class="point-circle fill-anahata" cx="333.7" cy="203" r="17"></circle>
+          <text class="point-text text-light size-small" id="xpoint" x="333.7" y="205"></text>
+        </g>
+
+        <!-- Auxiliary points (f1/f2, g1/g2, h1/h2, i1/i2, u, v) -->
+        <g id="points-aux">
+          <circle class="point-circle fill-neutral" cx="212" cy="175.93" r="17"></circle>
+          <text class="point-text text-light size-small" id="f2point" x="212" y="178"></text>
+
+          <circle class="point-circle fill-neutral" cx="184.71" cy="149.53" r="21"></circle>
+          <text class="point-text text-light size-medium" id="f1point" x="184.71" y="152"></text>
+
+          <circle class="point-circle fill-neutral" cx="455.4" cy="177.53" r="17"></circle>
+          <text class="point-text text-light size-small" id="g2point" x="455.4" y="180"></text>
+
+          <circle class="point-circle fill-neutral" cx="480.79" cy="149.13" r="21"></circle>
+          <text class="point-text text-light size-medium" id="g1point" x="480.79" y="152"></text>
+
+          <circle class="point-circle fill-neutral" cx="454.4" cy="416.91" r="17"></circle>
+          <text class="point-text text-light size-small" id="i2point" x="454.4" y="419"></text>
+
+          <circle class="point-circle fill-neutral" cx="479.79" cy="445.31" r="21"></circle>
+          <text class="point-text text-light size-medium" id="i1point" x="479.79" y="448"></text>
+
+          <circle class="point-circle fill-neutral" cx="215" cy="419" r="17"></circle>
+          <text class="point-text text-light size-small" id="h2point" x="215" y="422"></text>
+
+          <circle class="point-circle fill-neutral" cx="188.71" cy="446.7" r="21"></circle>
+          <text class="point-text text-light size-medium" id="h1point" x="188.71" y="449"></text>
+
+          <circle class="point-circle fill-neutral" cx="420.54" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="vpoint" x="420.54" y="299"></text>
+
+          <circle class="point-circle fill-neutral" cx="382" cy="297" r="21"></circle>
+          <text class="point-text text-light size-medium" id="upoint" x="382" y="299"></text>
+        </g>
+      </svg>
+    </div>
+
+    <hr class="section-divider" />
+
+    <div class="karmic-card scroll-reveal">
+      <h2>Your Karmic Tail</h2>
+      <p class="karmic-status" id="karmic-status"></p>
+      <div id="karmic-result"></div>
+    </div>
+   </div>
+  </div>
+</div>
+
+<script src="../shared/engine/calculations.js"></script>
+<script>
+'use strict';
+
+function renderValues(values) {
+  for (const [key, value] of Object.entries(values)) {
+    const el = document.getElementById(key);
+    if (el) el.textContent = value;
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   KARMIC TAIL CONTENT — loads interpretations/karmic-manifest.json once,
+   then looks up the entry matching jpoint-rpoint-dpoint.
+   ════════════════════════════════════════════════════════════════════ */
+
+const INTERPRETATIONS_BASE = 'interpretations/';
+let karmicEntriesPromise = null;
+
+function loadKarmicEntries() {
+  if (!karmicEntriesPromise) {
+    karmicEntriesPromise = fetch(INTERPRETATIONS_BASE + 'karmic-manifest.json')
+      .then((res) => {
+        if (!res.ok) throw new Error(`Karmic tail content request failed: ${res.status}`);
+        return res.json();
+      });
+  }
+  return karmicEntriesPromise;
+}
+
+function renderKarmicPosition(position) {
+  return `
+    <div class="karmic-position">
+      <p class="karmic-position-heading">${escapeHtml(position.roman)} &middot; <span class="arcana-name">${escapeHtml(position.arcana)}</span> — ${escapeHtml(position.role)}</p>
+      <p>${escapeHtml(position.text)}</p>
+    </div>`;
+}
+
+function renderKarmicEntry(entry) {
+  const positionsHtml = entry.positions.map(renderKarmicPosition).join('');
+  return `
+    <div class="karmic-triplet-badge"><span>${escapeHtml(entry.name)}</span></div>
+    ${positionsHtml}
+    <div class="karmic-summary-grid">
+      <div class="karmic-summary-block shadow">
+        <h3>Shadow</h3>
+        <p>${escapeHtml(entry.shadow)}</p>
+      </div>
+      <div class="karmic-summary-block integrated">
+        <h3>Integrated</h3>
+        <p>${escapeHtml(entry.integrated)}</p>
+      </div>
+      <div class="karmic-summary-block practical">
+        <h3>Where It Shows Up</h3>
+        <p>${escapeHtml(entry.practical)}</p>
+      </div>
+    </div>
+    <div class="karmic-cta">
+      <p>This is one thread. Your full Destiny Matrix reading maps how it connects to everything else in your chart.</p>
+      <a href="../destiny-matrix/destiny-matrix.html" target="_blank">Get your full Destiny Matrix reading</a>
+    </div>`;
+}
+
+async function renderKarmicResult(person) {
+  const resultEl = document.getElementById('karmic-result');
+  const statusEl = document.getElementById('karmic-status');
+  if (!resultEl) return;
+
+  resultEl.innerHTML = '';
+  statusEl.textContent = 'Loading your karmic tail…';
+
+  const cluster = `${person.points.jpoint}-${person.points.rpoint}-${person.points.dpoint}`;
+
+  try {
+    const entries = await loadKarmicEntries();
+    const entry = entries.find((item) => item.cluster === cluster);
+    if (!entry) {
+      statusEl.textContent = 'Your karmic tail content is being written — check back soon.';
+      return;
+    }
+    resultEl.innerHTML = renderKarmicEntry(entry);
+    statusEl.textContent = '';
+  } catch (err) {
+    console.warn('Could not load karmic tail content:', err);
+    statusEl.textContent = 'Your karmic tail could not be loaded right now.';
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM / UI WIRING
+   ════════════════════════════════════════════════════════════════════ */
+
+const dateInput = document.getElementById('date');
+const nameInput = document.getElementById('name');
+const container = document.querySelector('.matrix-container');
+const btnAnswer = document.getElementById('submit-btn');
+const errorOutput = document.querySelector('.error-output');
+const outputDate = document.querySelector('.output-personal-date');
+
+function titleCase(str) {
+  return str.replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+}
+
+function maskDateInput(evt) {
+  let digits = evt.target.value.replace(/\D/g, '').slice(0, 8);
+  let out = digits;
+  if (digits.length > 4) {
+    out = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  } else if (digits.length > 2) {
+    out = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  }
+  evt.target.value = out;
+}
+dateInput.addEventListener('input', maskDateInput);
+
+function parseDdMmYyyy(value) {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+  const [, dd, mm, yyyy] = match;
+  return { day: +dd, month: +mm, year: +yyyy };
+}
+
+function validate(date, name, parsed, dateIsValid) {
+  let errorMessage = '';
+  const today = new Date();
+  const nameValid = new RegExp('^[а-яё\\- ]*[a-z\\- ]*$', 'i');
+
+  if (name === '' || !parsed || !dateIsValid) {
+    errorMessage += `<p>Date is not valid or one of the fields is empty. Use dd/mm/yyyy.</p>`;
+  }
+  if (parsed && dateIsValid && (date > today)) {
+    errorMessage += `<p>Date can't be in the future.</p>`;
+  }
+  if (!nameValid.test(name)) {
+    errorMessage += `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: Anna, Anna-Maria, Anna Maria.</p>`;
+  }
+  return errorMessage !== '' ? errorMessage : true;
+}
+
+function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
+  const parsed = parseDdMmYyyy(calculationDate);
+  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
+  const dateIsValid = isValidCalendarDate(parsed, date);
+  const response = validate(date, name, parsed, dateIsValid);
+
+  outputDate.innerHTML = '';
+  errorOutput.innerHTML = '';
+
+  if (response !== true) {
+    errorOutput.innerHTML = response;
+    container.classList.add('display-none');
+    return;
+  }
+
+  const fullDate = `${String(parsed.day).padStart(2, '0')}.${String(parsed.month).padStart(2, '0')}.${parsed.year}`;
+  outputDate.innerHTML = `${titleCase(name)}'s <span class="gray">Karmic Tail — Date of Birth: ${fullDate}</span>`;
+
+  container.classList.remove('display-none');
+  container.scrollIntoView({ behavior: 'smooth' });
+
+  const apoint = reduceNumber(parsed.day);
+  const bpoint = parsed.month;
+  const cpoint = calculateYear(parsed.year);
+
+  const person = calculatePoints(apoint, bpoint, cpoint);
+
+  renderValues(person.points);
+  renderKarmicResult(person);
+
+  const itemRevealEls = document.querySelectorAll('.item-reveal');
+  itemRevealEls.forEach((el) => el.classList.remove('revealed'));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      itemRevealEls.forEach((el) => el.classList.add('revealed'));
+    });
+  });
+
+  // Same page, no reload/new page — just swap the shareable URL in place.
+  // Everything is recalculated client-side from the URL, nothing is stored server-side.
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('dob', calculationDate.replace(/\//g, '-'));
+    url.searchParams.set('name', name);
+    window.history.pushState({}, '', url);
+  }
+
+  dateInput.value = '';
+  nameInput.value = '';
+}
+
+btnAnswer.addEventListener('click', (evt) => {
+  evt.preventDefault();
+  runCalculation(dateInput.value, nameInput.value);
+});
+
+nameInput.addEventListener('keydown', (evt) => {
+  if (evt.key === 'Enter') btnAnswer.click();
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   SCROLL-REVEAL — result cards fade/slide in as they enter the viewport
+   ════════════════════════════════════════════════════════════════════ */
+
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('revealed');
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.scroll-reveal').forEach((el) => revealObserver.observe(el));
+
+// If the page is opened with ?dob=DD-MM-YYYY&name=... in the URL (e.g. a
+// shared link), fill the inputs and calculate immediately — no click required.
+(function calculateFromUrlIfPresent() {
+  const params = new URLSearchParams(window.location.search);
+  const dFromUrl = params.get('dob');
+  const nameFromUrl = params.get('name');
+
+  if (dFromUrl && nameFromUrl) {
+    const dobFromUrl = dFromUrl.replace(/-/g, '/');
+    dateInput.value = dobFromUrl;
+    nameInput.value = nameFromUrl;
+    runCalculation(dobFromUrl, nameFromUrl, { updateUrl: false });
+  }
+})();
+</script>
+</body>
+</html>
