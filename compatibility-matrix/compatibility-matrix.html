@@ -582,9 +582,22 @@ function maskDateInput(evt) {
     formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
   }
   input.value = formatted;
+  if (digits.length === 8) {
+    if (input === date1Input) {
+      date2Input.focus();
+    } else if (input === date2Input) {
+      btnAnswer.focus();
+    }
+  }
 }
 date1Input.addEventListener('input', maskDateInput);
 date2Input.addEventListener('input', maskDateInput);
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatLongDate(day, month, year) {
+  return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
+}
 
 function parseDdMmYyyy(value) {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
@@ -676,8 +689,8 @@ function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
     return;
   }
 
-  const fullDate1 = `${String(parsed1.day).padStart(2, '0')}.${String(parsed1.month).padStart(2, '0')}.${parsed1.year}`;
-  const fullDate2 = `${String(parsed2.day).padStart(2, '0')}.${String(parsed2.month).padStart(2, '0')}.${parsed2.year}`;
+  const fullDate1 = formatLongDate(parsed1.day, parsed1.month, parsed1.year);
+  const fullDate2 = formatLongDate(parsed2.day, parsed2.month, parsed2.year);
 
   const person1 = calculatePoints(reduceNumber(parsed1.day), parsed1.month, calculateYear(parsed1.year));
   const person2 = calculatePoints(reduceNumber(parsed2.day), parsed2.month, calculateYear(parsed2.year));

@@ -891,8 +891,17 @@ function maskDateInput(evt) {
     formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
   }
   input.value = formatted;
+  if (digits.length === 8) {
+    nameInput.focus();
+  }
 }
 dateInput.addEventListener('input', maskDateInput);
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatLongDate(day, month, year) {
+  return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
+}
 
 function parseDdMmYyyy(value) {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
@@ -933,7 +942,7 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
     return;
   }
 
-  const fullDate = `${String(parsed.day).padStart(2, '0')}.${String(parsed.month).padStart(2, '0')}.${parsed.year}`;
+  const fullDate = formatLongDate(parsed.day, parsed.month, parsed.year);
   outputDate.innerHTML = `${titleCase(name)}'s <span class="gray">Destiny Matrix Chart — Date of Birth: ${fullDate}</span>`;
 
   container.classList.remove('display-none');

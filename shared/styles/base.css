@@ -493,8 +493,11 @@ h3 {
     gap: 24px;
 }
 
-.purposes-grid {
-    grid-template-columns: 1fr;
+
+@media (max-width: 640px) {
+    .purposes-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 
@@ -564,6 +567,18 @@ h3 {
     fill: #000000;
     text-anchor: start;
     dominant-baseline: middle;
+}
+
+
+/* ── Non-selectable calculated output & controls ───────── */
+button,
+.point-text,
+.purpose-node-text,
+.base-circle,
+.year-tick-value {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 }
 
 
