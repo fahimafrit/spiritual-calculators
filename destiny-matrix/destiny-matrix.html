@@ -23,13 +23,6 @@
   }
 
 
-  .chakra-row-reveal{opacity:0; transform:translateX(-60px); transition:opacity .9s cubic-bezier(0.16,1,0.3,1), transform .9s cubic-bezier(0.16,1,0.3,1);}
-
-
-  .chakra-row-reveal.revealed{opacity:1; transform:translateX(0);}
-
-
-
   /* ── Octagram ───────────────────────────────────────── */
   .octagram-card{}
 
@@ -112,7 +105,7 @@
 
   .reading-chevron{
     display:inline-block; font-size:16px; color:var(--gold);
-    transition:transform .25s cubic-bezier(0.16,1,0.3,1); transform:rotate(0deg);
+    transform:rotate(0deg);
   }
   details.reading-section[open] .reading-chevron{transform:rotate(90deg);}
 
@@ -160,10 +153,10 @@
 
   <div class="result-wrap matrix-container display-none">
    <div class="result-card">
-    <div class="output-personal-date scroll-reveal"></div>
+    <div class="output-personal-date"></div>
     <hr class="section-divider" />
 
-    <div class="octagram-card scroll-reveal">
+    <div class="octagram-card">
       <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
         <g id="matrix-frame">
           <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
@@ -512,9 +505,9 @@
     <div class="purposes-card">
       <div class="purposes-grid">
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">Personal purpose</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Soul searching, balance of feminine and masculine qualities, abilities, skills</p>
-          <svg class="purpose-diagram item-reveal" style="transition-delay:0.36s" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
+          <h3>Personal purpose</h3>
+          <p class="purpose-desc">Soul searching, balance of feminine and masculine qualities, abilities, skills</p>
+          <svg class="purpose-diagram" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
             <text class="purpose-node-label" x="2" y="25">Sky</text>
             <circle class="purpose-node-circle" cx="66" cy="25" r="18"></circle>
             <text class="purpose-node-text" id="skypoint" x="66" y="26"></text>
@@ -530,9 +523,9 @@
           </svg>
         </div>
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">Purpose for society &amp; genus</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Tasks for genus, results and recognition in society</p>
-          <svg class="purpose-diagram item-reveal" style="transition-delay:0.36s" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
+          <h3>Purpose for society &amp; genus</h3>
+          <p class="purpose-desc">Tasks for genus, results and recognition in society</p>
+          <svg class="purpose-diagram" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
             <text class="purpose-node-label" x="12" y="25">M</text>
             <circle class="purpose-node-circle" cx="66" cy="25" r="18"></circle>
             <text class="purpose-node-text" id="malepoint" x="66" y="26"></text>
@@ -548,14 +541,14 @@
           </svg>
         </div>
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">General purpose</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Spiritual path, global task, where is the divine in me?</p>
-          <span class="base-circle item-reveal" style="transition-delay:0.36s" id="generalpurpose"></span>
+          <h3>General purpose</h3>
+          <p class="purpose-desc">Spiritual path, global task, where is the divine in me?</p>
+          <span class="base-circle" id="generalpurpose"></span>
         </div>
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">Planetary purpose</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Global soul purpose</p>
-          <span class="base-circle item-reveal" style="transition-delay:0.36s" id="planetarypurpose"></span>
+          <h3>Planetary purpose</h3>
+          <p class="purpose-desc">Global soul purpose</p>
+          <span class="base-circle" id="planetarypurpose"></span>
         </div>
       </div>
     </div>
@@ -601,14 +594,14 @@ function buildChakraTable() {
   const tbody = document.getElementById('chakra-tbody');
   let html = '';
   CHAKRAS.forEach(({ key, name, color }, i) => {
-    html += `<tr class="chakra-row chakra-row-reveal" style="transition-delay:${(i * 0.09).toFixed(2)}s">
+    html += `<tr class="chakra-row">
       <td><span class="chakra-name-pill"><span class="chakra-dot" style="background:${color}; color:${color};"></span>${name}</span></td>
       <td id="${key}physics"></td>
       <td id="${key}energy"></td>
       <td id="${key}emotions"></td>
     </tr>`;
   });
-  html += `<tr class="chakra-result-row chakra-row-reveal" style="transition-delay:${(CHAKRAS.length * 0.09).toFixed(2)}s">
+  html += `<tr class="chakra-result-row">
     <td>Result</td>
     <td id="resultphysics"></td>
     <td id="resultenergy"></td>
@@ -960,27 +953,6 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
   renderValues(person.years);
   renderReading(person);
 
-  // Personal/society purpose headings, descriptions, and structures fire together
-  // by group, regardless of scroll position — not tied to the scroll observer.
-  const itemRevealEls = document.querySelectorAll('.item-reveal');
-  itemRevealEls.forEach((el) => el.classList.remove('revealed'));
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      itemRevealEls.forEach((el) => el.classList.add('revealed'));
-    });
-  });
-
-  // Chakra table rows: reveal all of them together the moment any part of the
-  // table becomes visible, rather than each row waiting for its own turn to
-  // scroll into view. Re-observing forces a fresh intersection check even if
-  // the card was already on screen from a previous calculation.
-  const chakraRows = document.querySelectorAll('.chakra-row-reveal');
-  chakraRows.forEach((el) => el.classList.remove('revealed'));
-  if (chakraCardEl) {
-    rowRevealObserver.unobserve(chakraCardEl);
-    rowRevealObserver.observe(chakraCardEl);
-  }
-
   // Same page, no reload/new page — just swap the shareable URL in place.
   // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
@@ -1002,40 +974,6 @@ btnAnswer.addEventListener('click', (evt) => {
 nameInput.addEventListener('keydown', (evt) => {
   if (evt.key === 'Enter') btnAnswer.click();
 });
-
-/* ════════════════════════════════════════════════════════════════════
-   SCROLL-REVEAL — result cards fade/slide in as they enter the viewport
-   ════════════════════════════════════════════════════════════════════ */
-
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('revealed');
-    }
-  });
-}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-
-document.querySelectorAll('.scroll-reveal').forEach((el) => revealObserver.observe(el));
-
-// Chakra table: the card itself has no animation of its own — it's purely a
-// trigger. The instant any part of it is on screen, every row (already
-// carrying its own transition-delay for the left-to-right sweep) is revealed
-// together, so a half-visible table still finishes its animation in full.
-const chakraCardEl = document.querySelector('.chakra-card');
-const rowRevealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      const rows = entry.target.querySelectorAll('.chakra-row-reveal');
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          rows.forEach((el) => el.classList.add('revealed'));
-        });
-      });
-    }
-  });
-}, { threshold: 0.05 });
-
-if (chakraCardEl) rowRevealObserver.observe(chakraCardEl);
 
 // If the page is opened with ?dob=DD-MM-YYYY&name=... in the URL (e.g. a
 // shared link), fill the inputs and calculate immediately — no click required.

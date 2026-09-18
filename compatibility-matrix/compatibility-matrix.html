@@ -61,7 +61,7 @@
   <div class="error-output"></div>
 
   <div class="result-wrap matrix-container display-none">
-    <div class="result-card scroll-reveal">
+    <div class="result-card">
       <div class="output-personal-date"></div>
       <hr class="section-divider" />
 
@@ -412,9 +412,9 @@
       <div class="purposes-card" id="purposes-card">
       <div class="purposes-grid">
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">Personal purpose</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Soul searching, balance of feminine and masculine qualities, abilities, skills</p>
-          <svg class="purpose-diagram item-reveal" style="transition-delay:0.36s" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
+          <h3>Personal purpose</h3>
+          <p class="purpose-desc">Soul searching, balance of feminine and masculine qualities, abilities, skills</p>
+          <svg class="purpose-diagram" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
             <text class="purpose-node-label" x="2" y="25">Sky</text>
             <circle class="purpose-node-circle" cx="66" cy="25" r="18"></circle>
             <text class="purpose-node-text" id="skypoint" x="66" y="26"></text>
@@ -430,9 +430,9 @@
           </svg>
         </div>
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">Purpose for society &amp; genus</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Tasks for genus, results and recognition in society</p>
-          <svg class="purpose-diagram item-reveal" style="transition-delay:0.36s" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
+          <h3>Purpose for society &amp; genus</h3>
+          <p class="purpose-desc">Tasks for genus, results and recognition in society</p>
+          <svg class="purpose-diagram" viewBox="0 0 240 110" xmlns="http://www.w3.org/2000/svg">
             <text class="purpose-node-label" x="12" y="25">M</text>
             <circle class="purpose-node-circle" cx="66" cy="25" r="18"></circle>
             <text class="purpose-node-text" id="malepoint" x="66" y="26"></text>
@@ -448,14 +448,14 @@
           </svg>
         </div>
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">General purpose</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Spiritual path, global task, where is the divine in me?</p>
-          <span class="base-circle item-reveal" style="transition-delay:0.36s" id="generalpurpose"></span>
+          <h3>General purpose</h3>
+          <p class="purpose-desc">Spiritual path, global task, where is the divine in me?</p>
+          <span class="base-circle" id="generalpurpose"></span>
         </div>
         <div class="purpose-block">
-          <h3 class="item-reveal" style="transition-delay:0.00s">Planetary purpose</h3>
-          <p class="purpose-desc item-reveal" style="transition-delay:0.18s">Global soul purpose</p>
-          <span class="base-circle item-reveal" style="transition-delay:0.36s" id="planetarypurpose"></span>
+          <h3>Planetary purpose</h3>
+          <p class="purpose-desc">Global soul purpose</p>
+          <span class="base-circle" id="planetarypurpose"></span>
         </div>
       </div>
       </div>
@@ -654,15 +654,6 @@ function renderTab(tab) {
     renderValues(person.years);
   }
 
-  // Personal/society purpose headings, descriptions, and structures fire together
-  // by group, regardless of scroll position — not tied to the scroll observer.
-  const itemRevealEls = document.querySelectorAll('.item-reveal');
-  itemRevealEls.forEach((el) => el.classList.remove('revealed'));
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      itemRevealEls.forEach((el) => el.classList.add('revealed'));
-    });
-  });
 }
 
 tabButtons.forEach((btn) => {
@@ -726,20 +717,6 @@ btnAnswer.addEventListener('click', (evt) => {
 date2Input.addEventListener('keydown', (evt) => {
   if (evt.key === 'Enter') btnAnswer.click();
 });
-
-/* ════════════════════════════════════════════════════════════════════
-   SCROLL-REVEAL — result cards fade/slide in as they enter the viewport
-   ════════════════════════════════════════════════════════════════════ */
-
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('revealed');
-    }
-  });
-}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-
-document.querySelectorAll('.scroll-reveal').forEach((el) => revealObserver.observe(el));
 
 // If the page is opened with ?dob1=DD-MM-YYYY&dob2=DD-MM-YYYY in the URL
 // (e.g. a shared link), fill the inputs and calculate immediately.

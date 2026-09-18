@@ -124,10 +124,10 @@
 
   <div class="result-wrap matrix-container display-none">
    <div class="result-card">
-    <div class="output-personal-date scroll-reveal"></div>
+    <div class="output-personal-date"></div>
     <hr class="section-divider" />
 
-    <div class="octagram-card scroll-reveal">
+    <div class="octagram-card">
       <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
         <g id="matrix-frame">
           <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
@@ -286,7 +286,7 @@
 
     <hr class="section-divider" />
 
-    <div class="karmic-card scroll-reveal">
+    <div class="karmic-card">
       <h2>Your Karmic Tail</h2>
       <p class="karmic-status" id="karmic-status"></p>
       <div id="karmic-result"></div>
@@ -480,14 +480,6 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
   renderValues(person.points);
   renderKarmicResult(person);
 
-  const itemRevealEls = document.querySelectorAll('.item-reveal');
-  itemRevealEls.forEach((el) => el.classList.remove('revealed'));
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      itemRevealEls.forEach((el) => el.classList.add('revealed'));
-    });
-  });
-
   // Same page, no reload/new page — just swap the shareable URL in place.
   // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
@@ -509,20 +501,6 @@ btnAnswer.addEventListener('click', (evt) => {
 nameInput.addEventListener('keydown', (evt) => {
   if (evt.key === 'Enter') btnAnswer.click();
 });
-
-/* ════════════════════════════════════════════════════════════════════
-   SCROLL-REVEAL — result cards fade/slide in as they enter the viewport
-   ════════════════════════════════════════════════════════════════════ */
-
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('revealed');
-    }
-  });
-}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-
-document.querySelectorAll('.scroll-reveal').forEach((el) => revealObserver.observe(el));
 
 // If the page is opened with ?dob=DD-MM-YYYY&name=... in the URL (e.g. a
 // shared link), fill the inputs and calculate immediately — no click required.

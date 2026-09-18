@@ -128,7 +128,6 @@ h3 {
     font-size: 16px;
     font-family: 'Nunito', sans-serif;
     outline: none;
-    transition: border-color .2s, box-shadow .2s;
 }
 
 
@@ -188,33 +187,6 @@ h3 {
 .result-wrap {
     margin-top: 48px;
 }
-
-
-.scroll-reveal {
-    opacity: 0;
-    transform: translateY(46px) scale(0.98);
-    transition: opacity .75s cubic-bezier(0.16, 1, 0.3, 1), transform .75s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-
-.scroll-reveal.revealed {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-}
-
-
-.item-reveal {
-    opacity: 0;
-    transform: translateY(16px);
-    transition: opacity .55s cubic-bezier(0.16, 1, 0.3, 1), transform .55s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-
-.item-reveal.revealed {
-    opacity: 1;
-    transform: translateY(0);
-}
-
 
 
 /* ── Result card — everything (heading, matrix, purposes)
