@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../shared/styles/base.css" />
+<link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
 <style>
   /* ── Karmic tail highlight on the octagram ─────────────────────── */
   .karmic-tail-spine{
@@ -295,8 +295,8 @@
   </div>
 </div>
 
-<script src="../shared/engine/calculations.js"></script>
-<script src="../shared/engine/ui-effects.js"></script>
+<script src="../assets/js/destiny-matrix/calculations.js"></script>
+<script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
 
@@ -319,7 +319,7 @@ function escapeHtml(str) {
    then looks up the entry matching jpoint-rpoint-dpoint.
    ════════════════════════════════════════════════════════════════════ */
 
-const INTERPRETATIONS_BASE = 'interpretations/';
+const INTERPRETATIONS_BASE = 'data/karmic-tail-readings/';
 let karmicEntriesPromise = null;
 
 function loadKarmicEntries() {

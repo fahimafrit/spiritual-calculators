@@ -3,74 +3,160 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Compatibility Matrix Calculator</title>
+<title>Destiny Matrix Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../shared/styles/base.css" />
+<link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
 <style>
-  /* Page-specific styles (not shared with other calculators) */
-
-
-  /* ── Tabs ───────────────────────────────────────────── */
-  .tabs-row{
-    display:flex; justify-content:center; gap:10px; margin-bottom:28px; flex-wrap:wrap;
+  /* Page-specific: alias chakra names used in markup/JS to the
+     shared --tone-* variables defined in base.css */
+  :root{
+    --chakra-muladhara: var(--tone-muladhara);
+    --chakra-svadhisthana: var(--tone-svadhisthana);
+    --chakra-manipura: var(--tone-manipura);
+    --chakra-anahata: var(--tone-anahata);
+    --chakra-vishuddha: var(--tone-vishuddha);
+    --chakra-ajna: var(--tone-ajna);
+    --chakra-sahasrara: var(--tone-sahasrara);
   }
-
-
-  .tab-btn{
-    background:var(--card-bg); border:1px solid var(--card-border); border-radius:999px;
-    padding:10px 22px; font-family:'Nunito',sans-serif; font-weight:800; font-size:14px;
-    letter-spacing:0.03em; color:var(--ink); cursor:pointer; transition:transform .15s, box-shadow .15s, background .15s, color .15s;
-    text-transform:uppercase;
-  }
-
-
-  .tab-btn:hover{transform:translateY(-1px); box-shadow:0 8px 18px rgba(36,26,68,0.10);}
-
-
-  .tab-btn.active{
-    background:linear-gradient(135deg,var(--gold-bright),var(--gold)); color:#ffffff; border-color:transparent;
-  }
-
 
 
   /* ── Octagram ───────────────────────────────────────── */
-  .octagram-section{}
+  .octagram-card{}
+
+
+
+  /* ── Chakra table ───────────────────────────────────── */
+  .chakra-card{overflow-x:auto; overflow-y:hidden;}
+
+
+  .chakra-card h2{text-align:center; margin:0 0 20px; font-size:24px; color:var(--ink);}
+
+
+  table.chakra-table{width:100%; border-collapse:separate; border-spacing:0 6px; min-width:520px;}
+
+
+  .chakra-table th{
+    font-family:'Nunito',sans-serif; text-transform:uppercase; font-size:11px; letter-spacing:0.08em;
+    color:#000000; font-weight:800; padding:6px 10px; text-align:center;
+  }
+
+
+  .chakra-table th:first-child{text-align:left;}
+
+
+  .chakra-row td{background:rgba(36,26,68,0.035); padding:12px 10px; text-align:center; font-size:18px; font-weight:700; color:var(--ink);}
+
+
+  .chakra-row td:first-child{text-align:left; border-radius:10px 0 0 10px;}
+
+
+  .chakra-row td:last-child{border-radius:0 10px 10px 0;}
+
+
+  .chakra-name-pill{
+    display:inline-flex; align-items:center; gap:10px; font-family:'Nunito',sans-serif; font-size:18px; font-weight:700;
+  }
+
+
+  .chakra-dot{width:14px; height:14px; border-radius:50%; display:inline-block;}
+
+
+  .chakra-result-row td{
+    background:linear-gradient(135deg,#fff8ec,#fdf1dc);
+    font-weight:800; font-size:20px; color:var(--gold);
+    border-top:2px solid var(--gold); padding:14px 10px;
+  }
+
+
+  .chakra-result-row td:first-child{
+    text-transform:uppercase; font-size:12.5px; letter-spacing:0.1em; font-family:'Nunito',sans-serif;
+    border-radius:10px 0 0 10px; color:#000000;
+  }
+
+
+  .chakra-result-row td:last-child{border-radius:0 10px 10px 0;}
+
+
+  /* ── Interpretation reading ────────────────────────── */
+  .reading-card h2{text-align:center; margin:0 0 8px; font-size:24px; color:var(--ink);}
+
+  .reading-status{text-align:center; color:var(--ink-faint); font-size:14px; margin:0 0 24px;}
+  .reading-status:empty{display:none;}
+
+  details.reading-section{
+    margin:0 0 14px; border:1px solid var(--line-soft); border-radius:12px;
+    overflow:hidden;
+  }
+  details.reading-section:last-child{margin-bottom:0;}
+
+  details.reading-section summary.reading-section-title{
+    cursor:pointer; list-style:none; display:flex; align-items:center; gap:10px;
+    font-family:'Nunito',sans-serif; font-weight:800; font-size:17px; color:var(--ink);
+    padding:16px 20px; margin:0; background:rgba(169,120,47,0.06);
+    border-bottom:1px solid transparent; transition:background .2s ease;
+  }
+  details.reading-section summary.reading-section-title::-webkit-details-marker{display:none;}
+  details.reading-section summary.reading-section-title::marker{content:'';}
+  details.reading-section summary.reading-section-title:hover{background:rgba(169,120,47,0.12);}
+  details.reading-section[open] summary.reading-section-title{border-bottom-color:var(--line-soft);}
+
+  .reading-chevron{
+    display:inline-block; font-size:16px; color:var(--gold);
+    transform:rotate(0deg);
+  }
+  details.reading-section[open] .reading-chevron{transform:rotate(90deg);}
+
+  .reading-section-body{padding:18px 20px 20px;}
+
+  .reading-tabs{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px;}
+
+  .reading-tab{
+    font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:var(--ink-soft);
+    background:rgba(36,26,68,0.045); border:1px solid transparent; border-radius:999px;
+    padding:7px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
+    transition:background .2s ease, color .2s ease;
+  }
+  .reading-tab.active{background:var(--gold); color:#ffffff;}
+  .reading-tab:hover:not(.active){background:rgba(169,120,47,0.18);}
+
+  .reading-tab-panel{display:none;}
+  .reading-tab-panel.active{display:block;}
+
+  .reading-subsection-text{color:var(--ink-soft); font-size:15px; line-height:1.65; margin:0 0 12px;}
+  .reading-subsection-text:last-child{margin-bottom:0;}
+
+  .reading-chakra-dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
 </style>
 </head>
+
 <body>
 
 <div class="container">
-  <h1 class="page-title">Compatibility Matrix Calculator</h1>
-  <p class="page-subtitle">Discover how your soul blueprints align</p>
+  <h1 class="page-title">Destiny Matrix Calculator</h1>
+  <p class="page-subtitle">Discover your soul's blueprint</p>
 
   <div class="form-card">
     <div class="field">
-      <label for="date1">Date of birth</label>
-      <input id="date1" type="text" placeholder="Partner 1" onfocus="this.placeholder='dd/mm/yyyy'" onblur="this.placeholder='Partner 1'" maxlength="10" autocomplete="off" inputmode="numeric" />
+      <label for="date">Date of birth</label>
+      <input id="date" type="text" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off" inputmode="numeric" />
     </div>
     <div class="field">
-      <label for="date2">Date of birth</label>
-      <input id="date2" type="text" placeholder="Partner 2" onfocus="this.placeholder='dd/mm/yyyy'" onblur="this.placeholder='Partner 2'" maxlength="10" autocomplete="off" inputmode="numeric" />
+      <label for="name">Name</label>
+      <input id="name" type="text" placeholder="Your name" />
     </div>
-    <button id="submit-btn">Create compatibility chart</button>
+    <button id="submit-btn">Create your chart</button>
   </div>
   <div class="error-output"></div>
 
   <div class="result-wrap matrix-container display-none">
-    <div class="result-card">
-      <div class="output-personal-date"></div>
-      <hr class="section-divider" />
+   <div class="result-card">
+    <div class="output-personal-date"></div>
+    <hr class="section-divider" />
 
-      <div class="tabs-row">
-        <button class="tab-btn active" type="button" data-tab="compat">Compatibility</button>
-        <button class="tab-btn" type="button" data-tab="p1">Person 1</button>
-        <button class="tab-btn" type="button" data-tab="p2">Person 2</button>
-      </div>
-
-      <div class="octagram-section" data-reveal>
+    <div class="octagram-card" data-reveal>
       <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
         <g id="matrix-frame">
           <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
@@ -103,7 +189,7 @@
 
           <path class="icon-heart" transform="translate(366,376) scale(1.15)"
             d="M0,3 C0,-2 -6,-2 -6,3 C-6,7 0,11 0,14 C0,11 6,7 6,3 C6,-2 0,-2 0,3 Z"
-            stroke="var(--tone-muladhara)" stroke-width="2.4" stroke-linejoin="round"></path>
+            stroke="var(--chakra-muladhara)" stroke-width="2.4" stroke-linejoin="round"></path>
         </g>
 
         <!-- Small ring ticks sitting on the octagon edge: 7 per side, middle = hollow circle, others = filled dot -->
@@ -233,15 +319,11 @@
           <circle class="point-circle fill-vishuddha" cx="333.7" cy="129" r="17"></circle>
           <text class="point-text text-light size-small" id="tpoint" x="333.7" y="132"></text>
 
-          <g id="pt-w">
-            <circle class="point-circle fill-anahata" cx="245.26" cy="297" r="17"></circle>
-            <text class="point-text text-light size-small" id="wpoint" x="245.26" y="299"></text>
-          </g>
+          <circle class="point-circle fill-anahata" cx="245.26" cy="297" r="17"></circle>
+          <text class="point-text text-light size-small" id="wpoint" x="245.26" y="299"></text>
 
-          <g id="pt-x">
-            <circle class="point-circle fill-anahata" cx="333.7" cy="203" r="17"></circle>
-            <text class="point-text text-light size-small" id="xpoint" x="333.7" y="205"></text>
-          </g>
+          <circle class="point-circle fill-anahata" cx="333.7" cy="203" r="17"></circle>
+          <text class="point-text text-light size-small" id="xpoint" x="333.7" y="205"></text>
         </g>
 
         <!-- Auxiliary points (f1/f2, g1/g2, h1/h2, i1/i2, u, v) -->
@@ -404,11 +486,23 @@
           <text class="year-tick-value" id="ha6point" transform="translate(49 349.5) rotate(67.5)"></text>
         </g>
       </svg>
-      </div>
+    </div>
+    <hr class="section-divider" />
 
-      <hr class="section-divider" />
+    <div class="chakra-card" data-reveal style="--reveal-delay:.08s">
+      <h2>Chakra Table</h2>
+      <table class="chakra-table">
+        <thead>
+          <tr><th>Chakra</th><th>Physics</th><th>Energy</th><th>Emotions</th></tr>
+        </thead>
+        <tbody id="chakra-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+    <hr class="section-divider" />
 
-      <div class="purposes-card" id="purposes-card">
+    <div class="purposes-card">
       <div class="purposes-grid">
         <div class="purpose-block">
           <h3>Personal purpose</h3>
@@ -457,74 +551,24 @@
           <span class="base-circle" id="planetarypurpose"></span>
         </div>
       </div>
-      </div>
     </div>
+    <hr class="section-divider" />
+
+    <div class="reading-card" data-reveal style="--reveal-delay:.16s">
+      <h2>Your Full Reading</h2>
+      <p class="reading-status" id="reading-status"></p>
+      <div id="reading-sections"></div>
+    </div>
+   </div>
   </div>
 </div>
 
 
 
-<script src="../shared/engine/calculations.js"></script>
-<script src="../shared/engine/ui-effects.js"></script>
+<script src="../assets/js/destiny-matrix/calculations.js"></script>
+<script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
-
-
-/* ════════════════════════════════════════════════════════════════════
-   COMPATIBILITY ENGINE
-   a–i: reduced sum of the same-position point from each personal matrix.
-   j,k,l,m,n,o,p,q,r,s,t: derived from the compatibility matrix's own
-   a–i using the same formulas calculatePoints uses — never pulled
-   from either personal matrix directly.
-   Purposes: derived the same way, from the compatibility matrix's own
-   a,b,c,d,f,g,h,i — same formulas as calculatePoints.
-   ════════════════════════════════════════════════════════════════════ */
-
-const calculateCompatibility = (person1Points, person2Points) => {
-  const apoint = reduceNumber(person1Points.apoint + person2Points.apoint);
-  const bpoint = reduceNumber(person1Points.bpoint + person2Points.bpoint);
-  const cpoint = reduceNumber(person1Points.cpoint + person2Points.cpoint);
-  const dpoint = reduceNumber(person1Points.dpoint + person2Points.dpoint);
-  const epoint = reduceNumber(person1Points.epoint + person2Points.epoint);
-  const fpoint = reduceNumber(person1Points.fpoint + person2Points.fpoint);
-  const gpoint = reduceNumber(person1Points.gpoint + person2Points.gpoint);
-  const hpoint = reduceNumber(person1Points.hpoint + person2Points.hpoint);
-  const ipoint = reduceNumber(person1Points.ipoint + person2Points.ipoint);
-
-  const jpoint = reduceNumber(dpoint + epoint);
-  const npoint = reduceNumber(cpoint + epoint);
-  const lpoint = reduceNumber(jpoint + npoint);
-  const mpoint = reduceNumber(lpoint + npoint);
-  const kpoint = reduceNumber(jpoint + lpoint);
-  const qpoint = reduceNumber(npoint + cpoint);
-  const rpoint = reduceNumber(jpoint + dpoint);
-  const spoint = reduceNumber(apoint + epoint);
-  const tpoint = reduceNumber(bpoint + epoint);
-  const opoint = reduceNumber(apoint + spoint);
-  const ppoint = reduceNumber(bpoint + tpoint);
-
-  const points = {
-    apoint, bpoint, cpoint, dpoint, epoint, fpoint, gpoint, hpoint, ipoint,
-    jpoint, kpoint, lpoint, mpoint, npoint, opoint, ppoint, qpoint, rpoint, spoint, tpoint,
-  };
-
-  const skypoint = reduceNumber(bpoint + dpoint);
-  const earthpoint = reduceNumber(apoint + cpoint);
-  const perspurpose = reduceNumber(skypoint + earthpoint);
-  const femalepoint = reduceNumber(gpoint + hpoint);
-  const malepoint = reduceNumber(fpoint + ipoint);
-  const socialpurpose = reduceNumber(femalepoint + malepoint);
-  const generalpurpose = reduceNumber(perspurpose + socialpurpose);
-  const planetarypurpose = reduceNumber(socialpurpose + generalpurpose);
-
-  const purposes = {
-    skypoint, earthpoint, perspurpose,
-    femalepoint, malepoint, socialpurpose,
-    generalpurpose, planetarypurpose,
-  };
-
-  return { points, purposes };
-};
 
 function renderValues(values) {
   for (const [key, value] of Object.entries(values)) {
@@ -534,48 +578,58 @@ function renderValues(values) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   FORM / UI WIRING
+   CHAKRA TABLE RENDERING
    ════════════════════════════════════════════════════════════════════ */
 
-const date1Input = document.getElementById('date1');
-const date2Input = document.getElementById('date2');
-const container = document.querySelector('.matrix-container');
-const btnAnswer = document.getElementById('submit-btn');
-const errorOutput = document.querySelector('.error-output');
-const outputDate = document.querySelector('.output-personal-date');
-const purposesCard = document.getElementById('purposes-card');
-const tabButtons = document.querySelectorAll('.tab-btn');
+const CHAKRAS = [
+  { key: 'sah', name: 'Sahasrara', color: 'var(--chakra-sahasrara)' },
+  { key: 'aj',  name: 'Ajna',      color: 'var(--chakra-ajna)' },
+  { key: 'vish',name: 'Vishuddha', color: 'var(--chakra-vishuddha)' },
+  { key: 'anah',name: 'Anahata',   color: 'var(--chakra-anahata)' },
+  { key: 'man', name: 'Manipura',  color: 'var(--chakra-manipura)' },
+  { key: 'svad',name: 'Svadhisthana', color: 'var(--chakra-svadhisthana)' },
+  { key: 'mul', name: 'Muladhara', color: 'var(--chakra-muladhara)' },
+];
 
-// Ids of the SVG groups/points that only belong to a full 32-point personal
-// matrix and have no place in the 20-point compatibility matrix.
-const PERSONAL_ONLY_GROUP_IDS = ['points-aux', 'points-years', 'age-tick-dots', 'pt-w', 'pt-x'];
-
-// The 20 point ids the compatibility matrix actually fills.
-const COMPAT_POINT_IDS = ['apoint','bpoint','cpoint','dpoint','epoint','fpoint','gpoint','hpoint','ipoint',
-  'jpoint','kpoint','lpoint','mpoint','npoint','opoint','ppoint','qpoint','rpoint','spoint','tpoint'];
-
-// Everything the personal matrix can populate: the 32 matrix points, the
-// year-band ring, and the purposes diagrams.
-const ALL_POINT_IDS = ['apoint','bpoint','cpoint','dpoint','epoint','fpoint','gpoint','hpoint','ipoint',
-  'jpoint','kpoint','lpoint','mpoint','npoint','opoint','ppoint','qpoint','rpoint','spoint','tpoint',
-  'upoint','vpoint','wpoint','xpoint','f2point','f1point','g2point','g1point','i2point','i1point','h2point','h1point',
-  'afpoint','af1point','af2point','af3point','af4point','af5point','af6point',
-  'fbpoint','fb1point','fb2point','fb3point','fb4point','fb5point','fb6point',
-  'bgpoint','bg1point','bg2point','bg3point','bg4point','bg5point','bg6point',
-  'gcpoint','gc1point','gc2point','gc3point','gc4point','gc5point','gc6point',
-  'cipoint','ci1point','ci2point','ci3point','ci4point','ci5point','ci6point',
-  'idpoint','id1point','id2point','id3point','id4point','id5point','id6point',
-  'dhpoint','dh1point','dh2point','dh3point','dh4point','dh5point','dh6point',
-  'hapoint','ha1point','ha2point','ha3point','ha4point','ha5point','ha6point',
-  'skypoint','earthpoint','perspurpose','femalepoint','malepoint','socialpurpose','generalpurpose','planetarypurpose'];
-
-let activeTab = 'compat';
-let results = null; // { person1: {points,purposes,chartHeart,years}, person2: {...}, compat: {...}, fullDate1, fullDate2 }
+function buildChakraTable() {
+  const tbody = document.getElementById('chakra-tbody');
+  let html = '';
+  CHAKRAS.forEach(({ key, name, color }, i) => {
+    html += `<tr class="chakra-row">
+      <td><span class="chakra-name-pill"><span class="chakra-dot" style="background:${color}; color:${color};"></span>${name}</span></td>
+      <td id="${key}physics"></td>
+      <td id="${key}energy"></td>
+      <td id="${key}emotions"></td>
+    </tr>`;
+  });
+  html += `<tr class="chakra-result-row">
+    <td>Result</td>
+    <td id="resultphysics"></td>
+    <td id="resultenergy"></td>
+    <td id="resultemotions"></td>
+  </tr>`;
+  tbody.innerHTML = html;
+}
+buildChakraTable();
+UIEffects.staggerReveal(
+  document.querySelectorAll('#chakra-tbody tr'),
+  { from: 'translate(-28px, 18px)', step: 0.05, start: 0.1 }
+);
 
 /* Purpose blocks: heading, text, and diagram/circle reveal in their
-   own sequence on first appearance — never the whole block at once. */
+   own sequence — never the whole block at once.
+
+   We also track the moment this whole sequence is guaranteed to have
+   finished animating (purposesRevealedPromise below). The interpretation
+   sections lower on the page wait on that promise before they start
+   watching for their own scroll-reveal, so a fast scroll can never let
+   them visually overtake the purposes block above them. */
+let purposesRevealed;
+const purposesRevealedPromise = new Promise((resolve) => { purposesRevealed = resolve; });
+
 (function revealPurposeBlocks() {
   let i = 0;
+  let lastDelay = 0;
   document.querySelectorAll('.purpose-block').forEach((block) => {
     const parts = [
       block.querySelector('h3'),
@@ -584,12 +638,322 @@ let results = null; // { person1: {points,purposes,chartHeart,years}, person2: {
     ];
     parts.forEach((el) => {
       if (!el) return;
+      const delay = i * 0.09;
       el.setAttribute('data-reveal', '');
-      el.style.setProperty('--reveal-delay', (i * 0.09).toFixed(2) + 's');
+      el.style.setProperty('--reveal-delay', delay.toFixed(2) + 's');
+      lastDelay = delay;
       i += 1;
     });
   });
+  UIEffects.revealOnScroll();
+
+  const prefersReducedMotion = !!(window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const purposesCard = document.querySelector('.purposes-card');
+  const REVEAL_TRANSITION_MS = 550; // matches the [data-reveal] transition duration in base.css
+
+  if (prefersReducedMotion || !purposesCard || !('IntersectionObserver' in window)) {
+    purposesRevealed();
+  } else {
+    const purposesWatcher = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        purposesWatcher.disconnect();
+        setTimeout(purposesRevealed, lastDelay * 1000 + REVEAL_TRANSITION_MS);
+      });
+    }, { threshold: 0.01 });
+    purposesWatcher.observe(purposesCard);
+  }
 })();
+
+function renderChakraTable(chartHeart) {
+  const rows = [
+    { keys: ['sahphysics','ajphysics','vishphysics','anahphysics','manphysics','svadphysics','mulphysics'], resultId: 'resultphysics' },
+    { keys: ['sahenergy','ajenergy','vishenergy','anahenergy','manenergy','svadenergy','mulenergy'], resultId: 'resultenergy' },
+    { keys: ['sahemotions','ajemotions','vishemotions','anahemotions','manemotions','svademotions','mulemotions'], resultId: 'resultemotions' },
+  ];
+  rows.forEach(({ keys, resultId }) => {
+    let sum = 0;
+    keys.forEach((key) => {
+      const el = document.getElementById(key);
+      if (el) el.textContent = chartHeart[key];
+      sum += chartHeart[key];
+    });
+    const resultEl = document.getElementById(resultId);
+    if (resultEl) resultEl.textContent = reduceNumber(sum);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   INTERPRETATION READING
+   Loads interpretations/destiny-manifest.json once, then fetches each
+   referenced interpretation file on demand (cached after first use) and
+   renders every section's subsections into #reading-sections.
+   ════════════════════════════════════════════════════════════════════ */
+
+const INTERPRETATIONS_BASE = 'data/destiny-matrix-readings/';
+const readingFileCache = new Map(); // filename -> Promise<parsed JSON>
+let readingManifestPromise = null;
+
+const CHAKRA_FULL_NAME = {
+  sah: 'sahasrara', aj: 'ajna', vish: 'vishuddha', anah: 'anahata',
+  man: 'manipura', svad: 'svadhisthana', mul: 'muladhara',
+};
+
+function loadManifest() {
+  if (!readingManifestPromise) {
+    readingManifestPromise = fetch(INTERPRETATIONS_BASE + 'destiny-manifest.json')
+      .then((res) => {
+        if (!res.ok) throw new Error(`Manifest request failed: ${res.status}`);
+        return res.json();
+      });
+  }
+  return readingManifestPromise;
+}
+
+function loadInterpretationFile(filename) {
+  if (!readingFileCache.has(filename)) {
+    readingFileCache.set(
+      filename,
+      fetch(INTERPRETATIONS_BASE + filename).then((res) => {
+        if (!res.ok) throw new Error(`Failed to load ${filename}: ${res.status}`);
+        return res.json();
+      })
+    );
+  }
+  return readingFileCache.get(filename);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderTabsAndPanels(items) {
+  // items: array of { label (HTML, pre-escaped by caller), contentHtml }
+  const tabs = items.map((item, i) => `
+    <button type="button" class="reading-tab${i === 0 ? ' active' : ''}" data-tab-index="${i}">${item.label}</button>
+  `).join('');
+  const panels = items.map((item, i) => `
+    <div class="reading-tab-panel${i === 0 ? ' active' : ''}" data-tab-index="${i}">${item.contentHtml}</div>
+  `).join('');
+  return `
+    <div class="reading-tabs" role="tablist">${tabs}</div>
+    <div class="reading-tab-panels">${panels}</div>
+  `;
+}
+
+function buildSectionDropdownHtml(section, items) {
+  if (!items || items.length === 0) return null;
+  return `
+    <details class="reading-section" id="reading-${section.id}">
+      <summary class="reading-section-title"><span class="reading-chevron">&#8250;</span>${escapeHtml(section.title)}</summary>
+      <div class="reading-section-body">
+        ${renderTabsAndPanels(items)}
+      </div>
+    </details>
+  `;
+}
+
+/* Standard "arcana" lookup: entries keyed by an integer 1-22. */
+function findArcanaEntry(fileData, value) {
+  if (!Array.isArray(fileData)) return null;
+  return fileData.find((entry) => entry.arcana === value) || null;
+}
+
+/* Cluster lookup (Soul's Journey): entries keyed by a "j-k-l" string. */
+function findClusterEntry(fileData, clusterKey) {
+  if (!Array.isArray(fileData)) return null;
+  return fileData.find((entry) => entry.cluster === clusterKey) || null;
+}
+
+/* Resolve the lookup key for a manifest section from the computed points. */
+function resolveSectionKey(section, person, currentYearArcana) {
+  if (section.lookup === 'cluster') {
+    const values = section.sourcePoints.map((p) => person.points[p]);
+    if (values.some((v) => v === undefined)) return null;
+    return values.join('-');
+  }
+  if (section.lookup === 'arcana') {
+    if (section.derived === 'personalYear') return currentYearArcana;
+    const key = section.sourcePoints[0];
+    if (key in person.points) return person.points[key];
+    if (key in person.purposes) return person.purposes[key];
+    return null;
+  }
+  return null;
+}
+
+/* Each subsection (heading + text) becomes one tab in the dropdown. */
+function buildStandardSectionHtml(section, entry) {
+  if (!entry || !Array.isArray(entry.subsections) || entry.subsections.length === 0) return null;
+  const items = entry.subsections.map((sub) => ({
+    label: escapeHtml(sub.heading),
+    contentHtml: `<p class="reading-subsection-text">${escapeHtml(sub.text)}</p>`,
+  }));
+  return buildSectionDropdownHtml(section, items);
+}
+
+/* Body & Energy Map: one dropdown, one tab per chakra (Physics/Energy/Emotions stacked inside). */
+function buildChakraSectionHtml(section, chakraFileData, chartHeart) {
+  if (!Array.isArray(chakraFileData) || chakraFileData.length === 0) return null;
+
+  const items = [];
+  Object.entries(CHAKRA_FULL_NAME).forEach(([abbrev, fullName]) => {
+    const entry = chakraFileData.find((e) => e.chakra === fullName);
+    if (!entry) return; // this chakra's content not written yet — skip quietly
+
+    const physicsVal = chartHeart[`${abbrev}physics`];
+    const energyVal = chartHeart[`${abbrev}energy`];
+    const emotionsVal = chartHeart[`${abbrev}emotions`];
+
+    const paragraphs = [];
+    if (entry.physics_text) {
+      paragraphs.push(entry.physics_text);
+    } else if (entry.physics && entry.physics[String(physicsVal)]) {
+      paragraphs.push(entry.physics[String(physicsVal)]);
+    }
+    if (entry.energy_text) {
+      paragraphs.push(entry.energy_text);
+    } else if (entry.energy && entry.energy[String(energyVal)]) {
+      paragraphs.push(entry.energy[String(energyVal)]);
+    }
+    if (entry.emotions_text) {
+      paragraphs.push(entry.emotions_text);
+    } else if (entry.emotions && entry.emotions[String(emotionsVal)]) {
+      paragraphs.push(entry.emotions[String(emotionsVal)]);
+    }
+
+    if (paragraphs.length === 0) return;
+
+    const chakraMeta = CHAKRAS.find((c) => c.key === abbrev);
+    const color = chakraMeta ? chakraMeta.color : 'var(--gold)';
+    const label = chakraMeta ? chakraMeta.name : fullName;
+
+    items.push({
+      label: `<span class="reading-chakra-dot" style="background:${color};"></span>${escapeHtml(label)}`,
+      contentHtml: paragraphs.map((p) => `<p class="reading-subsection-text">${escapeHtml(p)}</p>`).join(''),
+    });
+  });
+
+  return buildSectionDropdownHtml(section, items);
+}
+
+
+async function renderSectionForManifestEntry(section, person, currentYearArcana) {
+  try {
+    const fileData = await loadInterpretationFile(section.file);
+
+    if (section.lookup === 'chakra') {
+      return buildChakraSectionHtml(section, fileData, person.chartHeart);
+    }
+
+    const key = resolveSectionKey(section, person, currentYearArcana);
+    if (key === null) return null;
+
+    const entry = section.lookup === 'cluster'
+      ? findClusterEntry(fileData, key)
+      : findArcanaEntry(fileData, key);
+
+    return buildStandardSectionHtml(section, entry);
+  } catch (err) {
+    console.warn(`Reading section "${section.id}" could not be rendered:`, err);
+    return null;
+  }
+}
+
+async function renderReading(person) {
+  const readingContainer = document.getElementById('reading-sections');
+  const statusEl = document.getElementById('reading-status');
+  if (!readingContainer) return;
+
+  readingContainer.innerHTML = '';
+  statusEl.textContent = 'Loading your reading…';
+
+  try {
+    const manifest = await loadManifest();
+    const sections = [...manifest.sections].sort((a, b) => a.order - b.order);
+    const currentYearArcana = calculateYear(new Date().getFullYear());
+
+    const htmlChunks = await Promise.all(
+      sections.map((section) => renderSectionForManifestEntry(section, person, currentYearArcana))
+    );
+
+    const rendered = htmlChunks.filter(Boolean);
+    readingContainer.innerHTML = rendered.join('');
+    statusEl.textContent = rendered.length === 0
+      ? 'Your reading content is being written — check back soon.'
+      : '';
+
+    // Mark these for reveal right away, so they render hidden instead of
+    // flashing fully visible for a moment — but don't start *watching*
+    // them for scroll entry until the purposes block above has finished
+    // its own reveal sequence. See purposesRevealedPromise above.
+    readingContainer.querySelectorAll('.reading-section').forEach((el, i) => {
+      el.setAttribute('data-reveal', '');
+      el.style.setProperty('--reveal-from', 'translate(-28px, 18px)');
+      el.style.setProperty('--reveal-delay', (i * 0.06).toFixed(2) + 's');
+    });
+
+    await purposesRevealedPromise;
+    UIEffects.revealOnScroll(readingContainer);
+  } catch (err) {
+    console.warn('Could not load the interpretation manifest:', err);
+    statusEl.textContent = 'Your reading could not be loaded right now.';
+  }
+}
+
+/* Tabs inside each dropdown: one delegated listener on the persistent
+   #reading-sections container handles every section, even after its
+   innerHTML is replaced on a fresh calculation. */
+(function setupReadingTabDelegation() {
+  const readingContainer = document.getElementById('reading-sections');
+  if (!readingContainer) return;
+
+  readingContainer.addEventListener('click', (evt) => {
+    const tabBtn = evt.target.closest('.reading-tab');
+    if (!tabBtn) return;
+    const tabsEl = tabBtn.parentElement;
+    const panelsEl = tabsEl.nextElementSibling;
+    if (!panelsEl) return;
+    const targetIndex = tabBtn.dataset.tabIndex;
+    tabsEl.querySelectorAll('.reading-tab').forEach((btn) => {
+      btn.classList.toggle('active', btn === tabBtn);
+    });
+    panelsEl.querySelectorAll('.reading-tab-panel').forEach((panel) => {
+      const isTarget = panel.dataset.tabIndex === targetIndex;
+      panel.classList.toggle('active', isTarget);
+      if (isTarget) UIEffects.retrigger(panel, 'tab-fade');
+    });
+  });
+
+  // Smooth, restartable open/close animation for every reading-section
+  // dropdown, handled once here since this container persists across
+  // recalculations (its innerHTML is replaced, but the container itself
+  // — and this listener — is not).
+  UIEffects.setupAnimatedDetails(readingContainer, {
+    detailsSelector: '.reading-section',
+    summarySelector: '.reading-section-title',
+    bodySelector: '.reading-section-body',
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM / UI WIRING
+   ════════════════════════════════════════════════════════════════════ */
+
+const dateInput = document.getElementById('date');
+const nameInput = document.getElementById('name');
+const container = document.querySelector('.matrix-container');
+const btnAnswer = document.getElementById('submit-btn');
+const errorOutput = document.querySelector('.error-output');
+const outputDate = document.querySelector('.output-personal-date');
+
+function titleCase(str) {
+  return str.replace(/^[a-zа-яё]|[\- ][a-zа-яё]/g, (a) => a.toUpperCase());
+}
 
 function maskDateInput(evt) {
   const input = evt.target;
@@ -602,15 +966,10 @@ function maskDateInput(evt) {
   }
   input.value = formatted;
   if (digits.length === 8) {
-    if (input === date1Input) {
-      date2Input.focus();
-    } else if (input === date2Input) {
-      btnAnswer.focus();
-    }
+    nameInput.focus();
   }
 }
-date1Input.addEventListener('input', maskDateInput);
-date2Input.addEventListener('input', maskDateInput);
+dateInput.addEventListener('input', maskDateInput);
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -625,136 +984,100 @@ function parseDdMmYyyy(value) {
   return { day: +dd, month: +mm, year: +yyyy };
 }
 
-function validateOne(label, date, parsed, dateIsValid) {
+function validate(date, name, parsed, dateIsValid) {
   let errorMessage = '';
   const today = new Date();
-  if (!parsed || !dateIsValid) {
-    errorMessage += `<p>${label} date is not valid or empty. Use DD/MM/YYYY.</p>`;
-  } else if (date > today) {
-    errorMessage += `<p>${label} date can't be in the future.</p>`;
+  const nameValid = new RegExp('^[а-яё\\- ]*[a-z\\- ]*$', 'i');
+
+  if (name === '' || !parsed || !dateIsValid) {
+    errorMessage += `<p>Date is not valid or one of the fields is empty. Use dd/mm/yyyy.</p>`;
   }
-  return errorMessage;
-}
-
-function clearAllOutputs() {
-  ALL_POINT_IDS.forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '';
-  });
-}
-
-function setSvgGroupsVisible(visible) {
-  PERSONAL_ONLY_GROUP_IDS.forEach((id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.toggle('display-none', !visible);
-  });
-}
-
-function renderTab(tab) {
-  activeTab = tab;
-  tabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tab));
-
-  if (!results) return;
-
-  clearAllOutputs();
-
-  if (tab === 'compat') {
-    setSvgGroupsVisible(false);
-    purposesCard.classList.remove('display-none');
-    renderValues(results.compat.points);
-    renderValues(results.compat.purposes);
-  } else {
-    const person = tab === 'p1' ? results.person1 : results.person2;
-    setSvgGroupsVisible(true);
-    purposesCard.classList.remove('display-none');
-    renderValues(person.points);
-    renderValues(person.purposes);
-    renderValues(person.years);
+  if (parsed && dateIsValid && (date > today)) {
+    errorMessage += `<p>Date can't be in the future.</p>`;
   }
-
-  // Content updates in place rather than being freshly inserted, so
-  // retrigger the fade manually on each tab switch.
-  UIEffects.retrigger(document.querySelector('.octagram-section'), 'tab-fade');
-  UIEffects.retrigger(purposesCard, 'tab-fade');
+  if (!nameValid.test(name)) {
+    errorMessage += `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: Anna, Anna-Maria, Anna Maria.</p>`;
+  }
+  return errorMessage !== '' ? errorMessage : true;
 }
 
-tabButtons.forEach((btn) => {
-  btn.addEventListener('click', () => renderTab(btn.dataset.tab));
-});
-
-function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
-  const parsed1 = parseDdMmYyyy(calcDate1);
-  const parsed2 = parseDdMmYyyy(calcDate2);
-  const date1 = parsed1 ? new Date(parsed1.year, parsed1.month - 1, parsed1.day) : new Date(NaN);
-  const date2 = parsed2 ? new Date(parsed2.year, parsed2.month - 1, parsed2.day) : new Date(NaN);
-  const dateIsValid1 = isValidCalendarDate(parsed1, date1);
-  const dateIsValid2 = isValidCalendarDate(parsed2, date2);
-
-  const response = validateOne('Partner 1', date1, parsed1, dateIsValid1)
-    + validateOne('Partner 2', date2, parsed2, dateIsValid2);
+function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
+  const parsed = parseDdMmYyyy(calculationDate);
+  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
+  const dateIsValid = isValidCalendarDate(parsed, date);
+  const response = validate(date, name, parsed, dateIsValid);
 
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== '') {
+  if (response !== true) {
     errorOutput.innerHTML = response;
     container.classList.add('display-none');
     return;
   }
 
-  const fullDate1 = formatLongDate(parsed1.day, parsed1.month, parsed1.year);
-  const fullDate2 = formatLongDate(parsed2.day, parsed2.month, parsed2.year);
-
-  const person1 = calculatePoints(reduceNumber(parsed1.day), parsed1.month, calculateYear(parsed1.year));
-  const person2 = calculatePoints(reduceNumber(parsed2.day), parsed2.month, calculateYear(parsed2.year));
-  const compat = calculateCompatibility(person1.points, person2.points);
-
-  results = { person1, person2, compat, fullDate1, fullDate2 };
-
-  outputDate.innerHTML = `Compatibility Matrix <span class="gray">Partner 1: ${fullDate1} — Partner 2: ${fullDate2}</span>`;
+  const fullDate = formatLongDate(parsed.day, parsed.month, parsed.year);
+  outputDate.innerHTML = `${titleCase(name)}'s <span class="gray">Destiny Matrix Chart — Date of Birth: ${fullDate}</span>`;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
   UIEffects.revealOnScroll();
 
-  renderTab('compat');
+  const apoint = reduceNumber(parsed.day);
+  const bpoint = parsed.month;
+  const cpoint = calculateYear(parsed.year);
+
+  const person = calculatePoints(apoint, bpoint, cpoint);
+
+  renderValues(person.points);
+  renderChakraTable(person.chartHeart);
+  renderValues(person.purposes);
+  renderValues(person.years);
+
+  // The full reading is the heaviest part of this page (up to 16
+  // interpretation JSON files). Defer fetching/building it until the
+  // reading card is actually about to scroll into view, instead of
+  // loading all of it the instant a chart is calculated.
+  const readingStatusEl = document.getElementById('reading-status');
+  if (readingStatusEl) readingStatusEl.textContent = '';
+  document.getElementById('reading-sections').innerHTML =
+    '<div class="lazy-skeleton"><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line short"></div></div>';
+  UIEffects.lazyMount(document.querySelector('.reading-card'), () => renderReading(person));
 
   // Same page, no reload/new page — just swap the shareable URL in place.
   // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
     const url = new URL(window.location.href);
-    url.searchParams.set('dob1', calcDate1.replace(/\//g, '-'));
-    url.searchParams.set('dob2', calcDate2.replace(/\//g, '-'));
+    url.searchParams.set('dob', calculationDate.replace(/\//g, '-'));
+    url.searchParams.set('name', name);
     window.history.pushState({}, '', url);
   }
 
-  date1Input.value = '';
-  date2Input.value = '';
+  dateInput.value = '';
+  nameInput.value = '';
 }
 
 btnAnswer.addEventListener('click', (evt) => {
   evt.preventDefault();
-  runCalculation(date1Input.value, date2Input.value);
+  runCalculation(dateInput.value, nameInput.value);
 });
 
-date2Input.addEventListener('keydown', (evt) => {
+nameInput.addEventListener('keydown', (evt) => {
   if (evt.key === 'Enter') btnAnswer.click();
 });
 
-// If the page is opened with ?dob1=DD-MM-YYYY&dob2=DD-MM-YYYY in the URL
-// (e.g. a shared link), fill the inputs and calculate immediately.
+// If the page is opened with ?dob=DD-MM-YYYY&name=... in the URL (e.g. a
+// shared link), fill the inputs and calculate immediately — no click required.
 (function calculateFromUrlIfPresent() {
   const params = new URLSearchParams(window.location.search);
-  const d1FromUrl = params.get('dob1');
-  const d2FromUrl = params.get('dob2');
+  const dFromUrl = params.get('dob');
+  const nameFromUrl = params.get('name');
 
-  if (d1FromUrl && d2FromUrl) {
-    const dob1FromUrl = d1FromUrl.replace(/-/g, '/');
-    const dob2FromUrl = d2FromUrl.replace(/-/g, '/');
-    date1Input.value = dob1FromUrl;
-    date2Input.value = dob2FromUrl;
-    runCalculation(dob1FromUrl, dob2FromUrl, { updateUrl: false });
+  if (dFromUrl && nameFromUrl) {
+    const dobFromUrl = dFromUrl.replace(/-/g, '/');
+    dateInput.value = dobFromUrl;
+    nameInput.value = nameFromUrl;
+    runCalculation(dobFromUrl, nameFromUrl, { updateUrl: false });
   }
 })();
 </script>
