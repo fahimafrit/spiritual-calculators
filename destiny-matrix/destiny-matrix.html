@@ -156,7 +156,7 @@
     <div class="output-personal-date"></div>
     <hr class="section-divider" />
 
-    <div class="octagram-card">
+    <div class="octagram-card" data-reveal>
       <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
         <g id="matrix-frame">
           <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
@@ -489,7 +489,7 @@
     </div>
     <hr class="section-divider" />
 
-    <div class="chakra-card">
+    <div class="chakra-card" data-reveal style="--reveal-delay:.08s">
       <h2>Chakra Table</h2>
       <table class="chakra-table">
         <thead>
@@ -554,7 +554,7 @@
     </div>
     <hr class="section-divider" />
 
-    <div class="reading-card">
+    <div class="reading-card" data-reveal style="--reveal-delay:.16s">
       <h2>Your Full Reading</h2>
       <p class="reading-status" id="reading-status"></p>
       <div id="reading-sections"></div>
@@ -566,6 +566,7 @@
 
 
 <script src="../shared/engine/calculations.js"></script>
+<script src="../shared/engine/ui-effects.js"></script>
 <script>
 'use strict';
 
@@ -610,6 +611,30 @@ function buildChakraTable() {
   tbody.innerHTML = html;
 }
 buildChakraTable();
+UIEffects.staggerReveal(
+  document.querySelectorAll('#chakra-tbody tr'),
+  { from: 'translate(-28px, 18px)', step: 0.05, start: 0.1 }
+);
+
+/* Purpose blocks: heading, text, and diagram/circle reveal in their
+   own sequence — never the whole block at once. */
+(function revealPurposeBlocks() {
+  let i = 0;
+  document.querySelectorAll('.purpose-block').forEach((block) => {
+    const parts = [
+      block.querySelector('h3'),
+      block.querySelector('.purpose-desc'),
+      block.querySelector('.purpose-diagram, .base-circle'),
+    ];
+    parts.forEach((el) => {
+      if (!el) return;
+      el.setAttribute('data-reveal', '');
+      el.style.setProperty('--reveal-delay', (i * 0.09).toFixed(2) + 's');
+      i += 1;
+    });
+  });
+  UIEffects.revealOnScroll();
+})();
 
 function renderChakraTable(chartHeart) {
   const rows = [
@@ -831,6 +856,11 @@ async function renderReading(person) {
     statusEl.textContent = rendered.length === 0
       ? 'Your reading content is being written — check back soon.'
       : '';
+
+    UIEffects.staggerReveal(
+      readingContainer.querySelectorAll('.reading-section'),
+      { from: 'translate(-28px, 18px)', step: 0.06 }
+    );
   } catch (err) {
     console.warn('Could not load the interpretation manifest:', err);
     statusEl.textContent = 'Your reading could not be loaded right now.';
@@ -843,6 +873,7 @@ async function renderReading(person) {
 (function setupReadingTabDelegation() {
   const readingContainer = document.getElementById('reading-sections');
   if (!readingContainer) return;
+
   readingContainer.addEventListener('click', (evt) => {
     const tabBtn = evt.target.closest('.reading-tab');
     if (!tabBtn) return;
@@ -854,8 +885,20 @@ async function renderReading(person) {
       btn.classList.toggle('active', btn === tabBtn);
     });
     panelsEl.querySelectorAll('.reading-tab-panel').forEach((panel) => {
-      panel.classList.toggle('active', panel.dataset.tabIndex === targetIndex);
+      const isTarget = panel.dataset.tabIndex === targetIndex;
+      panel.classList.toggle('active', isTarget);
+      if (isTarget) UIEffects.retrigger(panel, 'tab-fade');
     });
+  });
+
+  // Smooth, restartable open/close animation for every reading-section
+  // dropdown, handled once here since this container persists across
+  // recalculations (its innerHTML is replaced, but the container itself
+  // — and this listener — is not).
+  UIEffects.setupAnimatedDetails(readingContainer, {
+    detailsSelector: '.reading-section',
+    summarySelector: '.reading-section-title',
+    bodySelector: '.reading-section-body',
   });
 })();
 
@@ -940,6 +983,7 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
+  UIEffects.revealOnScroll();
 
   const apoint = reduceNumber(parsed.day);
   const bpoint = parsed.month;
@@ -951,7 +995,16 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
   renderChakraTable(person.chartHeart);
   renderValues(person.purposes);
   renderValues(person.years);
-  renderReading(person);
+
+  // The full reading is the heaviest part of this page (up to 16
+  // interpretation JSON files). Defer fetching/building it until the
+  // reading card is actually about to scroll into view, instead of
+  // loading all of it the instant a chart is calculated.
+  const readingStatusEl = document.getElementById('reading-status');
+  if (readingStatusEl) readingStatusEl.textContent = '';
+  document.getElementById('reading-sections').innerHTML =
+    '<div class="lazy-skeleton"><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line short"></div></div>';
+  UIEffects.lazyMount(document.querySelector('.reading-card'), () => renderReading(person));
 
   // Same page, no reload/new page — just swap the shareable URL in place.
   // Everything is recalculated client-side from the URL, nothing is stored server-side.

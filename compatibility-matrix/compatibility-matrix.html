@@ -32,7 +32,6 @@
 
   .tab-btn.active{
     background:linear-gradient(135deg,var(--gold-bright),var(--gold)); color:#ffffff; border-color:transparent;
-    box-shadow:0 10px 24px rgba(169,120,47,0.28);
   }
 
 
@@ -71,7 +70,7 @@
         <button class="tab-btn" type="button" data-tab="p2">Person 2</button>
       </div>
 
-      <div class="octagram-section">
+      <div class="octagram-section" data-reveal>
       <svg viewBox="-20 -45 690 685" id="matrix" xmlns="http://www.w3.org/2000/svg">
         <g id="matrix-frame">
           <rect class="frame-square" x="163.63" y="126.14" width="340.16" height="340.16"></rect>
@@ -466,6 +465,7 @@
 
 
 <script src="../shared/engine/calculations.js"></script>
+<script src="../shared/engine/ui-effects.js"></script>
 <script>
 'use strict';
 
@@ -572,6 +572,25 @@ const ALL_POINT_IDS = ['apoint','bpoint','cpoint','dpoint','epoint','fpoint','gp
 let activeTab = 'compat';
 let results = null; // { person1: {points,purposes,chartHeart,years}, person2: {...}, compat: {...}, fullDate1, fullDate2 }
 
+/* Purpose blocks: heading, text, and diagram/circle reveal in their
+   own sequence on first appearance — never the whole block at once. */
+(function revealPurposeBlocks() {
+  let i = 0;
+  document.querySelectorAll('.purpose-block').forEach((block) => {
+    const parts = [
+      block.querySelector('h3'),
+      block.querySelector('.purpose-desc'),
+      block.querySelector('.purpose-diagram, .base-circle'),
+    ];
+    parts.forEach((el) => {
+      if (!el) return;
+      el.setAttribute('data-reveal', '');
+      el.style.setProperty('--reveal-delay', (i * 0.09).toFixed(2) + 's');
+      i += 1;
+    });
+  });
+})();
+
 function maskDateInput(evt) {
   const input = evt.target;
   let digits = input.value.replace(/\D/g, '').slice(0, 8);
@@ -654,6 +673,10 @@ function renderTab(tab) {
     renderValues(person.years);
   }
 
+  // Content updates in place rather than being freshly inserted, so
+  // retrigger the fade manually on each tab switch.
+  UIEffects.retrigger(document.querySelector('.octagram-section'), 'tab-fade');
+  UIEffects.retrigger(purposesCard, 'tab-fade');
 }
 
 tabButtons.forEach((btn) => {
@@ -693,6 +716,7 @@ function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
+  UIEffects.revealOnScroll();
 
   renderTab('compat');
 

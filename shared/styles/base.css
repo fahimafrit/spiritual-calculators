@@ -560,3 +560,92 @@ button,
     stroke-width: 1.8;
     stroke-linecap: round;
 }
+
+
+
+/* ============================================================
+   Motion system — lazy scroll-reveal + minimal content transitions.
+   Driven by shared/engine/ui-effects.js. Everything here is gated
+   behind the .js-reveal-ready class that script adds on load, so a
+   blocked/failed script never leaves content stuck invisible.
+   The .form-card input section is intentionally never targeted.
+   ============================================================ */
+
+.js-reveal-ready [data-reveal] {
+    opacity: 0;
+    transform: var(--reveal-from, translateY(20px));
+    transition: opacity .55s cubic-bezier(.22, .61, .36, 1),
+                transform .55s cubic-bezier(.22, .61, .36, 1);
+    transition-delay: var(--reveal-delay, 0s);
+}
+
+
+.js-reveal-ready [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+}
+
+
+/* Reading-section body content: the open/close *height* animation is
+   driven by UIEffects.setupAnimatedDetails() (Web Animations API, so
+   it restarts reliably on every toggle, not just the first). This
+   rule only handles the inner text's own fade, which that controller
+   triggers by toggling the element's inline opacity. */
+.reading-section-body {
+    transition: opacity .3s ease;
+}
+
+
+/* Tab panel swap (reading dropdown sub-tabs, and compatibility Person
+   tabs) — (re)triggered explicitly via UIEffects.retrigger() on every
+   switch, not just relying on the .active class being added once. */
+.tab-fade {
+    animation: panelFade .3s ease;
+}
+
+
+@keyframes panelFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+
+/* Lightweight skeleton shown in place of lazily-loaded reading/karmic
+   content while it fetches, in place of an abrupt blank-to-text jump */
+.lazy-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 6px 0;
+}
+
+
+.lazy-skeleton-line {
+    height: 14px;
+    border-radius: 7px;
+    background: linear-gradient(90deg,
+        rgba(36, 26, 68, 0.06) 25%,
+        rgba(36, 26, 68, 0.13) 37%,
+        rgba(36, 26, 68, 0.06) 63%);
+    background-size: 400% 100%;
+    animation: lazyShimmer 1.4s ease infinite;
+}
+
+
+.lazy-skeleton-line.short { width: 45%; }
+
+
+@keyframes lazyShimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
