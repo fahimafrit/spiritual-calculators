@@ -29,7 +29,7 @@
 
 
   /* ── Chakra table ───────────────────────────────────── */
-  .chakra-card{overflow-x:auto;}
+  .chakra-card{overflow-x:auto; overflow-y:hidden;}
 
 
   .chakra-card h2{text-align:center; margin:0 0 20px; font-size:24px; color:var(--ink);}
@@ -617,9 +617,19 @@ UIEffects.staggerReveal(
 );
 
 /* Purpose blocks: heading, text, and diagram/circle reveal in their
-   own sequence — never the whole block at once. */
+   own sequence — never the whole block at once.
+
+   We also track the moment this whole sequence is guaranteed to have
+   finished animating (purposesRevealedPromise below). The interpretation
+   sections lower on the page wait on that promise before they start
+   watching for their own scroll-reveal, so a fast scroll can never let
+   them visually overtake the purposes block above them. */
+let purposesRevealed;
+const purposesRevealedPromise = new Promise((resolve) => { purposesRevealed = resolve; });
+
 (function revealPurposeBlocks() {
   let i = 0;
+  let lastDelay = 0;
   document.querySelectorAll('.purpose-block').forEach((block) => {
     const parts = [
       block.querySelector('h3'),
@@ -628,12 +638,32 @@ UIEffects.staggerReveal(
     ];
     parts.forEach((el) => {
       if (!el) return;
+      const delay = i * 0.09;
       el.setAttribute('data-reveal', '');
-      el.style.setProperty('--reveal-delay', (i * 0.09).toFixed(2) + 's');
+      el.style.setProperty('--reveal-delay', delay.toFixed(2) + 's');
+      lastDelay = delay;
       i += 1;
     });
   });
   UIEffects.revealOnScroll();
+
+  const prefersReducedMotion = !!(window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const purposesCard = document.querySelector('.purposes-card');
+  const REVEAL_TRANSITION_MS = 550; // matches the [data-reveal] transition duration in base.css
+
+  if (prefersReducedMotion || !purposesCard || !('IntersectionObserver' in window)) {
+    purposesRevealed();
+  } else {
+    const purposesWatcher = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        purposesWatcher.disconnect();
+        setTimeout(purposesRevealed, lastDelay * 1000 + REVEAL_TRANSITION_MS);
+      });
+    }, { threshold: 0.01 });
+    purposesWatcher.observe(purposesCard);
+  }
 })();
 
 function renderChakraTable(chartHeart) {
@@ -857,10 +887,18 @@ async function renderReading(person) {
       ? 'Your reading content is being written — check back soon.'
       : '';
 
-    UIEffects.staggerReveal(
-      readingContainer.querySelectorAll('.reading-section'),
-      { from: 'translate(-28px, 18px)', step: 0.06 }
-    );
+    // Mark these for reveal right away, so they render hidden instead of
+    // flashing fully visible for a moment — but don't start *watching*
+    // them for scroll entry until the purposes block above has finished
+    // its own reveal sequence. See purposesRevealedPromise above.
+    readingContainer.querySelectorAll('.reading-section').forEach((el, i) => {
+      el.setAttribute('data-reveal', '');
+      el.style.setProperty('--reveal-from', 'translate(-28px, 18px)');
+      el.style.setProperty('--reveal-delay', (i * 0.06).toFixed(2) + 's');
+    });
+
+    await purposesRevealedPromise;
+    UIEffects.revealOnScroll(readingContainer);
   } catch (err) {
     console.warn('Could not load the interpretation manifest:', err);
     statusEl.textContent = 'Your reading could not be loaded right now.';
