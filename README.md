@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Curently finalized repository structure:
 
 spiritual-tools
@@ -113,4 +114,3 @@ spiritual-tools
 └── wordpress-plugin
 
 &#x20;   └── .gitkeep
-
