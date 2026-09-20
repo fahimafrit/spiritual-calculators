@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Destiny Number Calculator</title>
+<title>Attitude Number Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -14,24 +14,24 @@
 <body>
 
 <div class="container">
-  <h1 class="page-title">Destiny Number Calculator</h1>
-  <p class="page-subtitle">What your full birth name reveals about your life's work</p>
+  <h1 class="page-title">Attitude Number Calculator</h1>
+  <p class="page-subtitle">The first impression you give the world</p>
 
   <div class="form-card">
     <div class="field">
-      <label for="name">Full birth name</label>
-      <input id="name" type="text" placeholder="e.g. John Michael Smith" autocomplete="off" />
+      <label for="date">Date of birth</label>
+      <input id="date" type="text" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off" inputmode="numeric" />
     </div>
     <button id="submit-btn">Calculate</button>
   </div>
   <div class="error-output"></div>
 
-  <div class="result-wrap destiny-container display-none">
+  <div class="result-wrap attitude-container display-none">
     <div class="result-card">
       <div class="output-personal-date"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title tight">Your Destiny Number</h2>
+      <h2 class="section-title tight">Your Attitude Number</h2>
       <div class="result-number-display">
         <p class="num-value" id="num-value"></p>
       </div>
@@ -41,44 +41,51 @@
       <div class="process-card" id="process-lines"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title">What Your Destiny Number Reveals</h2>
+      <h2 class="section-title">What Your Attitude Number Reveals</h2>
       <div class="interpretation-card" id="interpretation"></div>
     </div>
   </div>
 </div>
 
 <script src="../assets/js/numerology/calculations.js"></script>
-<script src="../assets/js/numerology/destiny-number-data.js"></script>
+<script src="../assets/js/numerology/attitude-number-data.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
    CALCULATION PROCESS RENDER
-   Per-letter values (plain comma list) -> reduction chain of the
-   total -> final Destiny Number, in the exact plain-text format used
-   by the other calculators in this silo.
+   The Attitude Number uses only day + month (never the year) — it
+   reflects instinctive first-impression energy, not the full life
+   path. Same plain-text reduction-chain format as Life Path.
    ════════════════════════════════════════════════════════════════════ */
 
-function calculateAndRender(name) {
-  const { total, breakdown } = computeNameNumber(name);
+function processLine(label, raw, steps, { finalLine = false } = {}) {
+  const inner = `<span class="process-label">${label}:</span> ${raw} <span class="process-arrow">&#8594;</span> ${steps.join(' <span class="process-arrow">&#8594;</span> ')}`;
+  return `<p class="process-line${finalLine ? ' process-final' : ''}">${inner}</p>`;
+}
 
-  const letterValuesText = breakdown
-    .map((entry) => `${entry.letter.toUpperCase()}=${entry.value}`)
-    .join(', ');
+function calculateAndRender(day, month) {
+  const daySteps = reduceKeepingMasterWithSteps(day);
+  const monthSteps = reduceKeepingMasterWithSteps(month);
 
+  const dayFinal = daySteps[daySteps.length - 1];
+  const monthFinal = monthSteps[monthSteps.length - 1];
+
+  const total = dayFinal + monthFinal;
   const totalSteps = reduceKeepingMasterWithSteps(total);
-  const destinyNumber = totalSteps[totalSteps.length - 1];
+  const attitudeNumber = totalSteps[totalSteps.length - 1];
 
   const lines = [
-    `<p class="process-line"><span class="process-label">Letter values:</span> ${escapeHtml(letterValuesText)}</p>`,
-    `<p class="process-line"><span class="process-label">Reduction:</span> ${breakdown.map((entry) => entry.value).join('+')} <span class="process-arrow">&#8594;</span> ${totalSteps.join(' <span class="process-arrow">&#8594;</span> ')}</p>`,
-    `<p class="process-line process-final">Destiny Number: ${formatDisplayNumber(destinyNumber)}</p>`,
+    processLine('Birth Day', day, daySteps),
+    processLine('Birth Month', month, monthSteps),
+    `<p class="process-line"><span class="process-label">Sum:</span> ${dayFinal} + ${monthFinal} = ${total} <span class="process-arrow">&#8594;</span> ${totalSteps.join(' <span class="process-arrow">&#8594;</span> ')}</p>`,
+    `<p class="process-line process-final">Attitude Number: ${formatDisplayNumber(attitudeNumber)}</p>`,
   ];
   document.getElementById('process-lines').innerHTML = lines.join('');
 
-  document.getElementById('num-value').textContent = formatDisplayNumber(destinyNumber);
+  document.getElementById('num-value').textContent = formatDisplayNumber(attitudeNumber);
 
-  const entry = DESTINY_NUMBER_DATA[destinyNumber];
+  const entry = ATTITUDE_NUMBER_DATA[attitudeNumber];
   const interpEl = document.getElementById('interpretation');
   if (entry) {
     interpEl.innerHTML = `<p><strong>${escapeHtml(entry.title)}</strong></p>` +
@@ -92,25 +99,32 @@ function calculateAndRender(name) {
    FORM / UI WIRING
    ════════════════════════════════════════════════════════════════════ */
 
-const nameInput = document.getElementById('name');
-const container = document.querySelector('.destiny-container');
+const dateInput = document.getElementById('date');
+const container = document.querySelector('.attitude-container');
 const btnAnswer = document.getElementById('submit-btn');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
-function validate(name) {
-  const nameValid = /^[a-zа-яё\- ]*$/i;
-  if (!name.replace(/[^a-zA-Z]/g, '')) {
-    return `<p>Enter a name using letters only (spaces and dashes are fine).</p>`;
+dateInput.addEventListener('input', maskDateInput);
+
+function validate(date, parsed, dateIsValid) {
+  let errorMessage = '';
+  const today = new Date();
+
+  if (!parsed || !dateIsValid) {
+    errorMessage += `<p>Date is not valid. Use dd/mm/yyyy.</p>`;
   }
-  if (!nameValid.test(name)) {
-    return `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: John Michael Smith.</p>`;
+  if (parsed && dateIsValid && (date > today)) {
+    errorMessage += `<p>Date can't be in the future.</p>`;
   }
-  return true;
+  return errorMessage !== '' ? errorMessage : true;
 }
 
-function runCalculation(name, { updateUrl = true } = {}) {
-  const response = validate(name);
+function runCalculation(calculationDate, { updateUrl = true } = {}) {
+  const parsed = parseDdMmYyyy(calculationDate);
+  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
+  const dateIsValid = isValidCalendarDate(parsed, date);
+  const response = validate(date, parsed, dateIsValid);
 
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
@@ -121,39 +135,40 @@ function runCalculation(name, { updateUrl = true } = {}) {
     return;
   }
 
-  outputDate.textContent = `${titleCase(name)}'s Destiny Number`;
+  outputDate.textContent = `Date of Birth: ${formatLongDate(parsed.day, parsed.month, parsed.year)}`;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
 
-  calculateAndRender(name);
+  calculateAndRender(parsed.day, parsed.month);
 
   // Same page, no reload — just swap the shareable URL in place.
+  // Everything is recalculated client-side, nothing is stored server-side.
   if (updateUrl) {
     const url = new URL(window.location.href);
-    url.searchParams.set('name', name);
+    url.searchParams.set('dob', calculationDate.replace(/\//g, '-'));
     window.history.pushState({}, '', url);
   }
 }
 
 btnAnswer.addEventListener('click', (evt) => {
   evt.preventDefault();
-  runCalculation(nameInput.value);
+  runCalculation(dateInput.value);
 });
 
-nameInput.addEventListener('keydown', (evt) => {
+dateInput.addEventListener('keydown', (evt) => {
   if (evt.key === 'Enter') btnAnswer.click();
 });
 
-// If the page is opened with ?name=... (a shared link), fill the
+// If the page is opened with ?dob=DD-MM-YYYY (a shared link), fill the
 // input and calculate immediately — no click required.
 (function calculateFromUrlIfPresent() {
   const params = new URLSearchParams(window.location.search);
-  const nameFromUrl = params.get('name');
-
-  if (nameFromUrl) {
-    nameInput.value = nameFromUrl;
-    runCalculation(nameFromUrl, { updateUrl: false });
+  const dFromUrl = params.get('dob');
+  if (dFromUrl) {
+    const dobFromUrl = dFromUrl.replace(/-/g, '/');
+    dateInput.value = dobFromUrl;
+    runCalculation(dobFromUrl, { updateUrl: false });
   }
 })();
 </script>

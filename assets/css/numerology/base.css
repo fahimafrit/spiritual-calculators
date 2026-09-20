@@ -1,0 +1,474 @@
+/* ============================================================
+   assets/css/numerology/base.css
+   Core shared stylesheet for every numerology calculator (Life
+   Path, Expression Number, and whatever follows). One file, so
+   every tool in the silo looks and behaves the same.
+
+   Structure:
+   1. Design tokens
+   2. Base / typography
+   3. Form card (inputs, submit button)
+   4. Result shell (card, header, divider)
+   5. Reduction chain (the step-by-step "29 -> 11" visualization)
+   6. Letter breakdown (per-letter value chips for name calculators)
+   7. Reading accordion + summary grid
+   8. Motion system
+   ============================================================ */
+
+:root {
+    --violet-deep: #1a1040;
+    --violet-mid: #2e1a63;
+    --violet-soft: #4a2f8a;
+    --gold: #a9782f;
+    --gold-bright: #c0923f;
+    --ink: #000000;
+    --ink-soft: #000000;
+    --ink-faint: #9ca3af;
+    --surface: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --card-border: rgba(36, 26, 68, 0.10);
+    --line: rgba(36, 26, 68, 0.22);
+    --line-soft: rgba(36, 26, 68, 0.12);
+    --radius: 16px;
+    --shadow: 0 16px 40px rgba(36, 26, 68, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 15% 10%, rgba(142, 91, 214, 0.07), transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(212, 175, 106, 0.10), transparent 50%),
+        linear-gradient(160deg, #fbfaff 0%, #f6f3fb 50%, #f9f5ee 100%);
+    padding: 48px 16px 80px;
+}
+
+h1, h2, h3 { font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 0.01em; }
+
+.container { max-width: 700px; margin: 0 auto; }
+
+.page-title {
+    text-align: center;
+    font-size: clamp(32px, 5vw, 48px);
+    margin: 0 0 6px;
+    font-weight: 900;
+    color: #000000;
+}
+
+.page-subtitle {
+    text-align: center;
+    color: var(--ink-soft);
+    margin: 0 0 40px;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ── Form ───────────────────────────────────────────── */
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+.field label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #000000; }
+
+.field input {
+    background: #ffffff;
+    border: 1px solid rgba(36, 26, 68, 0.16);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--ink);
+    font-size: 16px;
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+    width: 100%;
+}
+.field input::placeholder { color: var(--ink-faint); }
+.field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15); }
+
+#submit-btn {
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 28px;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-transform: uppercase;
+    flex: 1;
+    min-width: 140px;
+}
+#submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(169, 120, 47, 0.28); }
+
+.error-output { color: #c0392b; text-align: center; margin-top: 14px; font-size: 14px; }
+.error-output p { margin: 4px 0; }
+
+.display-none { display: none !important; }
+
+/* ── Result shell ───────────────────────────────────── */
+.result-wrap { margin-top: 48px; }
+
+.result-card {
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+
+.section-divider { border: none; border-top: 1px solid var(--line-soft); margin: 32px 0; }
+
+.output-personal-date {
+    text-align: center;
+    font-size: clamp(20px, 3vw, 28px);
+    margin-bottom: 32px;
+    font-weight: 700;
+}
+.output-personal-date .gray {
+    color: var(--ink-soft);
+    font-size: 0.7em;
+    display: block;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+}
+
+/* ── Reduction chain ──────────────────────────────────
+   The step-by-step "29 -> 11" visualization that replaces a plain
+   result number. A .chain-group is one labeled sequence (Day /
+   Month / Year, or the running letter total); a .chain-combine row
+   joins several groups' final values with + and = into the next
+   chain. Everything wraps gracefully on narrow screens. ────────── */
+.chain-card { text-align: center; }
+
+.chain-group { margin: 0 0 22px; }
+.chain-group:last-child { margin-bottom: 0; }
+
+.chain-group-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 10px;
+}
+
+.chain-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chain-chip {
+    position: relative;
+    min-width: 52px;
+    height: 52px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: rgba(36, 26, 68, 0.04);
+    border: 1.5px solid var(--line-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--ink);
+}
+
+.chain-chip.is-final {
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    border-color: transparent;
+    color: #ffffff;
+    min-width: 68px;
+    height: 68px;
+    font-size: 28px;
+    box-shadow: 0 10px 26px rgba(46, 26, 99, 0.28);
+}
+
+.chain-chip.is-master { border-color: var(--gold); }
+.chain-chip.is-master::after {
+    content: 'Master';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    white-space: nowrap;
+}
+.chain-chip.is-master.is-final::after { color: var(--gold-bright); bottom: -22px; }
+
+.chain-arrow, .chain-op {
+    font-size: 18px;
+    color: var(--ink-faint);
+    font-weight: 700;
+}
+.chain-op { color: var(--gold); font-size: 20px; }
+
+.chain-combine {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--line-soft);
+}
+
+.chain-result-title {
+    font-size: clamp(20px, 3vw, 26px);
+    font-weight: 800;
+    color: var(--ink);
+    margin: 26px 0 6px;
+}
+.chain-result-tagline {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin: 0 auto;
+    max-width: 480px;
+    line-height: 1.5;
+}
+
+/* ── Letter breakdown (name-based calculators) ───────── */
+.letter-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 0 22px;
+}
+.letter-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 34px;
+    padding: 8px 4px 6px;
+    border-radius: 8px;
+    background: rgba(36, 26, 68, 0.035);
+    border: 1px solid var(--line-soft);
+}
+.letter-chip .letter-char {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    text-transform: uppercase;
+}
+.letter-chip .letter-value {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-top: 2px;
+}
+.letter-breakdown-space { width: 14px; }
+
+/* ── Reading accordion (interpretation sections) ─────── */
+.reading-card h2 { text-align: center; margin: 0 0 8px; font-size: 24px; color: var(--ink); }
+.reading-status { text-align: center; color: var(--ink-faint); font-size: 14px; margin: 0 0 24px; }
+.reading-status:empty { display: none; }
+
+details.reading-section {
+    margin: 0 0 14px;
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    overflow: hidden;
+}
+details.reading-section:last-child { margin-bottom: 0; }
+
+details.reading-section summary.reading-section-title {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--ink);
+    padding: 16px 20px;
+    margin: 0;
+    background: rgba(169, 120, 47, 0.06);
+    border-bottom: 1px solid transparent;
+    transition: background .2s ease;
+}
+details.reading-section summary.reading-section-title::-webkit-details-marker { display: none; }
+details.reading-section summary.reading-section-title::marker { content: ''; }
+details.reading-section summary.reading-section-title:hover { background: rgba(169, 120, 47, 0.12); }
+details.reading-section[open] summary.reading-section-title { border-bottom-color: var(--line-soft); }
+
+.reading-chevron { display: inline-block; font-size: 16px; color: var(--gold); transform: rotate(0deg); }
+details.reading-section[open] .reading-chevron { transform: rotate(90deg); }
+
+.reading-section-body { padding: 18px 20px 20px; }
+.reading-subsection-text { color: var(--ink-soft); font-size: 15px; line-height: 1.65; margin: 0 0 12px; }
+.reading-subsection-text:last-child { margin-bottom: 0; }
+
+/* ── Summary grid (Shadow / Integrated / Practical) ──── */
+.summary-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 24px; }
+.summary-block { border-radius: 12px; padding: 16px 18px; }
+.summary-block h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+}
+.summary-block p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+.summary-block.shadow { background: rgba(192, 57, 43, 0.06); }
+.summary-block.shadow h3 { color: #c0392b; }
+.summary-block.integrated { background: rgba(63, 159, 106, 0.08); }
+.summary-block.integrated h3 { color: #2e7d54; }
+.summary-block.practical { background: rgba(91, 111, 214, 0.07); }
+.summary-block.practical h3 { color: #4655b0; }
+
+/* ── CTA banner (cross-link to other calculators) ────── */
+.calc-cta {
+    margin-top: 28px;
+    text-align: center;
+    padding: 22px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff8ec, #fdf1dc);
+    border: 1px solid var(--gold);
+}
+.calc-cta p { margin: 0 0 12px; font-size: 14.5px; color: var(--ink); }
+.calc-cta a {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    border-radius: 10px;
+}
+
+/* ── Non-selectable calculated output & controls ─────── */
+button, .chain-chip { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+
+/* ============================================================
+   Motion system — lazy scroll-reveal + minimal content transitions.
+   Driven by assets/js/numerology/ui-effects.js. Gated behind
+   .js-reveal-ready so a blocked/failed script never leaves
+   content stuck invisible. The .form-card input section is
+   intentionally never targeted.
+   ============================================================ */
+.js-reveal-ready [data-reveal] {
+    opacity: 0;
+    transform: var(--reveal-from, translateY(20px));
+    transition: opacity .55s cubic-bezier(.22, .61, .36, 1),
+                transform .55s cubic-bezier(.22, .61, .36, 1);
+    transition-delay: var(--reveal-delay, 0s);
+}
+.js-reveal-ready [data-reveal].is-visible { opacity: 1; transform: none; }
+
+.reading-section-body { transition: opacity .3s ease; }
+
+.tab-fade { animation: panelFade .3s ease; }
+@keyframes panelFade { from { opacity: 0; } to { opacity: 1; } }
+
+.lazy-skeleton { display: flex; flex-direction: column; gap: 10px; padding: 6px 0; }
+.lazy-skeleton-line {
+    height: 14px;
+    border-radius: 7px;
+    background: linear-gradient(90deg, rgba(36, 26, 68, 0.06) 25%, rgba(36, 26, 68, 0.13) 37%, rgba(36, 26, 68, 0.06) 63%);
+    background-size: 400% 100%;
+    animation: lazyShimmer 1.4s ease infinite;
+}
+.lazy-skeleton-line.short { width: 45%; }
+@keyframes lazyShimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================================
+   Simplified result layout — used by calculators whose output is
+   Section 1 (headline number) + Section 2 (plain-text calculation
+   process) + Section 3 (single-block interpretation), with no
+   circle/chip graphics and no multi-part accordion. Introduced for
+   Life Path, Attitude Number, and Destiny Number; safe to reuse for
+   any future calculator that follows the same three-section pattern.
+   ============================================================ */
+
+.section-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 18px;
+}
+.section-title.tight { margin-bottom: 6px; }
+
+/* ── Section 1: the headline number ──────────────────── */
+.result-number-display { text-align: center; margin: -6px 0 4px; }
+.result-number-display .num-value {
+    font-size: clamp(30px, 4vw, 38px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ── Section 2: plain-text calculation process ───────── */
+.process-card {
+    background: rgba(36, 26, 68, 0.035);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 20px 22px;
+}
+.process-line {
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--ink-soft);
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+.process-line .process-label { font-weight: 800; color: var(--ink); }
+.process-line .process-arrow { color: var(--gold); font-weight: 700; margin: 0 2px; }
+.process-line.process-final {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line-soft);
+    font-weight: 800;
+    color: var(--violet-deep);
+    font-size: 16px;
+}
+
+/* ── Section 3: single-block interpretation ──────────── */
+.interpretation-card p {
+    color: var(--ink-soft);
+    font-size: 15.5px;
+    line-height: 1.7;
+    margin: 0 0 14px;
+}
+.interpretation-card p:last-child { margin-bottom: 0; }
