@@ -80,6 +80,45 @@
   .chakra-result-row td:last-child{border-radius:0 10px 10px 0;}
 
 
+  /* Fit the 9-row × 4-col table inside the screen width — no
+     horizontal scroll needed. table-layout:fixed + percentage
+     columns replace the min-width:520px scroll-to-see approach,
+     and the name column stays wide enough for "Svadhisthana"
+     (the longest chakra name) to keep to one line down to a
+     320px-wide phone. These rules are placed after the base
+     table styles above so they win the cascade at matching
+     screen widths, instead of losing to those unconditional
+     rules despite being "more specific" media queries. */
+  @media (max-width: 640px){
+    table.chakra-table{
+      min-width:0; width:100%; table-layout:fixed; border-spacing:0 5px;
+    }
+    .chakra-table th:first-child,
+    .chakra-row td:first-child,
+    .chakra-result-row td:first-child{ width:44%; }
+    .chakra-table th:not(:first-child),
+    .chakra-row td:not(:first-child),
+    .chakra-result-row td:not(:first-child){ width:18.67%; }
+
+    .chakra-table th{ font-size:9.5px; padding:5px 4px; letter-spacing:0.04em; }
+    .chakra-row td{ font-size:13.5px; padding:9px 5px; }
+    .chakra-name-pill{ font-size:12.5px; gap:6px; }
+    .chakra-dot{ width:10px; height:10px; }
+    .chakra-result-row td{ font-size:14.5px; padding:10px 5px; }
+    .chakra-result-row td:first-child{ font-size:10.5px; }
+  }
+
+  @media (max-width: 400px){
+    table.chakra-table{ border-spacing:0 4px; }
+    .chakra-table th{ font-size:8.5px; padding:4px 3px; }
+    .chakra-row td{ font-size:12px; padding:7px 4px; }
+    .chakra-name-pill{ font-size:11px; gap:4px; }
+    .chakra-dot{ width:8px; height:8px; }
+    .chakra-result-row td{ font-size:13px; padding:8px 4px; }
+    .chakra-result-row td:first-child{ font-size:9.5px; letter-spacing:0.06em; }
+  }
+
+
   /* ── Interpretation reading ────────────────────────── */
   .reading-card h2{text-align:center; margin:0 0 8px; font-size:24px; color:var(--ink);}
 
@@ -111,13 +150,21 @@
 
   .reading-section-body{padding:18px 20px 20px;}
 
-  .reading-tabs{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 16px;}
+  /* Kept to one line on every screen width: the row scrolls
+     horizontally instead of wrapping tabs onto a second line. */
+  .reading-tabs{
+    display:flex; flex-wrap:nowrap; gap:8px; margin:0 0 16px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .reading-tabs::-webkit-scrollbar{display:none;}
 
   .reading-tab{
     font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:var(--ink-soft);
     background:rgba(36,26,68,0.045); border:1px solid transparent; border-radius:999px;
     padding:7px 14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;
     transition:background .2s ease, color .2s ease;
+    flex:0 0 auto; white-space:nowrap;
   }
   .reading-tab.active{background:var(--gold); color:#ffffff;}
   .reading-tab:hover:not(.active){background:rgba(169,120,47,0.18);}
@@ -129,6 +176,12 @@
   .reading-subsection-text:last-child{margin-bottom:0;}
 
   .reading-chakra-dot{width:9px; height:9px; border-radius:50%; display:inline-block;}
+
+  @media (max-width: 420px){
+    .reading-tab{ font-size:12px; padding:6px 12px; }
+    details.reading-section summary.reading-section-title{ padding:14px 16px; font-size:15.5px; }
+    .reading-section-body{ padding:14px 16px 16px; }
+  }
 </style>
 </head>
 

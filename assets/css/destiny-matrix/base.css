@@ -649,3 +649,82 @@ button,
         scroll-behavior: auto !important;
     }
 }
+
+
+/* ============================================================
+   Mobile responsiveness
+   Shared across Destiny Matrix, Compatibility Matrix, and
+   Karmic Tail (all three link this stylesheet). Tightens outer
+   spacing and card padding as the viewport narrows, and keeps
+   the chakra table usable down to small phone widths.
+   ============================================================ */
+
+@media (max-width: 640px) {
+    body {
+        padding: 32px 12px 56px;
+    }
+
+    .page-subtitle {
+        margin-bottom: 28px;
+    }
+
+    .form-card {
+        padding: 20px;
+        gap: 14px;
+    }
+
+    .field {
+        min-width: 140px;
+    }
+
+    .result-card {
+        padding: 22px 16px;
+    }
+
+    .section-divider {
+        margin: 24px 0;
+    }
+
+    .result-wrap {
+        margin-top: 32px;
+    }
+
+    /* Note: chakra-table sizing lives in destiny-matrix-calculator.html's
+       own <style> block, not here. That page defines the same selectors
+       unconditionally, and since it's linked after this stylesheet, a
+       same-specificity rule here would lose the cascade tie regardless
+       of this media query matching — so the real override has to sit
+       there instead. */
+}
+
+@media (max-width: 420px) {
+    body {
+        padding: 28px 10px 48px;
+    }
+
+    .form-card {
+        padding: 16px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .field {
+        min-width: 0;
+    }
+
+    #submit-btn {
+        width: 100%;
+    }
+
+    .result-card {
+        padding: 18px 14px;
+    }
+
+    .purposes-grid {
+        gap: 18px;
+    }
+
+    /* Note: reading-section / reading-section-body padding is set in
+       destiny-matrix-calculator.html's own <style> block for the same
+       cascade-order reason as the chakra table above. */
+}
