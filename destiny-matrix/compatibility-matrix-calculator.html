@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
+<link rel="stylesheet" href="../assets/css/core/forms.css" />
 <link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
 <style>
   /* Page-specific styles (not shared with other calculators) */
@@ -52,17 +53,7 @@
   <h1 class="page-title">Compatibility Matrix Calculator</h1>
   <p class="page-subtitle">Discover how your soul blueprints align</p>
 
-  <div class="form-card">
-    <div class="field">
-      <label for="date1">Date of birth</label>
-      <input id="date1" type="text" placeholder="Partner 1" onfocus="this.placeholder='dd/mm/yyyy'" onblur="this.placeholder='Partner 1'" maxlength="10" autocomplete="off" inputmode="numeric" />
-    </div>
-    <div class="field">
-      <label for="date2">Date of birth</label>
-      <input id="date2" type="text" placeholder="Partner 2" onfocus="this.placeholder='dd/mm/yyyy'" onblur="this.placeholder='Partner 2'" maxlength="10" autocomplete="off" inputmode="numeric" />
-    </div>
-    <button id="submit-btn">Create compatibility chart</button>
-  </div>
+  <div class="form-card" id="calc-form"></div>
   <div class="error-output"></div>
 
   <div class="result-wrap matrix-container display-none">
@@ -470,6 +461,7 @@
 
 
 
+<script src="../assets/js/core/forms.js"></script>
 <script src="../assets/js/destiny-matrix/calculations.js"></script>
 <script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
@@ -543,10 +535,12 @@ function renderValues(values) {
    FORM / UI WIRING
    ════════════════════════════════════════════════════════════════════ */
 
+const fields = FormKit.render(document.getElementById('calc-form'), 'two-dob', {
+  submitLabel: 'Create compatibility chart',
+});
 const date1Input = document.getElementById('date1');
 const date2Input = document.getElementById('date2');
 const container = document.querySelector('.matrix-container');
-const btnAnswer = document.getElementById('submit-btn');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 const purposesCard = document.getElementById('purposes-card');
@@ -597,26 +591,9 @@ let results = null; // { person1: {points,purposes,chartHeart,years}, person2: {
   });
 })();
 
-function maskDateInput(evt) {
-  const input = evt.target;
-  let digits = input.value.replace(/\D/g, '').slice(0, 8);
-  let formatted = digits;
-  if (digits.length >= 4) {
-    formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  } else if (digits.length >= 2) {
-    formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-  input.value = formatted;
-  if (digits.length === 8) {
-    if (input === date1Input) {
-      date2Input.focus();
-    } else if (input === date2Input) {
-      btnAnswer.focus();
-    }
-  }
-}
-date1Input.addEventListener('input', maskDateInput);
-date2Input.addEventListener('input', maskDateInput);
+// Date masking, focus-advance between date1/date2 (and on to the
+// submit button after date2), and the Partner-1/Partner-2 focus-
+// placeholder swap are all wired below via FormKit.wire().
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -729,40 +706,23 @@ function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
   // Same page, no reload/new page — just swap the shareable URL in place.
   // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('dob1', calcDate1.replace(/\//g, '-'));
-    url.searchParams.set('dob2', calcDate2.replace(/\//g, '-'));
-    window.history.pushState({}, '', url);
+    FormKit.updateUrlParams(fields, { date1: calcDate1, date2: calcDate2 });
   }
 
   date1Input.value = '';
   date2Input.value = '';
 }
 
-btnAnswer.addEventListener('click', (evt) => {
-  evt.preventDefault();
-  runCalculation(date1Input.value, date2Input.value);
-});
-
-date2Input.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Enter') btnAnswer.click();
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values.date1, values.date2),
 });
 
 // If the page is opened with ?dob1=DD-MM-YYYY&dob2=DD-MM-YYYY in the URL
 // (e.g. a shared link), fill the inputs and calculate immediately.
-(function calculateFromUrlIfPresent() {
-  const params = new URLSearchParams(window.location.search);
-  const d1FromUrl = params.get('dob1');
-  const d2FromUrl = params.get('dob2');
+FormKit.prefillFromUrl(fields, (values) =>
+  runCalculation(values.date1, values.date2, { updateUrl: false })
+);
 
-  if (d1FromUrl && d2FromUrl) {
-    const dob1FromUrl = d1FromUrl.replace(/-/g, '/');
-    const dob2FromUrl = d2FromUrl.replace(/-/g, '/');
-    date1Input.value = dob1FromUrl;
-    date2Input.value = dob2FromUrl;
-    runCalculation(dob1FromUrl, dob2FromUrl, { updateUrl: false });
-  }
-})();
 </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
+<link rel="stylesheet" href="../assets/css/core/forms.css" />
 <link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
 <style>
   /* ── Karmic tail highlight on the octagram ─────────────────────── */
@@ -116,17 +117,7 @@
   <h1 class="page-title">Karmic Tail Calculator</h1>
   <p class="page-subtitle">Uncover the pattern your soul carried in</p>
 
-  <div class="form-card">
-    <div class="field">
-      <label for="date">Date of birth</label>
-      <input id="date" type="text" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off" inputmode="numeric" />
-    </div>
-    <div class="field">
-      <label for="name">Name</label>
-      <input id="name" type="text" placeholder="Your name" />
-    </div>
-    <button id="submit-btn">Reveal my karmic tail</button>
-  </div>
+  <div class="form-card" id="calc-form"></div>
   <div class="error-output"></div>
 
   <div class="result-wrap matrix-container display-none">
@@ -302,6 +293,7 @@
   </div>
 </div>
 
+<script src="../assets/js/core/forms.js"></script>
 <script src="../assets/js/destiny-matrix/calculations.js"></script>
 <script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
@@ -412,31 +404,18 @@ async function renderKarmicResult(person) {
    FORM / UI WIRING
    ════════════════════════════════════════════════════════════════════ */
 
+const fields = FormKit.render(document.getElementById('calc-form'), 'dob-name', {
+  submitLabel: 'Reveal my karmic tail',
+});
 const dateInput = document.getElementById('date');
 const nameInput = document.getElementById('name');
 const container = document.querySelector('.matrix-container');
-const btnAnswer = document.getElementById('submit-btn');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
 function titleCase(str) {
   return str.replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
 }
-
-function maskDateInput(evt) {
-  let digits = evt.target.value.replace(/\D/g, '').slice(0, 8);
-  let out = digits;
-  if (digits.length > 4) {
-    out = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  } else if (digits.length > 2) {
-    out = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-  evt.target.value = out;
-  if (digits.length === 8) {
-    nameInput.focus();
-  }
-}
-dateInput.addEventListener('input', maskDateInput);
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -509,39 +488,21 @@ function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
   // Same page, no reload/new page — just swap the shareable URL in place.
   // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('dob', calculationDate.replace(/\//g, '-'));
-    url.searchParams.set('name', name);
-    window.history.pushState({}, '', url);
+    FormKit.updateUrlParams(fields, { date: calculationDate, name });
   }
 
   dateInput.value = '';
   nameInput.value = '';
 }
 
-btnAnswer.addEventListener('click', (evt) => {
-  evt.preventDefault();
-  runCalculation(dateInput.value, nameInput.value);
-});
-
-nameInput.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Enter') btnAnswer.click();
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values.date, values.name),
 });
 
 // If the page is opened with ?dob=DD-MM-YYYY&name=... in the URL (e.g. a
 // shared link), fill the inputs and calculate immediately — no click required.
-(function calculateFromUrlIfPresent() {
-  const params = new URLSearchParams(window.location.search);
-  const dFromUrl = params.get('dob');
-  const nameFromUrl = params.get('name');
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values.date, values.name, { updateUrl: false }));
 
-  if (dFromUrl && nameFromUrl) {
-    const dobFromUrl = dFromUrl.replace(/-/g, '/');
-    dateInput.value = dobFromUrl;
-    nameInput.value = nameFromUrl;
-    runCalculation(dobFromUrl, nameFromUrl, { updateUrl: false });
-  }
-})();
 </script>
 </body>
 </html>

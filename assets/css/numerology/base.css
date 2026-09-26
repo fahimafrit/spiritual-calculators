@@ -69,58 +69,15 @@ h1, h2, h3 { font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing
 }
 
 /* ── Form ───────────────────────────────────────────── */
-.form-card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: var(--radius);
-    padding: 28px;
-    backdrop-filter: blur(12px);
-    box-shadow: var(--shadow);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-end;
-    justify-content: center;
-}
-
-.field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
-.field label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #000000; }
-
-.field input {
-    background: #ffffff;
-    border: 1px solid rgba(36, 26, 68, 0.16);
-    border-radius: 10px;
-    padding: 12px 14px;
-    color: var(--ink);
-    font-size: 16px;
-    font-family: 'Nunito', sans-serif;
-    outline: none;
-    width: 100%;
-}
-.field input::placeholder { color: var(--ink-faint); }
-.field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15); }
-
+/* Shared .form-card / .field / #submit-btn / .error-output /
+   .display-none rules now live in assets/css/core/forms.css
+   (linked in <head> before this file). Only this category's one
+   genuine difference stays here: the Calculate button grows to
+   fill the row alongside the input fields. */
 #submit-btn {
-    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    padding: 13px 28px;
-    font-weight: 800;
-    font-size: 15px;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: transform .15s, box-shadow .15s;
-    text-transform: uppercase;
     flex: 1;
     min-width: 140px;
 }
-#submit-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(169, 120, 47, 0.28); }
-
-.error-output { color: #c0392b; text-align: center; margin-top: 14px; font-size: 14px; }
-.error-output p { margin: 4px 0; }
-
-.display-none { display: none !important; }
 
 /* ── Result shell ───────────────────────────────────── */
 .result-wrap { margin-top: 48px; }
@@ -427,15 +384,6 @@ button, .chain-chip { -webkit-user-select: none; -moz-user-select: none; user-se
         margin-bottom: 28px;
     }
 
-    .form-card {
-        padding: 20px;
-        gap: 14px;
-    }
-
-    .field {
-        min-width: 140px;
-    }
-
     .result-card {
         padding: 22px 16px;
     }
@@ -475,18 +423,10 @@ button, .chain-chip { -webkit-user-select: none; -moz-user-select: none; user-se
         padding: 28px 10px 48px;
     }
 
-    .form-card {
-        padding: 16px;
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .field {
-        min-width: 0;
-    }
-
+    /* core/forms.css already sets #submit-btn{width:100%} at this
+       breakpoint; this category also needs flex reset back to none
+       since its desktop #submit-btn uses flex:1 (see rule above). */
     #submit-btn {
-        width: 100%;
         flex: none;
     }
 

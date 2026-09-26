@@ -136,18 +136,9 @@ function formatLongDate(day, month, year) {
   return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
 }
 
-function maskDateInput(evt, onComplete) {
-  const input = evt.target;
-  let digits = input.value.replace(/\D/g, '').slice(0, 8);
-  let formatted = digits;
-  if (digits.length >= 4) {
-    formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  } else if (digits.length >= 2) {
-    formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-  input.value = formatted;
-  if (digits.length === 8 && typeof onComplete === 'function') onComplete();
-}
+// Date-input auto-"/" masking now lives in assets/js/core/forms.js
+// (FormKit.maskDateInput), shared by every calculator across all
+// categories, so it isn't duplicated here anymore.
 
 function titleCase(str) {
   return str.replace(/^[a-zа-яё]|[\- ][a-zа-яё]/g, (a) => a.toUpperCase());

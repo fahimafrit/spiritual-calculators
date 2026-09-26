@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
+<link rel="stylesheet" href="../assets/css/core/forms.css" />
 <link rel="stylesheet" href="../assets/css/numerology/base.css" />
 </head>
 
@@ -17,13 +18,7 @@
   <h1 class="page-title">Life Path Number Calculator</h1>
   <p class="page-subtitle">Discover the road your soul is walking</p>
 
-  <div class="form-card">
-    <div class="field">
-      <label for="date">Date of birth</label>
-      <input id="date" type="text" placeholder="dd/mm/yyyy" maxlength="10" autocomplete="off" inputmode="numeric" />
-    </div>
-    <button id="submit-btn">Calculate</button>
-  </div>
+  <div class="form-card" id="calc-form"></div>
   <div class="error-output"></div>
 
   <div class="result-wrap lifepath-container display-none">
@@ -47,6 +42,7 @@
   </div>
 </div>
 
+<script src="../assets/js/core/forms.js"></script>
 <script src="../assets/js/numerology/calculations.js"></script>
 <script src="../assets/js/numerology/life-path-number-data.js"></script>
 <script>
@@ -101,13 +97,11 @@ function calculateAndRender(day, month, year) {
    FORM / UI WIRING
    ════════════════════════════════════════════════════════════════════ */
 
+const fields = FormKit.render(document.getElementById('calc-form'), 'dob');
 const dateInput = document.getElementById('date');
 const container = document.querySelector('.lifepath-container');
-const btnAnswer = document.getElementById('submit-btn');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
-
-dateInput.addEventListener('input', maskDateInput);
 
 function validate(date, parsed, dateIsValid) {
   let errorMessage = '';
@@ -147,32 +141,18 @@ function runCalculation(calculationDate, { updateUrl = true } = {}) {
   // Same page, no reload — just swap the shareable URL in place.
   // Everything is recalculated client-side, nothing is stored server-side.
   if (updateUrl) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('dob', calculationDate.replace(/\//g, '-'));
-    window.history.pushState({}, '', url);
+    FormKit.updateUrlParams(fields, { date: calculationDate });
   }
 }
 
-btnAnswer.addEventListener('click', (evt) => {
-  evt.preventDefault();
-  runCalculation(dateInput.value);
-});
-
-dateInput.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Enter') btnAnswer.click();
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values.date),
 });
 
 // If the page is opened with ?dob=DD-MM-YYYY (a shared link), fill the
 // input and calculate immediately — no click required.
-(function calculateFromUrlIfPresent() {
-  const params = new URLSearchParams(window.location.search);
-  const dFromUrl = params.get('dob');
-  if (dFromUrl) {
-    const dobFromUrl = dFromUrl.replace(/-/g, '/');
-    dateInput.value = dobFromUrl;
-    runCalculation(dobFromUrl, { updateUrl: false });
-  }
-})();
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values.date, { updateUrl: false }));
+
 </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
+<link rel="stylesheet" href="../assets/css/core/forms.css" />
 <link rel="stylesheet" href="../assets/css/numerology/base.css" />
 </head>
 
@@ -17,13 +18,7 @@
   <h1 class="page-title">Destiny Number Calculator</h1>
   <p class="page-subtitle">What your full birth name reveals about your life's work</p>
 
-  <div class="form-card">
-    <div class="field">
-      <label for="name">Full birth name</label>
-      <input id="name" type="text" placeholder="e.g. John Michael Smith" autocomplete="off" />
-    </div>
-    <button id="submit-btn">Calculate</button>
-  </div>
+  <div class="form-card" id="calc-form"></div>
   <div class="error-output"></div>
 
   <div class="result-wrap destiny-container display-none">
@@ -47,6 +42,7 @@
   </div>
 </div>
 
+<script src="../assets/js/core/forms.js"></script>
 <script src="../assets/js/numerology/calculations.js"></script>
 <script src="../assets/js/numerology/destiny-number-data.js"></script>
 <script>
@@ -92,9 +88,11 @@ function calculateAndRender(name) {
    FORM / UI WIRING
    ════════════════════════════════════════════════════════════════════ */
 
+const fields = FormKit.render(document.getElementById('calc-form'), 'name', {
+  name: { label: 'Full birth name', placeholder: 'e.g. John Michael Smith' },
+});
 const nameInput = document.getElementById('name');
 const container = document.querySelector('.destiny-container');
-const btnAnswer = document.getElementById('submit-btn');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
@@ -130,32 +128,18 @@ function runCalculation(name, { updateUrl = true } = {}) {
 
   // Same page, no reload — just swap the shareable URL in place.
   if (updateUrl) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('name', name);
-    window.history.pushState({}, '', url);
+    FormKit.updateUrlParams(fields, { name });
   }
 }
 
-btnAnswer.addEventListener('click', (evt) => {
-  evt.preventDefault();
-  runCalculation(nameInput.value);
-});
-
-nameInput.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Enter') btnAnswer.click();
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values.name),
 });
 
 // If the page is opened with ?name=... (a shared link), fill the
 // input and calculate immediately — no click required.
-(function calculateFromUrlIfPresent() {
-  const params = new URLSearchParams(window.location.search);
-  const nameFromUrl = params.get('name');
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values.name, { updateUrl: false }));
 
-  if (nameFromUrl) {
-    nameInput.value = nameFromUrl;
-    runCalculation(nameFromUrl, { updateUrl: false });
-  }
-})();
 </script>
 </body>
 </html>

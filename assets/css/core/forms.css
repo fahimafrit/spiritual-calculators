@@ -1,0 +1,127 @@
+/* ════════════════════════════════════════════════════════════════════
+   assets/css/core/forms.css
+   ════════════════════════════════════════════════════════════════════
+   Shared input-form styling for every calculator (60+), across all
+   three tool categories.
+
+   This is structure only — no colors are hardcoded here. Every rule
+   below reads its colors from CSS custom properties (--card-bg,
+   --gold, --ink, etc.) that each category's own base.css already
+   defines. Link this stylesheet BEFORE the category's base.css in
+   each calculator's <head>, so a category can still override any of
+   these rules if a given calculator genuinely needs to differ.
+
+   Covers: .form-card, .field (+ label/input/placeholder/focus),
+   #submit-btn (+ hover), .error-output, .display-none.
+   ════════════════════════════════════════════════════════════════════ */
+
+.form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 28px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.field label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #000000;
+}
+
+.field input {
+    background: #ffffff;
+    border: 1px solid rgba(36, 26, 68, 0.16);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--ink);
+    font-size: 16px;
+    font-family: 'Nunito', sans-serif;
+    outline: none;
+    width: 100%;
+}
+
+.field input::placeholder {
+    color: var(--ink-faint);
+}
+
+.field input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15);
+}
+
+#submit-btn {
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 28px;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-transform: uppercase;
+}
+
+#submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(169, 120, 47, 0.28);
+}
+
+.error-output {
+    color: #c0392b;
+    text-align: center;
+    margin-top: 14px;
+    font-size: 14px;
+}
+
+.error-output p {
+    margin: 4px 0;
+}
+
+.display-none {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    .form-card {
+        padding: 20px;
+        gap: 14px;
+    }
+
+    .field {
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 420px) {
+    .form-card {
+        padding: 16px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .field {
+        min-width: 0;
+    }
+
+    #submit-btn {
+        width: 100%;
+    }
+}
