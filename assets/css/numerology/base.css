@@ -35,38 +35,22 @@
 
 * { box-sizing: border-box; }
 
-body {
-    margin: 0;
-    min-height: 100vh;
+/* Kept bare (not scoped to .container): a standalone file opened
+   directly still needs a sane default when previewed via Live
+   Server. No page-level background/padding/font here on purpose —
+   this file is embedded into an existing page via shortcode in
+   production, so it must not restyle the host page's <body>. */
+body { margin: 0; }
+
+.container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 16px;
     font-family: 'Nunito', sans-serif;
     color: var(--ink);
-    background:
-        radial-gradient(circle at 15% 10%, rgba(142, 91, 214, 0.07), transparent 45%),
-        radial-gradient(circle at 85% 90%, rgba(212, 175, 106, 0.10), transparent 50%),
-        linear-gradient(160deg, #fbfaff 0%, #f6f3fb 50%, #f9f5ee 100%);
-    padding: 48px 16px 80px;
 }
 
-h1, h2, h3 { font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 0.01em; }
-
-.container { max-width: 700px; margin: 0 auto; }
-
-.page-title {
-    text-align: center;
-    font-size: clamp(32px, 5vw, 48px);
-    margin: 0 0 6px;
-    font-weight: 900;
-    color: #000000;
-}
-
-.page-subtitle {
-    text-align: center;
-    color: var(--ink-soft);
-    margin: 0 0 40px;
-    font-size: 15px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-}
+.container h1, .container h2, .container h3 { font-family: 'Nunito', sans-serif; font-weight: 800; letter-spacing: 0.01em; }
 
 /* ── Form ───────────────────────────────────────────── */
 /* Shared .form-card / .field / #submit-btn / .error-output /
@@ -376,12 +360,8 @@ button, .chain-chip { -webkit-user-select: none; -moz-user-select: none; user-se
    ============================================================ */
 
 @media (max-width: 640px) {
-    body {
-        padding: 32px 12px 56px;
-    }
-
-    .page-subtitle {
-        margin-bottom: 28px;
+    .container {
+        padding: 0 12px;
     }
 
     .result-card {
@@ -419,8 +399,8 @@ button, .chain-chip { -webkit-user-select: none; -moz-user-select: none; user-se
 }
 
 @media (max-width: 420px) {
-    body {
-        padding: 28px 10px 48px;
+    .container {
+        padding: 0 10px;
     }
 
     /* core/forms.css already sets #submit-btn{width:100%} at this
