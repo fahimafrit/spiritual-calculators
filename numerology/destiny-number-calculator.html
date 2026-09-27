@@ -40,88 +40,55 @@
 </div>
 
 <script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/numerology/calculations.js"></script>
-<script src="../assets/js/numerology/destiny-number-data.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
-   CALCULATION PROCESS RENDER
-   Per-letter values (plain comma list) -> reduction chain of the
-   total -> final Destiny Number, in the exact plain-text format used
-   by the other calculators in this silo.
-   ════════════════════════════════════════════════════════════════════ */
-
-function calculateAndRender(name) {
-  const { total, breakdown } = computeNameNumber(name);
-
-  const letterValuesText = breakdown
-    .map((entry) => `${entry.letter.toUpperCase()}=${entry.value}`)
-    .join(', ');
-
-  const totalSteps = reduceKeepingMasterWithSteps(total);
-  const destinyNumber = totalSteps[totalSteps.length - 1];
-
-  const lines = [
-    `<p class="process-line"><span class="process-label">Letter values:</span> ${escapeHtml(letterValuesText)}</p>`,
-    `<p class="process-line"><span class="process-label">Reduction:</span> ${breakdown.map((entry) => entry.value).join('+')} <span class="process-arrow">&#8594;</span> ${totalSteps.join(' <span class="process-arrow">&#8594;</span> ')}</p>`,
-    `<p class="process-line process-final">Destiny Number: ${formatDisplayNumber(destinyNumber)}</p>`,
-  ];
-  document.getElementById('process-lines').innerHTML = lines.join('');
-
-  document.getElementById('num-value').textContent = formatDisplayNumber(destinyNumber);
-
-  const entry = DESTINY_NUMBER_DATA[destinyNumber];
-  const interpEl = document.getElementById('interpretation');
-  if (entry) {
-    interpEl.innerHTML = `<p><strong>${escapeHtml(entry.title)}</strong></p>` +
-      entry.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
-  } else {
-    interpEl.innerHTML = `<p>This reading is being written — check back soon.</p>`;
-  }
-}
-
-/* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
+   All calculation and interpretation logic lives server-side in
+   numerology/api/destiny-number-calculate.php. This page only submits
+   the name and renders whatever HTML fragments the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
 
 const fields = FormKit.render(document.getElementById('calc-form'), 'name', {
   name: { label: 'Full birth name', placeholder: 'e.g. John Michael Smith' },
 });
-const nameInput = document.getElementById('name');
 const container = document.querySelector('.destiny-container');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
-function validate(name) {
-  const nameValid = /^[a-zа-яё\- ]*$/i;
-  if (!name.replace(/[^a-zA-Z]/g, '')) {
-    return `<p>Enter a name using letters only (spaces and dashes are fine).</p>`;
-  }
-  if (!nameValid.test(name)) {
-    return `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: John Michael Smith.</p>`;
-  }
-  return true;
-}
-
-function runCalculation(name, { updateUrl = true } = {}) {
-  const response = validate(name);
-
+async function runCalculation(name, { updateUrl = true } = {}) {
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== true) {
-    errorOutput.innerHTML = response;
+  let data;
+  try {
+    const res = await fetch('api/destiny-number-calculate.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'name=' + encodeURIComponent(name),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
     container.classList.add('display-none');
     return;
   }
 
-  outputDate.textContent = `${titleCase(name)}'s Destiny Number`;
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.textContent = data.headerText;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
 
-  calculateAndRender(name);
+  document.getElementById('process-lines').innerHTML = data.processLinesHtml;
+  document.getElementById('num-value').textContent = data.numValue;
+  document.getElementById('interpretation').innerHTML = data.interpretationHtml;
 
   // Same page, no reload — just swap the shareable URL in place.
   if (updateUrl) {

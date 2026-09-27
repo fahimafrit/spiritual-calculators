@@ -40,103 +40,55 @@
 </div>
 
 <script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/numerology/calculations.js"></script>
-<script src="../assets/js/numerology/life-path-number-data.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
-   CALCULATION PROCESS RENDER
-   Plain-text, line-by-line reduction chains for day / month / year,
-   then their sum reduced to the final Life Path Number.
-   ════════════════════════════════════════════════════════════════════ */
-
-function processLine(label, raw, steps, { finalLine = false } = {}) {
-  const inner = `<span class="process-label">${label}:</span> ${raw} <span class="process-arrow">&#8594;</span> ${steps.join(' <span class="process-arrow">&#8594;</span> ')}`;
-  return `<p class="process-line${finalLine ? ' process-final' : ''}">${inner}</p>`;
-}
-
-function calculateAndRender(day, month, year) {
-  const daySteps = reduceKeepingMasterWithSteps(day);
-  const monthSteps = reduceKeepingMasterWithSteps(month);
-  const yearSteps = reduceKeepingMasterWithSteps(year);
-
-  const dayFinal = daySteps[daySteps.length - 1];
-  const monthFinal = monthSteps[monthSteps.length - 1];
-  const yearFinal = yearSteps[yearSteps.length - 1];
-
-  const total = dayFinal + monthFinal + yearFinal;
-  const totalSteps = reduceKeepingMasterWithSteps(total);
-  const lifePathNumber = totalSteps[totalSteps.length - 1];
-
-  const lines = [
-    processLine('Birth Day', day, daySteps),
-    processLine('Birth Month', month, monthSteps),
-    processLine('Birth Year', year, yearSteps),
-    `<p class="process-line"><span class="process-label">Sum:</span> ${dayFinal} + ${monthFinal} + ${yearFinal} = ${total} <span class="process-arrow">&#8594;</span> ${totalSteps.join(' <span class="process-arrow">&#8594;</span> ')}</p>`,
-    `<p class="process-line process-final">Life Path Number: ${formatDisplayNumber(lifePathNumber)}</p>`,
-  ];
-  document.getElementById('process-lines').innerHTML = lines.join('');
-
-  document.getElementById('num-value').textContent = formatDisplayNumber(lifePathNumber);
-
-  const entry = LIFE_PATH_DATA[lifePathNumber];
-  const interpEl = document.getElementById('interpretation');
-  if (entry) {
-    interpEl.innerHTML = `<p><strong>${escapeHtml(entry.title)}</strong></p>` +
-      entry.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
-  } else {
-    interpEl.innerHTML = `<p>This reading is being written — check back soon.</p>`;
-  }
-}
-
-/* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
+   All calculation and interpretation logic lives server-side in
+   numerology/api/life-path-calculate.php. This page only submits the
+   date and renders whatever HTML fragments the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
 
 const fields = FormKit.render(document.getElementById('calc-form'), 'dob');
-const dateInput = document.getElementById('date');
 const container = document.querySelector('.lifepath-container');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
-function validate(date, parsed, dateIsValid) {
-  let errorMessage = '';
-  const today = new Date();
-
-  if (!parsed || !dateIsValid) {
-    errorMessage += `<p>Date is not valid. Use dd/mm/yyyy.</p>`;
-  }
-  if (parsed && dateIsValid && (date > today)) {
-    errorMessage += `<p>Date can't be in the future.</p>`;
-  }
-  return errorMessage !== '' ? errorMessage : true;
-}
-
-function runCalculation(calculationDate, { updateUrl = true } = {}) {
-  const parsed = parseDdMmYyyy(calculationDate);
-  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
-  const dateIsValid = isValidCalendarDate(parsed, date);
-  const response = validate(date, parsed, dateIsValid);
-
+async function runCalculation(calculationDate, { updateUrl = true } = {}) {
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== true) {
-    errorOutput.innerHTML = response;
+  let data;
+  try {
+    const res = await fetch('api/life-path-calculate.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date=' + encodeURIComponent(calculationDate),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
     container.classList.add('display-none');
     return;
   }
 
-  outputDate.textContent = `Date of Birth: ${formatLongDate(parsed.day, parsed.month, parsed.year)}`;
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.textContent = data.personalDateText;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
 
-  calculateAndRender(parsed.day, parsed.month, parsed.year);
+  document.getElementById('process-lines').innerHTML = data.processLinesHtml;
+  document.getElementById('num-value').textContent = data.numValue;
+  document.getElementById('interpretation').innerHTML = data.interpretationHtml;
 
   // Same page, no reload — just swap the shareable URL in place.
-  // Everything is recalculated client-side, nothing is stored server-side.
   if (updateUrl) {
     FormKit.updateUrlParams(fields, { date: calculationDate });
   }

@@ -40,101 +40,55 @@
 </div>
 
 <script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/numerology/calculations.js"></script>
-<script src="../assets/js/numerology/attitude-number-data.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
-   CALCULATION PROCESS RENDER
-   The Attitude Number uses only day + month (never the year) — it
-   reflects instinctive first-impression energy, not the full life
-   path. Same plain-text reduction-chain format as Life Path.
-   ════════════════════════════════════════════════════════════════════ */
-
-function processLine(label, raw, steps, { finalLine = false } = {}) {
-  const inner = `<span class="process-label">${label}:</span> ${raw} <span class="process-arrow">&#8594;</span> ${steps.join(' <span class="process-arrow">&#8594;</span> ')}`;
-  return `<p class="process-line${finalLine ? ' process-final' : ''}">${inner}</p>`;
-}
-
-function calculateAndRender(day, month) {
-  const daySteps = reduceKeepingMasterWithSteps(day);
-  const monthSteps = reduceKeepingMasterWithSteps(month);
-
-  const dayFinal = daySteps[daySteps.length - 1];
-  const monthFinal = monthSteps[monthSteps.length - 1];
-
-  const total = dayFinal + monthFinal;
-  const totalSteps = reduceKeepingMasterWithSteps(total);
-  const attitudeNumber = totalSteps[totalSteps.length - 1];
-
-  const lines = [
-    processLine('Birth Day', day, daySteps),
-    processLine('Birth Month', month, monthSteps),
-    `<p class="process-line"><span class="process-label">Sum:</span> ${dayFinal} + ${monthFinal} = ${total} <span class="process-arrow">&#8594;</span> ${totalSteps.join(' <span class="process-arrow">&#8594;</span> ')}</p>`,
-    `<p class="process-line process-final">Attitude Number: ${formatDisplayNumber(attitudeNumber)}</p>`,
-  ];
-  document.getElementById('process-lines').innerHTML = lines.join('');
-
-  document.getElementById('num-value').textContent = formatDisplayNumber(attitudeNumber);
-
-  const entry = ATTITUDE_NUMBER_DATA[attitudeNumber];
-  const interpEl = document.getElementById('interpretation');
-  if (entry) {
-    interpEl.innerHTML = `<p><strong>${escapeHtml(entry.title)}</strong></p>` +
-      entry.paragraphs.map((p) => `<p>${escapeHtml(p)}</p>`).join('');
-  } else {
-    interpEl.innerHTML = `<p>This reading is being written — check back soon.</p>`;
-  }
-}
-
-/* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
+   All calculation and interpretation logic lives server-side in
+   numerology/api/attitude-number-calculate.php. This page only submits
+   the date and renders whatever HTML fragments the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
 
 const fields = FormKit.render(document.getElementById('calc-form'), 'dob');
-const dateInput = document.getElementById('date');
 const container = document.querySelector('.attitude-container');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
-function validate(date, parsed, dateIsValid) {
-  let errorMessage = '';
-  const today = new Date();
-
-  if (!parsed || !dateIsValid) {
-    errorMessage += `<p>Date is not valid. Use dd/mm/yyyy.</p>`;
-  }
-  if (parsed && dateIsValid && (date > today)) {
-    errorMessage += `<p>Date can't be in the future.</p>`;
-  }
-  return errorMessage !== '' ? errorMessage : true;
-}
-
-function runCalculation(calculationDate, { updateUrl = true } = {}) {
-  const parsed = parseDdMmYyyy(calculationDate);
-  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
-  const dateIsValid = isValidCalendarDate(parsed, date);
-  const response = validate(date, parsed, dateIsValid);
-
+async function runCalculation(calculationDate, { updateUrl = true } = {}) {
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== true) {
-    errorOutput.innerHTML = response;
+  let data;
+  try {
+    const res = await fetch('api/attitude-number-calculate.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date=' + encodeURIComponent(calculationDate),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
     container.classList.add('display-none');
     return;
   }
 
-  outputDate.textContent = `Date of Birth: ${formatLongDate(parsed.day, parsed.month, parsed.year)}`;
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.textContent = data.headerText;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
 
-  calculateAndRender(parsed.day, parsed.month);
+  document.getElementById('process-lines').innerHTML = data.processLinesHtml;
+  document.getElementById('num-value').textContent = data.numValue;
+  document.getElementById('interpretation').innerHTML = data.interpretationHtml;
 
   // Same page, no reload — just swap the shareable URL in place.
-  // Everything is recalculated client-side, nothing is stored server-side.
   if (updateUrl) {
     FormKit.updateUrlParams(fields, { date: calculationDate });
   }
