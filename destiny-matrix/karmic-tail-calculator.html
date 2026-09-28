@@ -291,10 +291,15 @@
 </div>
 
 <script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/destiny-matrix/calculations.js"></script>
 <script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   All calculation, validation and karmic tail lookup logic lives
+   server-side (destiny-matrix/api/karmic-tail-calculate.php). This page
+   only submits the date and name and renders what the endpoint returns.
+   ════════════════════════════════════════════════════════════════════ */
 
 function renderValues(values) {
   for (const [key, value] of Object.entries(values)) {
@@ -303,98 +308,36 @@ function renderValues(values) {
   }
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
 /* ════════════════════════════════════════════════════════════════════
-   KARMIC TAIL CONTENT — loads interpretations/karmic-manifest.json once,
-   then looks up the entry matching jpoint-rpoint-dpoint.
+   KARMIC TAIL CONTENT
+   The endpoint returns the finished reading HTML for this one chart
+   ('' when no reading exists for it yet). It is shown once its card is
+   about to scroll into view.
    ════════════════════════════════════════════════════════════════════ */
 
-const INTERPRETATIONS_BASE = 'data/karmic-tail-readings/';
-let karmicEntriesPromise = null;
-
-function loadKarmicEntries() {
-  if (!karmicEntriesPromise) {
-    karmicEntriesPromise = fetch(INTERPRETATIONS_BASE + 'karmic-manifest.json')
-      .then((res) => {
-        if (!res.ok) throw new Error(`Karmic tail content request failed: ${res.status}`);
-        return res.json();
-      });
-  }
-  return karmicEntriesPromise;
-}
-
-function renderKarmicPosition(position) {
-  return `
-    <div class="karmic-position">
-      <p class="karmic-position-heading">${escapeHtml(position.roman)} &middot; <span class="arcana-name">${escapeHtml(position.arcana)}</span> — ${escapeHtml(position.role)}</p>
-      <p>${escapeHtml(position.text)}</p>
-    </div>`;
-}
-
-function renderKarmicEntry(entry) {
-  const positionsHtml = entry.positions.map(renderKarmicPosition).join('');
-  return `
-    <div class="karmic-triplet-badge"><span>${escapeHtml(entry.name)}</span></div>
-    ${positionsHtml}
-    <div class="karmic-summary-grid">
-      <div class="karmic-summary-block shadow">
-        <h3>Shadow</h3>
-        <p>${escapeHtml(entry.shadow)}</p>
-      </div>
-      <div class="karmic-summary-block integrated">
-        <h3>Integrated</h3>
-        <p>${escapeHtml(entry.integrated)}</p>
-      </div>
-      <div class="karmic-summary-block practical">
-        <h3>Where It Shows Up</h3>
-        <p>${escapeHtml(entry.practical)}</p>
-      </div>
-    </div>
-    <div class="karmic-cta">
-      <p>This is one thread. Your full Destiny Matrix reading maps how it connects to everything else in your chart.</p>
-      <a href="../destiny-matrix/destiny-matrix.html" target="_blank">Get your full Destiny Matrix reading</a>
-    </div>`;
-}
-
-async function renderKarmicResult(person) {
+function renderKarmicResult(readingHtml) {
   const resultEl = document.getElementById('karmic-result');
   const statusEl = document.getElementById('karmic-status');
   if (!resultEl) return;
 
-  resultEl.innerHTML = '';
-  statusEl.textContent = 'Loading your karmic tail…';
-
-  const cluster = `${person.points.jpoint}-${person.points.rpoint}-${person.points.dpoint}`;
-
-  try {
-    const entries = await loadKarmicEntries();
-    const entry = entries.find((item) => item.cluster === cluster);
-    if (!entry) {
-      statusEl.textContent = 'Your karmic tail content is being written — check back soon.';
-      return;
-    }
-    resultEl.innerHTML = renderKarmicEntry(entry);
-    statusEl.textContent = '';
-
-    const traits = resultEl.querySelectorAll('.karmic-triplet-badge, .karmic-position');
-    UIEffects.staggerReveal(traits, { from: 'translate(-28px, 18px)', step: 0.06 });
-
-    const blocks = resultEl.querySelectorAll('.karmic-summary-block');
-    UIEffects.staggerReveal(blocks, {
-      from: 'translate(-28px, 18px)',
-      step: 0.08,
-      start: traits.length * 0.06 + 0.1,
-    });
-  } catch (err) {
-    console.warn('Could not load karmic tail content:', err);
-    statusEl.textContent = 'Your karmic tail could not be loaded right now.';
+  if (readingHtml === '') {
+    resultEl.innerHTML = '';
+    statusEl.textContent = 'Your karmic tail content is being written — check back soon.';
+    return;
   }
+
+  resultEl.innerHTML = readingHtml;
+  statusEl.textContent = '';
+
+  const traits = resultEl.querySelectorAll('.karmic-triplet-badge, .karmic-position');
+  UIEffects.staggerReveal(traits, { from: 'translate(-28px, 18px)', step: 0.06 });
+
+  const blocks = resultEl.querySelectorAll('.karmic-summary-block');
+  UIEffects.staggerReveal(blocks, {
+    from: 'translate(-28px, 18px)',
+    step: 0.08,
+    start: traits.length * 0.06 + 0.1,
+  });
 }
 
 /* ════════════════════════════════════════════════════════════════════
@@ -410,80 +353,58 @@ const container = document.querySelector('.matrix-container');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
-function titleCase(str) {
-  return str.replace(/\S+/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
-}
+// Bumped on every calculation so a slow, older response can never
+// overwrite the result of a newer one.
+let latestCalculationId = 0;
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function formatLongDate(day, month, year) {
-  return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
-}
-
-function parseDdMmYyyy(value) {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (!match) return null;
-  const [, dd, mm, yyyy] = match;
-  return { day: +dd, month: +mm, year: +yyyy };
-}
-
-function validate(date, name, parsed, dateIsValid) {
-  let errorMessage = '';
-  const today = new Date();
-  const nameValid = new RegExp('^[а-яё\\- ]*[a-z\\- ]*$', 'i');
-
-  if (name === '' || !parsed || !dateIsValid) {
-    errorMessage += `<p>Date is not valid or one of the fields is empty. Use dd/mm/yyyy.</p>`;
-  }
-  if (parsed && dateIsValid && (date > today)) {
-    errorMessage += `<p>Date can't be in the future.</p>`;
-  }
-  if (!nameValid.test(name)) {
-    errorMessage += `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: Anna, Anna-Maria, Anna Maria.</p>`;
-  }
-  return errorMessage !== '' ? errorMessage : true;
-}
-
-function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
-  const parsed = parseDdMmYyyy(calculationDate);
-  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
-  const dateIsValid = isValidCalendarDate(parsed, date);
-  const response = validate(date, name, parsed, dateIsValid);
+async function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
+  const calculationId = ++latestCalculationId;
 
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== true) {
-    errorOutput.innerHTML = response;
+  let data;
+  try {
+    const res = await fetch('api/karmic-tail-calculate.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date=' + encodeURIComponent(calculationDate) + '&name=' + encodeURIComponent(name),
+    });
+    data = await res.json();
+  } catch (err) {
+    if (calculationId !== latestCalculationId) return;
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
     container.classList.add('display-none');
     return;
   }
 
-  const fullDate = formatLongDate(parsed.day, parsed.month, parsed.year);
-  outputDate.innerHTML = `${titleCase(name)}'s <span class="gray">Karmic Tail — Date of Birth: ${fullDate}</span>`;
+  if (calculationId !== latestCalculationId) return;
+
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.innerHTML = data.headerHtml;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
   UIEffects.revealOnScroll();
 
-  const apoint = reduceNumber(parsed.day);
-  const bpoint = parsed.month;
-  const cpoint = calculateYear(parsed.year);
+  renderValues(data.values);
 
-  const person = calculatePoints(apoint, bpoint, cpoint);
-
-  renderValues(person.points);
-
-  // Defer the karmic tail content fetch/render until its card is
-  // actually about to scroll into view.
+  // Defer showing the karmic tail content until its card is actually
+  // about to scroll into view.
   const karmicStatusEl = document.getElementById('karmic-status');
   if (karmicStatusEl) karmicStatusEl.textContent = '';
   document.getElementById('karmic-result').innerHTML =
     '<div class="lazy-skeleton"><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line short"></div></div>';
-  UIEffects.lazyMount(document.querySelector('.karmic-card'), () => renderKarmicResult(person));
+  UIEffects.lazyMount(document.querySelector('.karmic-card'), () => {
+    if (calculationId === latestCalculationId) renderKarmicResult(data.readingHtml);
+  });
 
   // Same page, no reload/new page — just swap the shareable URL in place.
-  // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
     FormKit.updateUrlParams(fields, { date: calculationDate, name });
   }

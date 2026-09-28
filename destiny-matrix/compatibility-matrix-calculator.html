@@ -459,67 +459,15 @@
 
 
 <script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/destiny-matrix/calculations.js"></script>
 <script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
 
-
 /* ════════════════════════════════════════════════════════════════════
-   COMPATIBILITY ENGINE
-   a–i: reduced sum of the same-position point from each personal matrix.
-   j,k,l,m,n,o,p,q,r,s,t: derived from the compatibility matrix's own
-   a–i using the same formulas calculatePoints uses — never pulled
-   from either personal matrix directly.
-   Purposes: derived the same way, from the compatibility matrix's own
-   a,b,c,d,f,g,h,i — same formulas as calculatePoints.
+   All calculation and validation logic lives server-side
+   (destiny-matrix/api/compatibility-matrix-calculate.php). This page
+   only submits the two dates and renders what the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
-
-const calculateCompatibility = (person1Points, person2Points) => {
-  const apoint = reduceNumber(person1Points.apoint + person2Points.apoint);
-  const bpoint = reduceNumber(person1Points.bpoint + person2Points.bpoint);
-  const cpoint = reduceNumber(person1Points.cpoint + person2Points.cpoint);
-  const dpoint = reduceNumber(person1Points.dpoint + person2Points.dpoint);
-  const epoint = reduceNumber(person1Points.epoint + person2Points.epoint);
-  const fpoint = reduceNumber(person1Points.fpoint + person2Points.fpoint);
-  const gpoint = reduceNumber(person1Points.gpoint + person2Points.gpoint);
-  const hpoint = reduceNumber(person1Points.hpoint + person2Points.hpoint);
-  const ipoint = reduceNumber(person1Points.ipoint + person2Points.ipoint);
-
-  const jpoint = reduceNumber(dpoint + epoint);
-  const npoint = reduceNumber(cpoint + epoint);
-  const lpoint = reduceNumber(jpoint + npoint);
-  const mpoint = reduceNumber(lpoint + npoint);
-  const kpoint = reduceNumber(jpoint + lpoint);
-  const qpoint = reduceNumber(npoint + cpoint);
-  const rpoint = reduceNumber(jpoint + dpoint);
-  const spoint = reduceNumber(apoint + epoint);
-  const tpoint = reduceNumber(bpoint + epoint);
-  const opoint = reduceNumber(apoint + spoint);
-  const ppoint = reduceNumber(bpoint + tpoint);
-
-  const points = {
-    apoint, bpoint, cpoint, dpoint, epoint, fpoint, gpoint, hpoint, ipoint,
-    jpoint, kpoint, lpoint, mpoint, npoint, opoint, ppoint, qpoint, rpoint, spoint, tpoint,
-  };
-
-  const skypoint = reduceNumber(bpoint + dpoint);
-  const earthpoint = reduceNumber(apoint + cpoint);
-  const perspurpose = reduceNumber(skypoint + earthpoint);
-  const femalepoint = reduceNumber(gpoint + hpoint);
-  const malepoint = reduceNumber(fpoint + ipoint);
-  const socialpurpose = reduceNumber(femalepoint + malepoint);
-  const generalpurpose = reduceNumber(perspurpose + socialpurpose);
-  const planetarypurpose = reduceNumber(socialpurpose + generalpurpose);
-
-  const purposes = {
-    skypoint, earthpoint, perspurpose,
-    femalepoint, malepoint, socialpurpose,
-    generalpurpose, planetarypurpose,
-  };
-
-  return { points, purposes };
-};
 
 function renderValues(values) {
   for (const [key, value] of Object.entries(values)) {
@@ -547,12 +495,8 @@ const tabButtons = document.querySelectorAll('.tab-btn');
 // matrix and have no place in the 20-point compatibility matrix.
 const PERSONAL_ONLY_GROUP_IDS = ['points-aux', 'points-years', 'age-tick-dots', 'pt-w', 'pt-x'];
 
-// The 20 point ids the compatibility matrix actually fills.
-const COMPAT_POINT_IDS = ['apoint','bpoint','cpoint','dpoint','epoint','fpoint','gpoint','hpoint','ipoint',
-  'jpoint','kpoint','lpoint','mpoint','npoint','opoint','ppoint','qpoint','rpoint','spoint','tpoint'];
-
-// Everything the personal matrix can populate: the 32 matrix points, the
-// year-band ring, and the purposes diagrams.
+// Every id the chart can populate, so a tab switch can blank the whole
+// chart before drawing the next tab's values.
 const ALL_POINT_IDS = ['apoint','bpoint','cpoint','dpoint','epoint','fpoint','gpoint','hpoint','ipoint',
   'jpoint','kpoint','lpoint','mpoint','npoint','opoint','ppoint','qpoint','rpoint','spoint','tpoint',
   'upoint','vpoint','wpoint','xpoint','f2point','f1point','g2point','g1point','i2point','i1point','h2point','h1point',
@@ -567,7 +511,11 @@ const ALL_POINT_IDS = ['apoint','bpoint','cpoint','dpoint','epoint','fpoint','gp
   'skypoint','earthpoint','perspurpose','femalepoint','malepoint','socialpurpose','generalpurpose','planetarypurpose'];
 
 let activeTab = 'compat';
-let results = null; // { person1: {points,purposes,chartHeart,years}, person2: {...}, compat: {...}, fullDate1, fullDate2 }
+let results = null; // { compat: {...}, p1: {...}, p2: {...} } as returned by the server
+
+// Bumped on every calculation so a slow, older response can never
+// overwrite the result of a newer one.
+let latestCalculationId = 0;
 
 /* Purpose blocks: heading, text, and diagram/circle reveal in their
    own sequence on first appearance — never the whole block at once. */
@@ -591,30 +539,6 @@ let results = null; // { person1: {points,purposes,chartHeart,years}, person2: {
 // Date masking, focus-advance between date1/date2 (and on to the
 // submit button after date2), and the Partner-1/Partner-2 focus-
 // placeholder swap are all wired below via FormKit.wire().
-
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function formatLongDate(day, month, year) {
-  return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
-}
-
-function parseDdMmYyyy(value) {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (!match) return null;
-  const [, dd, mm, yyyy] = match;
-  return { day: +dd, month: +mm, year: +yyyy };
-}
-
-function validateOne(label, date, parsed, dateIsValid) {
-  let errorMessage = '';
-  const today = new Date();
-  if (!parsed || !dateIsValid) {
-    errorMessage += `<p>${label} date is not valid or empty. Use DD/MM/YYYY.</p>`;
-  } else if (date > today) {
-    errorMessage += `<p>${label} date can't be in the future.</p>`;
-  }
-  return errorMessage;
-}
 
 function clearAllOutputs() {
   ALL_POINT_IDS.forEach((id) => {
@@ -642,15 +566,11 @@ function renderTab(tab) {
   if (tab === 'compat') {
     setSvgGroupsVisible(false);
     purposesCard.classList.remove('display-none');
-    renderValues(results.compat.points);
-    renderValues(results.compat.purposes);
+    renderValues(results.compat);
   } else {
-    const person = tab === 'p1' ? results.person1 : results.person2;
     setSvgGroupsVisible(true);
     purposesCard.classList.remove('display-none');
-    renderValues(person.points);
-    renderValues(person.purposes);
-    renderValues(person.years);
+    renderValues(tab === 'p1' ? results.p1 : results.p2);
   }
 
   // Content updates in place rather than being freshly inserted, so
@@ -663,36 +583,38 @@ tabButtons.forEach((btn) => {
   btn.addEventListener('click', () => renderTab(btn.dataset.tab));
 });
 
-function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
-  const parsed1 = parseDdMmYyyy(calcDate1);
-  const parsed2 = parseDdMmYyyy(calcDate2);
-  const date1 = parsed1 ? new Date(parsed1.year, parsed1.month - 1, parsed1.day) : new Date(NaN);
-  const date2 = parsed2 ? new Date(parsed2.year, parsed2.month - 1, parsed2.day) : new Date(NaN);
-  const dateIsValid1 = isValidCalendarDate(parsed1, date1);
-  const dateIsValid2 = isValidCalendarDate(parsed2, date2);
-
-  const response = validateOne('Partner 1', date1, parsed1, dateIsValid1)
-    + validateOne('Partner 2', date2, parsed2, dateIsValid2);
+async function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
+  const calculationId = ++latestCalculationId;
 
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== '') {
-    errorOutput.innerHTML = response;
+  let data;
+  try {
+    const res = await fetch('api/compatibility-matrix-calculate.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date1=' + encodeURIComponent(calcDate1) + '&date2=' + encodeURIComponent(calcDate2),
+    });
+    data = await res.json();
+  } catch (err) {
+    if (calculationId !== latestCalculationId) return;
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
     container.classList.add('display-none');
     return;
   }
 
-  const fullDate1 = formatLongDate(parsed1.day, parsed1.month, parsed1.year);
-  const fullDate2 = formatLongDate(parsed2.day, parsed2.month, parsed2.year);
+  if (calculationId !== latestCalculationId) return;
 
-  const person1 = calculatePoints(reduceNumber(parsed1.day), parsed1.month, calculateYear(parsed1.year));
-  const person2 = calculatePoints(reduceNumber(parsed2.day), parsed2.month, calculateYear(parsed2.year));
-  const compat = calculateCompatibility(person1.points, person2.points);
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
 
-  results = { person1, person2, compat, fullDate1, fullDate2 };
+  results = { compat: data.compat, p1: data.p1, p2: data.p2 };
 
-  outputDate.innerHTML = `Compatibility Matrix <span class="gray">Partner 1: ${fullDate1} — Partner 2: ${fullDate2}</span>`;
+  outputDate.innerHTML = data.headerHtml;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
@@ -701,7 +623,6 @@ function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
   renderTab('compat');
 
   // Same page, no reload/new page — just swap the shareable URL in place.
-  // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
     FormKit.updateUrlParams(fields, { date1: calcDate1, date2: calcDate2 });
   }

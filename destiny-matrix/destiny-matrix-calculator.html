@@ -607,7 +607,6 @@
 
 
 <script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/destiny-matrix/calculations.js"></script>
 <script src="../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
@@ -708,205 +707,13 @@ const purposesRevealedPromise = new Promise((resolve) => { purposesRevealed = re
   }
 })();
 
-function renderChakraTable(chartHeart) {
-  const rows = [
-    { keys: ['sahphysics','ajphysics','vishphysics','anahphysics','manphysics','svadphysics','mulphysics'], resultId: 'resultphysics' },
-    { keys: ['sahenergy','ajenergy','vishenergy','anahenergy','manenergy','svadenergy','mulenergy'], resultId: 'resultenergy' },
-    { keys: ['sahemotions','ajemotions','vishemotions','anahemotions','manemotions','svademotions','mulemotions'], resultId: 'resultemotions' },
-  ];
-  rows.forEach(({ keys, resultId }) => {
-    let sum = 0;
-    keys.forEach((key) => {
-      const el = document.getElementById(key);
-      if (el) el.textContent = chartHeart[key];
-      sum += chartHeart[key];
-    });
-    const resultEl = document.getElementById(resultId);
-    if (resultEl) resultEl.textContent = reduceNumber(sum);
-  });
-}
-
 /* ════════════════════════════════════════════════════════════════════
    INTERPRETATION READING
-   Loads interpretations/destiny-manifest.json once, then fetches each
-   referenced interpretation file on demand (cached after first use) and
-   renders every section's subsections into #reading-sections.
+   The full reading is built server-side (api/destiny-matrix-reading.php).
+   The browser only receives the finished HTML for this one chart.
    ════════════════════════════════════════════════════════════════════ */
 
-const INTERPRETATIONS_BASE = 'data/destiny-matrix-readings/';
-const readingFileCache = new Map(); // filename -> Promise<parsed JSON>
-let readingManifestPromise = null;
-
-const CHAKRA_FULL_NAME = {
-  sah: 'sahasrara', aj: 'ajna', vish: 'vishuddha', anah: 'anahata',
-  man: 'manipura', svad: 'svadhisthana', mul: 'muladhara',
-};
-
-function loadManifest() {
-  if (!readingManifestPromise) {
-    readingManifestPromise = fetch(INTERPRETATIONS_BASE + 'destiny-manifest.json')
-      .then((res) => {
-        if (!res.ok) throw new Error(`Manifest request failed: ${res.status}`);
-        return res.json();
-      });
-  }
-  return readingManifestPromise;
-}
-
-function loadInterpretationFile(filename) {
-  if (!readingFileCache.has(filename)) {
-    readingFileCache.set(
-      filename,
-      fetch(INTERPRETATIONS_BASE + filename).then((res) => {
-        if (!res.ok) throw new Error(`Failed to load ${filename}: ${res.status}`);
-        return res.json();
-      })
-    );
-  }
-  return readingFileCache.get(filename);
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
-
-function renderTabsAndPanels(items) {
-  // items: array of { label (HTML, pre-escaped by caller), contentHtml }
-  const tabs = items.map((item, i) => `
-    <button type="button" class="reading-tab${i === 0 ? ' active' : ''}" data-tab-index="${i}">${item.label}</button>
-  `).join('');
-  const panels = items.map((item, i) => `
-    <div class="reading-tab-panel${i === 0 ? ' active' : ''}" data-tab-index="${i}">${item.contentHtml}</div>
-  `).join('');
-  return `
-    <div class="reading-tabs" role="tablist">${tabs}</div>
-    <div class="reading-tab-panels">${panels}</div>
-  `;
-}
-
-function buildSectionDropdownHtml(section, items) {
-  if (!items || items.length === 0) return null;
-  return `
-    <details class="reading-section" id="reading-${section.id}">
-      <summary class="reading-section-title"><span class="reading-chevron">&#8250;</span>${escapeHtml(section.title)}</summary>
-      <div class="reading-section-body">
-        ${renderTabsAndPanels(items)}
-      </div>
-    </details>
-  `;
-}
-
-/* Standard "arcana" lookup: entries keyed by an integer 1-22. */
-function findArcanaEntry(fileData, value) {
-  if (!Array.isArray(fileData)) return null;
-  return fileData.find((entry) => entry.arcana === value) || null;
-}
-
-/* Cluster lookup (Soul's Journey): entries keyed by a "j-k-l" string. */
-function findClusterEntry(fileData, clusterKey) {
-  if (!Array.isArray(fileData)) return null;
-  return fileData.find((entry) => entry.cluster === clusterKey) || null;
-}
-
-/* Resolve the lookup key for a manifest section from the computed points. */
-function resolveSectionKey(section, person, currentYearArcana) {
-  if (section.lookup === 'cluster') {
-    const values = section.sourcePoints.map((p) => person.points[p]);
-    if (values.some((v) => v === undefined)) return null;
-    return values.join('-');
-  }
-  if (section.lookup === 'arcana') {
-    if (section.derived === 'personalYear') return currentYearArcana;
-    const key = section.sourcePoints[0];
-    if (key in person.points) return person.points[key];
-    if (key in person.purposes) return person.purposes[key];
-    return null;
-  }
-  return null;
-}
-
-/* Each subsection (heading + text) becomes one tab in the dropdown. */
-function buildStandardSectionHtml(section, entry) {
-  if (!entry || !Array.isArray(entry.subsections) || entry.subsections.length === 0) return null;
-  const items = entry.subsections.map((sub) => ({
-    label: escapeHtml(sub.heading),
-    contentHtml: `<p class="reading-subsection-text">${escapeHtml(sub.text)}</p>`,
-  }));
-  return buildSectionDropdownHtml(section, items);
-}
-
-/* Body & Energy Map: one dropdown, one tab per chakra (Physics/Energy/Emotions stacked inside). */
-function buildChakraSectionHtml(section, chakraFileData, chartHeart) {
-  if (!Array.isArray(chakraFileData) || chakraFileData.length === 0) return null;
-
-  const items = [];
-  Object.entries(CHAKRA_FULL_NAME).forEach(([abbrev, fullName]) => {
-    const entry = chakraFileData.find((e) => e.chakra === fullName);
-    if (!entry) return; // this chakra's content not written yet — skip quietly
-
-    const physicsVal = chartHeart[`${abbrev}physics`];
-    const energyVal = chartHeart[`${abbrev}energy`];
-    const emotionsVal = chartHeart[`${abbrev}emotions`];
-
-    const paragraphs = [];
-    if (entry.physics_text) {
-      paragraphs.push(entry.physics_text);
-    } else if (entry.physics && entry.physics[String(physicsVal)]) {
-      paragraphs.push(entry.physics[String(physicsVal)]);
-    }
-    if (entry.energy_text) {
-      paragraphs.push(entry.energy_text);
-    } else if (entry.energy && entry.energy[String(energyVal)]) {
-      paragraphs.push(entry.energy[String(energyVal)]);
-    }
-    if (entry.emotions_text) {
-      paragraphs.push(entry.emotions_text);
-    } else if (entry.emotions && entry.emotions[String(emotionsVal)]) {
-      paragraphs.push(entry.emotions[String(emotionsVal)]);
-    }
-
-    if (paragraphs.length === 0) return;
-
-    const chakraMeta = CHAKRAS.find((c) => c.key === abbrev);
-    const color = chakraMeta ? chakraMeta.color : 'var(--gold)';
-    const label = chakraMeta ? chakraMeta.name : fullName;
-
-    items.push({
-      label: `<span class="reading-chakra-dot" style="background:${color};"></span>${escapeHtml(label)}`,
-      contentHtml: paragraphs.map((p) => `<p class="reading-subsection-text">${escapeHtml(p)}</p>`).join(''),
-    });
-  });
-
-  return buildSectionDropdownHtml(section, items);
-}
-
-
-async function renderSectionForManifestEntry(section, person, currentYearArcana) {
-  try {
-    const fileData = await loadInterpretationFile(section.file);
-
-    if (section.lookup === 'chakra') {
-      return buildChakraSectionHtml(section, fileData, person.chartHeart);
-    }
-
-    const key = resolveSectionKey(section, person, currentYearArcana);
-    if (key === null) return null;
-
-    const entry = section.lookup === 'cluster'
-      ? findClusterEntry(fileData, key)
-      : findArcanaEntry(fileData, key);
-
-    return buildStandardSectionHtml(section, entry);
-  } catch (err) {
-    console.warn(`Reading section "${section.id}" could not be rendered:`, err);
-    return null;
-  }
-}
-
-async function renderReading(person) {
+async function renderReading(calculationDate, calculationId) {
   const readingContainer = document.getElementById('reading-sections');
   const statusEl = document.getElementById('reading-status');
   if (!readingContainer) return;
@@ -915,17 +722,19 @@ async function renderReading(person) {
   statusEl.textContent = 'Loading your reading…';
 
   try {
-    const manifest = await loadManifest();
-    const sections = [...manifest.sections].sort((a, b) => a.order - b.order);
-    const currentYearArcana = calculateYear(new Date().getFullYear());
+    const res = await fetch('api/destiny-matrix-reading.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date=' + encodeURIComponent(calculationDate),
+    });
+    const data = await res.json();
+    if (!data.valid) throw new Error('Reading request was rejected');
 
-    const htmlChunks = await Promise.all(
-      sections.map((section) => renderSectionForManifestEntry(section, person, currentYearArcana))
-    );
+    // A newer calculation started while this one was loading — drop this result.
+    if (calculationId !== latestCalculationId) return;
 
-    const rendered = htmlChunks.filter(Boolean);
-    readingContainer.innerHTML = rendered.join('');
-    statusEl.textContent = rendered.length === 0
+    readingContainer.innerHTML = data.html;
+    statusEl.textContent = data.html === ''
       ? 'Your reading content is being written — check back soon.'
       : '';
 
@@ -942,7 +751,7 @@ async function renderReading(person) {
     await purposesRevealedPromise;
     UIEffects.revealOnScroll(readingContainer);
   } catch (err) {
-    console.warn('Could not load the interpretation manifest:', err);
+    if (calculationId !== latestCalculationId) return;
     statusEl.textContent = 'Your reading could not be loaded right now.';
   }
 }
@@ -984,6 +793,9 @@ async function renderReading(person) {
 
 /* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
+   All calculation and interpretation logic lives server-side in
+   destiny-matrix/api/. This page only submits the date and name and
+   renders what the endpoints return.
    ════════════════════════════════════════════════════════════════════ */
 
 const fields = FormKit.render(document.getElementById('calc-form'), 'dob-name', {
@@ -995,85 +807,59 @@ const container = document.querySelector('.matrix-container');
 const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
-function titleCase(str) {
-  return str.replace(/^[a-zа-яё]|[\- ][a-zа-яё]/g, (a) => a.toUpperCase());
-}
+// Bumped on every calculation so a slow, older response can never
+// overwrite the result of a newer one.
+let latestCalculationId = 0;
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function formatLongDate(day, month, year) {
-  return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
-}
-
-function parseDdMmYyyy(value) {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
-  if (!match) return null;
-  const [, dd, mm, yyyy] = match;
-  return { day: +dd, month: +mm, year: +yyyy };
-}
-
-function validate(date, name, parsed, dateIsValid) {
-  let errorMessage = '';
-  const today = new Date();
-  const nameValid = new RegExp('^[а-яё\\- ]*[a-z\\- ]*$', 'i');
-
-  if (name === '' || !parsed || !dateIsValid) {
-    errorMessage += `<p>Date is not valid or one of the fields is empty. Use dd/mm/yyyy.</p>`;
-  }
-  if (parsed && dateIsValid && (date > today)) {
-    errorMessage += `<p>Date can't be in the future.</p>`;
-  }
-  if (!nameValid.test(name)) {
-    errorMessage += `<p>Name format is incorrect: allowed characters are letters, dash and space. Example: Anna, Anna-Maria, Anna Maria.</p>`;
-  }
-  return errorMessage !== '' ? errorMessage : true;
-}
-
-function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
-  const parsed = parseDdMmYyyy(calculationDate);
-  const date = parsed ? new Date(parsed.year, parsed.month - 1, parsed.day) : new Date(NaN);
-  const dateIsValid = isValidCalendarDate(parsed, date);
-  const response = validate(date, name, parsed, dateIsValid);
+async function runCalculation(calculationDate, name, { updateUrl = true } = {}) {
+  const calculationId = ++latestCalculationId;
 
   outputDate.innerHTML = '';
   errorOutput.innerHTML = '';
 
-  if (response !== true) {
-    errorOutput.innerHTML = response;
+  let data;
+  try {
+    const res = await fetch('api/destiny-matrix-calculate.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date=' + encodeURIComponent(calculationDate) + '&name=' + encodeURIComponent(name),
+    });
+    data = await res.json();
+  } catch (err) {
+    if (calculationId !== latestCalculationId) return;
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
     container.classList.add('display-none');
     return;
   }
 
-  const fullDate = formatLongDate(parsed.day, parsed.month, parsed.year);
-  outputDate.innerHTML = `${titleCase(name)}'s <span class="gray">Destiny Matrix Chart — Date of Birth: ${fullDate}</span>`;
+  if (calculationId !== latestCalculationId) return;
+
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.innerHTML = data.headerHtml;
 
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
   UIEffects.revealOnScroll();
 
-  const apoint = reduceNumber(parsed.day);
-  const bpoint = parsed.month;
-  const cpoint = calculateYear(parsed.year);
+  renderValues(data.values);
 
-  const person = calculatePoints(apoint, bpoint, cpoint);
-
-  renderValues(person.points);
-  renderChakraTable(person.chartHeart);
-  renderValues(person.purposes);
-  renderValues(person.years);
-
-  // The full reading is the heaviest part of this page (up to 16
-  // interpretation JSON files). Defer fetching/building it until the
-  // reading card is actually about to scroll into view, instead of
-  // loading all of it the instant a chart is calculated.
+  // The full reading is the heaviest part of this page. Defer fetching
+  // it until the reading card is actually about to scroll into view,
+  // instead of loading all of it the instant a chart is calculated.
   const readingStatusEl = document.getElementById('reading-status');
   if (readingStatusEl) readingStatusEl.textContent = '';
   document.getElementById('reading-sections').innerHTML =
     '<div class="lazy-skeleton"><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line"></div><div class="lazy-skeleton-line short"></div></div>';
-  UIEffects.lazyMount(document.querySelector('.reading-card'), () => renderReading(person));
+  UIEffects.lazyMount(document.querySelector('.reading-card'), () => {
+    if (calculationId === latestCalculationId) renderReading(calculationDate, calculationId);
+  });
 
   // Same page, no reload/new page — just swap the shareable URL in place.
-  // Everything is recalculated client-side from the URL, nothing is stored server-side.
   if (updateUrl) {
     FormKit.updateUrlParams(fields, { date: calculationDate, name });
   }
