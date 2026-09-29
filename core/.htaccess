@@ -1,0 +1,5 @@
+# Block direct access to PHP and JSON files in core/.
+# Stylesheets and scripts in core/assets stay public.
+<FilesMatch "\.(php|json)$">
+    Require all denied
+</FilesMatch>

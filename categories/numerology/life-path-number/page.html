@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../assets/css/core/forms.css" />
-<link rel="stylesheet" href="../assets/css/numerology/base.css" />
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/base.css" />
 </head>
 
 <body>
@@ -39,14 +39,14 @@
   </div>
 </div>
 
-<script src="../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/core/forms.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
    All calculation and interpretation logic lives server-side in
-   numerology/api/life-path-calculate.php. This page only submits the
+   categories/numerology/life-path-number/handler.php. This page only submits the
    date and renders whatever HTML fragments the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -61,7 +61,7 @@ async function runCalculation(calculationDate, { updateUrl = true } = {}) {
 
   let data;
   try {
-    const res = await fetch('api/life-path-calculate.php', {
+    const res = await fetch('../../../calculate.php?slug=life-path-number', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'date=' + encodeURIComponent(calculationDate),
