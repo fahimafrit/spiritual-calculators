@@ -1,5 +1,7 @@
 {
   "calculators": {
-    "life-path-number": { "category": "numerology" }
+    "life-path-number": { "category": "numerology" },
+    "attitude-number": { "category": "numerology" },
+    "destiny-number": { "category": "numerology" }
   }
 }

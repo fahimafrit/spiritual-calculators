@@ -7,24 +7,24 @@ if (!defined('SPIRITUAL_APP')) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   LIFE PATH NUMBER — HANDLER
+   ATTITUDE NUMBER — HANDLER
    Input:  { date: "dd/mm/yyyy" }
-   Output: the rendered result fragments only — never the reduction
-   engine or the interpretation library itself.
-   Called through the dispatcher: POST /calculate.php?slug=life-path-number
+   Uses only the day and month (never the year). Output: the rendered
+   result fragments only — never the reduction engine or the
+   interpretation library itself.
+   Called through the dispatcher: POST /calculate.php?slug=attitude-number
    ════════════════════════════════════════════════════════════════════ */
 
 require_once SPIRITUAL_ROOT . '/categories/numerology/_shared/engine.php';
 
-$lifePathData = require __DIR__ . '/readings.php';
+$attitudeData = require __DIR__ . '/readings.php';
 
-return function (array $input) use ($lifePathData): array {
-    $processLine = function (string $label, int $raw, array $steps, bool $finalLine = false): string {
-        $inner = '<span class="process-label">' . htmlspecialchars($label) . ':</span> ' . $raw
+return function (array $input) use ($attitudeData): array {
+    $processLine = function (string $label, int $raw, array $steps): string {
+        return '<p class="process-line"><span class="process-label">' . htmlspecialchars($label) . ':</span> ' . $raw
             . ' <span class="process-arrow">&#8594;</span> '
-            . implode(' <span class="process-arrow">&#8594;</span> ', array_map('strval', $steps));
-        $class = 'process-line' . ($finalLine ? ' process-final' : '');
-        return '<p class="' . $class . '">' . $inner . '</p>';
+            . implode(' <span class="process-arrow">&#8594;</span> ', array_map('strval', $steps))
+            . '</p>';
     };
 
     $dateRaw = (string) ($input['date'] ?? '');
@@ -51,29 +51,26 @@ return function (array $input) use ($lifePathData): array {
 
     $daySteps = reduceKeepingMasterWithSteps($day);
     $monthSteps = reduceKeepingMasterWithSteps($month);
-    $yearSteps = reduceKeepingMasterWithSteps($year);
 
     $dayFinal = end($daySteps);
     $monthFinal = end($monthSteps);
-    $yearFinal = end($yearSteps);
 
-    $total = $dayFinal + $monthFinal + $yearFinal;
+    $total = $dayFinal + $monthFinal;
     $totalSteps = reduceKeepingMasterWithSteps($total);
-    $lifePathNumber = end($totalSteps);
-    $numDisplay = formatDisplayNumber($lifePathNumber);
+    $attitudeNumber = end($totalSteps);
+    $numDisplay = formatDisplayNumber($attitudeNumber);
 
     $lines = [];
     $lines[] = $processLine('Birth Day', $day, $daySteps);
     $lines[] = $processLine('Birth Month', $month, $monthSteps);
-    $lines[] = $processLine('Birth Year', $year, $yearSteps);
     $lines[] = '<p class="process-line"><span class="process-label">Sum:</span> '
-        . $dayFinal . ' + ' . $monthFinal . ' + ' . $yearFinal . ' = ' . $total
+        . $dayFinal . ' + ' . $monthFinal . ' = ' . $total
         . ' <span class="process-arrow">&#8594;</span> '
         . implode(' <span class="process-arrow">&#8594;</span> ', array_map('strval', $totalSteps))
         . '</p>';
-    $lines[] = '<p class="process-line process-final">Life Path Number: ' . $numDisplay . '</p>';
+    $lines[] = '<p class="process-line process-final">Attitude Number: ' . $numDisplay . '</p>';
 
-    $entry = $lifePathData[(string) $lifePathNumber] ?? null;
+    $entry = $attitudeData[(string) $attitudeNumber] ?? null;
     if ($entry) {
         $interpretationHtml = '<p><strong>' . htmlspecialchars($entry['title']) . '</strong></p>';
         foreach ($entry['paragraphs'] as $p) {
@@ -85,7 +82,7 @@ return function (array $input) use ($lifePathData): array {
 
     return [
         'valid' => true,
-        'personalDateText' => 'Date of Birth: ' . formatLongDate($day, $month, $year),
+        'headerText' => 'Date of Birth: ' . formatLongDate($day, $month, $year),
         'processLinesHtml' => implode('', $lines),
         'numValue' => $numDisplay,
         'interpretationHtml' => $interpretationHtml,

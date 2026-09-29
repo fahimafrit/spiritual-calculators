@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../assets/css/core/forms.css" />
-<link rel="stylesheet" href="../assets/css/numerology/base.css" />
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/base.css" />
 </head>
 
 <body>
@@ -39,15 +39,16 @@
   </div>
 </div>
 
-<script src="../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/core/forms.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
-   All calculation and interpretation logic lives server-side in
-   numerology/api/attitude-number-calculate.php. This page only submits
-   the date and renders whatever HTML fragments the endpoint returns.
+   All calculation and interpretation logic lives server-side, reached
+   through the dispatcher (calculate.php?slug=attitude-number). This
+   page only submits the date and renders whatever HTML fragments the
+   server returns.
    ════════════════════════════════════════════════════════════════════ */
 
 const fields = FormKit.render(document.getElementById('calc-form'), 'dob');
@@ -61,7 +62,7 @@ async function runCalculation(calculationDate, { updateUrl = true } = {}) {
 
   let data;
   try {
-    const res = await fetch('api/attitude-number-calculate.php', {
+    const res = await fetch('../../../calculate.php?slug=attitude-number', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'date=' + encodeURIComponent(calculationDate),
