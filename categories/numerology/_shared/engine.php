@@ -141,6 +141,102 @@ function computeNameNumber(string $name, ?string $filter = null): array
     return ['total' => $total, 'breakdown' => $breakdown];
 }
 
+/**
+ * Full reduction of a name: total, per-letter breakdown, and every
+ * reduction step (masters kept). $filter is the same as
+ * computeNameNumber() — null for every letter (Destiny Number),
+ * 'vowels' for Soul Urge, 'consonants' for Personality.
+ *
+ * @return array{total:int, breakdown:array<int,array{letter:string,value:int}>, steps:int[], number:int}
+ */
+function computeNameReduction(string $name, ?string $filter = null): array
+{
+    ['total' => $total, 'breakdown' => $breakdown] = computeNameNumber($name, $filter);
+    $steps = reduceKeepingMasterWithSteps($total);
+    return [
+        'total' => $total,
+        'breakdown' => $breakdown,
+        'steps' => $steps,
+        'number' => end($steps),
+    ];
+}
+
+/**
+ * How many times each number 1-9 appears in a name's letter values.
+ * Numbers that never appear have a count of 0.
+ *
+ * @param array<int,array{letter:string,value:int}> $breakdown  from computeNameNumber()
+ * @return array<int,int>
+ */
+function countNumberFrequencies(array $breakdown): array
+{
+    $counts = array_fill(1, 9, 0);
+    foreach ($breakdown as $entry) {
+        if (isset($counts[$entry['value']])) {
+            $counts[$entry['value']]++;
+        }
+    }
+    return $counts;
+}
+
+/**
+ * Life Path from a birth date: day, month and year are each reduced
+ * (masters kept), summed, and the sum is reduced again.
+ *
+ * @return array{daySteps:int[], monthSteps:int[], yearSteps:int[],
+ *               dayFinal:int, monthFinal:int, yearFinal:int,
+ *               total:int, totalSteps:int[], number:int}
+ */
+function computeLifePath(int $day, int $month, int $year): array
+{
+    $daySteps = reduceKeepingMasterWithSteps($day);
+    $monthSteps = reduceKeepingMasterWithSteps($month);
+    $yearSteps = reduceKeepingMasterWithSteps($year);
+
+    $dayFinal = end($daySteps);
+    $monthFinal = end($monthSteps);
+    $yearFinal = end($yearSteps);
+
+    $total = $dayFinal + $monthFinal + $yearFinal;
+    $totalSteps = reduceKeepingMasterWithSteps($total);
+
+    return [
+        'daySteps' => $daySteps,
+        'monthSteps' => $monthSteps,
+        'yearSteps' => $yearSteps,
+        'dayFinal' => $dayFinal,
+        'monthFinal' => $monthFinal,
+        'yearFinal' => $yearFinal,
+        'total' => $total,
+        'totalSteps' => $totalSteps,
+        'number' => end($totalSteps),
+    ];
+}
+
+/* ── Karmic debt ──────────────────────────────────────────────────── */
+
+const KARMIC_DEBT_NUMBERS = [13, 14, 16, 19];
+
+function isKarmicDebtNumber(int $number): bool
+{
+    return in_array($number, KARMIC_DEBT_NUMBERS, true);
+}
+
+/**
+ * Which karmic debt numbers (13, 14, 16, 19) appear anywhere in a
+ * reduction chain, in ascending order.
+ *
+ * @param int[] $steps
+ * @return int[]
+ */
+function findKarmicDebtInSteps(array $steps): array
+{
+    return array_values(array_filter(
+        KARMIC_DEBT_NUMBERS,
+        fn ($debt) => in_array($debt, $steps, true)
+    ));
+}
+
 /* ── Date helpers (shared by every date-based calculator) ────────── */
 
 /** @return array{day:int, month:int, year:int}|null */
@@ -166,6 +262,25 @@ function isDateInFuture(array $parsed): bool
     );
     $today = new DateTime('today');
     return $candidate > $today;
+}
+
+/**
+ * Validates a submitted birth date exactly as every date-based
+ * calculator does: dd/mm/yyyy, a real calendar date, not in the future.
+ *
+ * @return array{errors:string[], parsed:?array{day:int,month:int,year:int}}
+ */
+function validateBirthDate(string $raw): array
+{
+    $parsed = parseDdMmYyyy($raw);
+
+    if (!isValidCalendarDate($parsed)) {
+        return ['errors' => ['Date is not valid. Use dd/mm/yyyy.'], 'parsed' => null];
+    }
+    if (isDateInFuture($parsed)) {
+        return ['errors' => ["Date can't be in the future."], 'parsed' => null];
+    }
+    return ['errors' => [], 'parsed' => $parsed];
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

@@ -6,6 +6,9 @@
     "compatibility-matrix": { "category": "destiny-matrix" },
     "karmic-tail": { "category": "destiny-matrix" },
     "destiny-matrix": { "category": "destiny-matrix" },
-    "destiny-matrix-reading": { "category": "destiny-matrix", "folder": "destiny-matrix", "file": "reading-handler.php" }
+    "destiny-matrix-reading": { "category": "destiny-matrix", "folder": "destiny-matrix", "file": "reading-handler.php" },
+    "maturity-number": { "category": "numerology" },
+    "karmic-debt": { "category": "numerology" },
+    "karmic-lessons": { "category": "numerology" }
   }
 }
