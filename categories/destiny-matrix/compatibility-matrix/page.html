@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../assets/css/core/forms.css" />
-<link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/destiny-matrix/base.css" />
 <style>
   /* Page-specific styles (not shared with other calculators) */
 
@@ -458,14 +458,14 @@
 
 
 
-<script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/destiny-matrix/ui-effects.js"></script>
+<script src="../../../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
    All calculation and validation logic lives server-side
-   (destiny-matrix/api/compatibility-matrix-calculate.php). This page
+   (calculate.php?slug=compatibility-matrix). This page
    only submits the two dates and renders what the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -591,7 +591,7 @@ async function runCalculation(calcDate1, calcDate2, { updateUrl = true } = {}) {
 
   let data;
   try {
-    const res = await fetch('api/compatibility-matrix-calculate.php', {
+    const res = await fetch('../../../calculate.php?slug=compatibility-matrix', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'date1=' + encodeURIComponent(calcDate1) + '&date2=' + encodeURIComponent(calcDate2),

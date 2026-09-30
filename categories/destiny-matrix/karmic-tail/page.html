@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../assets/css/core/forms.css" />
-<link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/destiny-matrix/base.css" />
 <style>
   /* ── Karmic tail highlight on the octagram ─────────────────────── */
   .karmic-tail-spine{
@@ -290,14 +290,14 @@
   </div>
 </div>
 
-<script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/destiny-matrix/ui-effects.js"></script>
+<script src="../../../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════
    All calculation, validation and karmic tail lookup logic lives
-   server-side (destiny-matrix/api/karmic-tail-calculate.php). This page
+   server-side (calculate.php?slug=karmic-tail). This page
    only submits the date and name and renders what the endpoint returns.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -365,7 +365,7 @@ async function runCalculation(calculationDate, name, { updateUrl = true } = {}) 
 
   let data;
   try {
-    const res = await fetch('api/karmic-tail-calculate.php', {
+    const res = await fetch('../../../calculate.php?slug=karmic-tail', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'date=' + encodeURIComponent(calculationDate) + '&name=' + encodeURIComponent(name),

@@ -2,6 +2,10 @@
   "calculators": {
     "life-path-number": { "category": "numerology" },
     "attitude-number": { "category": "numerology" },
-    "destiny-number": { "category": "numerology" }
+    "destiny-number": { "category": "numerology" },
+    "compatibility-matrix": { "category": "destiny-matrix" },
+    "karmic-tail": { "category": "destiny-matrix" },
+    "destiny-matrix": { "category": "destiny-matrix" },
+    "destiny-matrix-reading": { "category": "destiny-matrix", "folder": "destiny-matrix", "file": "reading-handler.php" }
   }
 }

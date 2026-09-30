@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="../assets/css/core/forms.css" />
-<link rel="stylesheet" href="../assets/css/destiny-matrix/base.css" />
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/destiny-matrix/base.css" />
 <style>
   /* Page-specific: alias chakra names used in markup/JS to the
      shared --tone-* variables defined in base.css */
@@ -606,8 +606,8 @@
 
 
 
-<script src="../assets/js/core/forms.js"></script>
-<script src="../assets/js/destiny-matrix/ui-effects.js"></script>
+<script src="../../../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/destiny-matrix/ui-effects.js"></script>
 <script>
 'use strict';
 
@@ -709,7 +709,7 @@ const purposesRevealedPromise = new Promise((resolve) => { purposesRevealed = re
 
 /* ════════════════════════════════════════════════════════════════════
    INTERPRETATION READING
-   The full reading is built server-side (api/destiny-matrix-reading.php).
+   The full reading is built server-side (calculate.php?slug=destiny-matrix-reading).
    The browser only receives the finished HTML for this one chart.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -722,7 +722,7 @@ async function renderReading(calculationDate, calculationId) {
   statusEl.textContent = 'Loading your reading…';
 
   try {
-    const res = await fetch('api/destiny-matrix-reading.php', {
+    const res = await fetch('../../../calculate.php?slug=destiny-matrix-reading', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'date=' + encodeURIComponent(calculationDate),
@@ -794,7 +794,7 @@ async function renderReading(calculationDate, calculationId) {
 /* ════════════════════════════════════════════════════════════════════
    FORM / UI WIRING
    All calculation and interpretation logic lives server-side in
-   destiny-matrix/api/. This page only submits the date and name and
+   calculate.php. This page only submits the date and name and
    renders what the endpoints return.
    ════════════════════════════════════════════════════════════════════ */
 
@@ -819,7 +819,7 @@ async function runCalculation(calculationDate, name, { updateUrl = true } = {}) 
 
   let data;
   try {
-    const res = await fetch('api/destiny-matrix-calculate.php', {
+    const res = await fetch('../../../calculate.php?slug=destiny-matrix', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'date=' + encodeURIComponent(calculationDate) + '&name=' + encodeURIComponent(name),
