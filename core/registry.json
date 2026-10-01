@@ -9,6 +9,9 @@
     "destiny-matrix-reading": { "category": "destiny-matrix", "folder": "destiny-matrix", "file": "reading-handler.php" },
     "maturity-number": { "category": "numerology" },
     "karmic-debt": { "category": "numerology" },
-    "karmic-lessons": { "category": "numerology" }
+    "karmic-lessons": { "category": "numerology" },
+    "soul-urge-number": { "category": "numerology" },
+    "personality-number": { "category": "numerology" },
+    "birthday-number": { "category": "numerology" }
   }
 }

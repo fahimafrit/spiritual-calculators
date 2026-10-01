@@ -7,13 +7,12 @@ if (!defined('SPIRITUAL_APP')) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   DESTINY NUMBER — HANDLER
+   PERSONALITY NUMBER — HANDLER
    Input:  { name: "Full Birth Name" }
-   Every letter of the name counts. Output: the rendered result fragments only — never the
-   reduction/letter-value engine or the interpretation library itself.
-   Called through the dispatcher: POST /calculate.php?slug=destiny-number
+   Only the consonants of the name count.
+   Called through the dispatcher: POST /calculate.php?slug=personality-number
    ════════════════════════════════════════════════════════════════════ */
 
 require_once SPIRITUAL_ROOT . '/categories/numerology/_shared/name-calculator.php';
 
-return buildNameCalculatorHandler('Destiny Number', null, require __DIR__ . '/readings.php');
+return buildNameCalculatorHandler('Personality Number', 'consonants', require __DIR__ . '/readings.php');
