@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Life Path Compatibility Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/base.css" />
+<style>
+  /* Page-specific styles (not shared with other calculators) */
+  .pair-numbers { display: flex; justify-content: center; align-items: flex-start; gap: 28px; flex-wrap: wrap; }
+  .pair-person { text-align: center; min-width: 120px; }
+  .pair-person .pair-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); margin: 0 0 6px; }
+  .pair-person .pair-date { font-size: 13px; color: var(--ink-soft); margin: 8px 0 0; }
+  .pair-amp { font-size: 26px; font-weight: 900; color: var(--gold); align-self: center; }
+  .score-block { text-align: center; }
+  .score-value { font-size: clamp(34px, 5vw, 44px); font-weight: 900; line-height: 1; margin: 0;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .score-level { font-size: 15px; font-weight: 800; color: var(--gold); margin: 8px 0 14px; }
+  .score-bar { height: 10px; max-width: 360px; margin: 0 auto; border-radius: 999px; background: rgba(36, 26, 68, 0.10); overflow: hidden; }
+  .score-bar-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(135deg, var(--gold-bright), var(--gold)); transition: width .6s ease; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output"></div>
+
+  <div class="result-wrap compat-container display-none">
+    <div class="result-card">
+      <h2 class="section-title tight">Your Life Path Numbers</h2>
+      <div class="pair-numbers">
+        <div class="pair-person">
+          <p class="pair-label">Partner 1</p>
+          <div class="result-number-display"><p class="num-value" id="num-value-1"></p></div>
+          <p class="pair-date" id="date-1"></p>
+        </div>
+        <div class="pair-amp">&amp;</div>
+        <div class="pair-person">
+          <p class="pair-label">Partner 2</p>
+          <div class="result-number-display"><p class="num-value" id="num-value-2"></p></div>
+          <p class="pair-date" id="date-2"></p>
+        </div>
+      </div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Compatibility Score</h2>
+      <div class="score-block">
+        <p class="score-value" id="score-value"></p>
+        <p class="score-level" id="score-level"></p>
+        <div class="score-bar"><div class="score-bar-fill" id="score-fill"></div></div>
+      </div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Calculation Process</h2>
+      <div class="process-card" id="process-lines-1"></div>
+      <div style="height:14px"></div>
+      <div class="process-card" id="process-lines-2"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">What Your Compatibility Means</h2>
+      <div class="interpretation-card" id="interpretation"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM / UI WIRING
+   All calculation and interpretation logic lives server-side in
+   categories/numerology/life-path-compatibility/handler.php. This page
+   only submits the two dates and renders what the endpoint returns.
+   ════════════════════════════════════════════════════════════════════ */
+
+const fields = FormKit.render(document.getElementById('calc-form'), 'two-dob', {
+  submitLabel: 'Check compatibility',
+});
+const container = document.querySelector('.compat-container');
+const errorOutput = document.querySelector('.error-output');
+
+async function runCalculation(date1, date2, { updateUrl = true } = {}) {
+  errorOutput.innerHTML = '';
+
+  let data;
+  try {
+    const res = await fetch('../../../calculate.php?slug=life-path-compatibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date1=' + encodeURIComponent(date1) + '&date2=' + encodeURIComponent(date2),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
+    container.classList.add('display-none');
+    return;
+  }
+
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  document.getElementById('num-value-1').textContent = data.person1.numValue;
+  document.getElementById('num-value-2').textContent = data.person2.numValue;
+  document.getElementById('date-1').textContent = data.person1.dateText;
+  document.getElementById('date-2').textContent = data.person2.dateText;
+  document.getElementById('score-value').textContent = data.score + '%';
+  document.getElementById('score-level').textContent = data.levelLabel;
+  document.getElementById('process-lines-1').innerHTML = '<p class="process-line"><span class="process-label">Partner 1</span></p>' + data.person1.processLinesHtml;
+  document.getElementById('process-lines-2').innerHTML = '<p class="process-line"><span class="process-label">Partner 2</span></p>' + data.person2.processLinesHtml;
+  document.getElementById('interpretation').innerHTML = data.interpretationHtml;
+
+  container.classList.remove('display-none');
+  container.scrollIntoView({ behavior: 'smooth' });
+
+  const fill = document.getElementById('score-fill');
+  fill.style.width = '0';
+  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = data.score + '%'; }));
+
+  if (updateUrl) {
+    FormKit.updateUrlParams(fields, { date1, date2 });
+  }
+}
+
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values.date1, values.date2),
+});
+
+// ?dob1=DD-MM-YYYY&dob2=DD-MM-YYYY (a shared link) calculates immediately.
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values.date1, values.date2, { updateUrl: false }));
+
+</script>
+</body>
+</html>

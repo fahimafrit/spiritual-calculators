@@ -29,16 +29,18 @@ return function (array $input) use ($attitudeData): array {
 
     ['day' => $day, 'month' => $month, 'year' => $year] = $parsed;
 
-    $daySteps = reduceKeepingMasterWithSteps($day);
-    $monthSteps = reduceKeepingMasterWithSteps($month);
+    // Attitude Number is always a single digit 1-9: no master numbers are
+    // kept at any step.
+    $daySteps = reduceToSingleDigitWithSteps($day);
+    $monthSteps = reduceToSingleDigitWithSteps($month);
 
     $dayFinal = end($daySteps);
     $monthFinal = end($monthSteps);
 
     $total = $dayFinal + $monthFinal;
-    $totalSteps = reduceKeepingMasterWithSteps($total);
+    $totalSteps = reduceToSingleDigitWithSteps($total);
     $attitudeNumber = end($totalSteps);
-    $numDisplay = formatDisplayNumber($attitudeNumber);
+    $numDisplay = (string) $attitudeNumber;
 
     $lines = [
         renderProcessLine('Birth Day', $day, $daySteps),

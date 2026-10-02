@@ -74,6 +74,25 @@ function reduceToSingleDigit(int $number): int
 }
 
 /**
+ * Reduces a number all the way down to a single digit (1-9) and returns
+ * every intermediate value, including the starting number. Master
+ * numbers get no special treatment: 29 -> [29, 11, 2], 22 -> [22, 4].
+ * Used by calculators whose result is always 1-9 (Attitude Number).
+ *
+ * @return int[]
+ */
+function reduceToSingleDigitWithSteps(int $number): array
+{
+    $steps = [$number];
+    $value = $number;
+    while ($value > 9) {
+        $value = sumDigitsOnce($value);
+        $steps[] = $value;
+    }
+    return $steps;
+}
+
+/**
  * Formats a number for display using the site's standard dual format
  * for master numbers — 11 -> "11/2", 22 -> "22/4", 33 -> "33/6" — and
  * plain digits otherwise.
