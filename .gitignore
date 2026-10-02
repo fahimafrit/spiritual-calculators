@@ -8,3 +8,4 @@ Thumbs.db
 
 # WordPress plugin build artifacts (future)
 spiritual-calc-suite/*.zip
+davison-calculator/node_modules/

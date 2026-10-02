@@ -1,0 +1,20 @@
+{
+  "name": "davison-calculator",
+  "version": "1.0.0",
+  "description": "Standalone Davison relationship chart calculator powered by Swiss Ephemeris",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "ephe": "node scripts/download-ephe.mjs",
+    "postinstall": "node scripts/download-ephe.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "luxon": "^3.7.2",
+    "sweph": "^2.10.3-8",
+    "tz-lookup": "^6.1.25"
+  }
+}

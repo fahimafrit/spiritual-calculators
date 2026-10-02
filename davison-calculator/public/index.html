@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Davison Relationship Chart Calculator</title>
+<meta name="description" content="Calculate a Davison relationship chart from two birth charts using Swiss Ephemeris. Midpoint in time and place, full wheel, houses, aspects.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12071f; --deep:#241046; --panel:rgba(255,255,255,.045);
+  --gold:#e6c76a; --gold-soft:#f4e4a6; --gold-dim:rgba(230,199,106,.28); --gold-faint:rgba(230,199,106,.12);
+  --text:#efe8fb; --muted:#b4a5d2; --field:rgba(10,4,24,.6);
+  --rose:#ff7a90; --teal:#6fd6c4; --blue:#7db4ff; --amber:#ffc46b;
+  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --sans:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --glyphs:'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols','DejaVu Sans',sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:var(--sans); color:var(--text); line-height:1.6; min-height:100vh;
+  background:
+    radial-gradient(1100px 620px at 12% -8%, #3b1b70 0%, transparent 62%),
+    radial-gradient(900px 600px at 105% 8%, #2b1256 0%, transparent 60%),
+    linear-gradient(165deg,#12071f 0%,#1c0d38 55%,#140a29 100%);
+  background-attachment:fixed;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:44px 24px 80px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(2.5rem,5.4vw,3.9rem);line-height:1.05;color:var(--gold-soft)}
+h2{font-size:1.7rem;color:var(--gold);margin-bottom:14px}
+h3{font-size:1.35rem;color:var(--gold-soft)}
+.lede{max-width:62ch;color:var(--muted);font-size:1.05rem;margin:14px 0 0}
+a{color:var(--gold)}
+.gl{font-family:var(--glyphs);display:inline-block;min-width:1.2em;text-align:center}
+svg.gl{vertical-align:-3px}
+
+/* ---- form ---- */
+.panel{border:1px solid var(--gold-dim);border-radius:20px;background:var(--panel);padding:30px 32px;margin-top:34px}
+.people{display:grid;grid-template-columns:1fr 1px 1fr;gap:34px}
+.people .rule{background:var(--gold-dim)}
+.person h3{margin-bottom:16px}
+label{display:block;font-size:.86rem;color:var(--muted);margin-bottom:12px;font-weight:600}
+input,select{
+  display:block;width:100%;margin-top:5px;padding:10px 12px;font:inherit;font-size:.98rem;color:var(--text);
+  background:var(--field);border:1px solid rgba(230,199,106,.24);border-radius:10px;color-scheme:dark;
+}
+input::placeholder{color:rgba(180,165,210,.55)}
+input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:12px}
+.ac{position:relative}
+.sug{display:none;list-style:none;margin:4px 0 0;padding:4px;position:absolute;z-index:20;left:0;right:0;background:#22103f;border:1px solid var(--gold-dim);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.5);max-height:260px;overflow:auto}
+.sug li{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:.95rem}
+.sug li:hover{background:var(--gold-faint)}
+.sug li small{display:block;color:var(--muted);font-size:.8rem}
+.sug li.none{color:var(--muted);cursor:default}
+.sug li.none:hover{background:none}
+.options{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:26px;padding-top:24px;border-top:1px solid var(--gold-dim)}
+.actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:22px}
+button{font:inherit;cursor:pointer}
+.btn{border:0;border-radius:999px;padding:13px 30px;font-weight:700;font-size:1rem;color:#2a1600;background:linear-gradient(135deg,#f6e3a1,#dcae3d);box-shadow:0 8px 24px rgba(220,174,61,.25)}
+.btn:hover{filter:brightness(1.06)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.link{background:none;border:0;color:var(--gold);padding:6px 2px;text-decoration:underline;text-underline-offset:3px}
+.ghost{background:none;border:1px solid var(--gold-dim);color:var(--gold-soft);border-radius:999px;padding:9px 18px;font-weight:600}
+.ghost:hover{background:var(--gold-faint)}
+.hint{font-size:.8rem;color:var(--muted);margin:-4px 0 0;min-height:1.2em}
+.notice{border-left:3px solid var(--amber);background:rgba(255,196,107,.09);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0;font-size:.93rem}
+.notice.err{border-color:var(--rose);background:rgba(255,122,144,.1)}
+
+/* ---- results ---- */
+#results{display:none;margin-top:56px}
+.result-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px;margin-bottom:8px}
+.result-head h2{font-size:2.3rem;margin:0;color:var(--gold-soft)}
+.moment{display:grid;grid-template-columns:repeat(3,auto);gap:10px 44px;justify-content:start;margin:16px 0 34px;padding:18px 0;border-top:1px solid var(--gold-dim);border-bottom:1px solid var(--gold-dim)}
+.moment div span{display:block;font-size:.8rem;color:var(--muted)}
+.moment div b{font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--text)}
+.rgrid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:44px;align-items:start}
+.wheel svg{width:100%;height:auto;display:block;border-radius:26px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.wheel-tools{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{font-weight:600;color:var(--muted);text-align:left;font-size:.82rem;padding:6px 8px;border-bottom:1px solid var(--gold-dim)}
+td{padding:7px 8px;border-bottom:1px solid rgba(230,199,106,.09);font-variant-numeric:tabular-nums}
+td.pos{white-space:nowrap}
+.retro{color:var(--rose);font-weight:700}
+.sect{margin-top:46px}
+.sect:first-child{margin-top:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
+.grid-wrap{overflow-x:auto}
+table.agrid{width:auto;border-collapse:separate;border-spacing:0}
+table.agrid th,table.agrid td{width:34px;height:32px;padding:0;text-align:center;border:1px solid rgba(230,199,106,.13);font-size:.9rem}
+table.agrid th{color:var(--gold-soft);border-color:rgba(230,199,106,.13)}
+table.agrid td.empty{background:rgba(255,255,255,.02)}
+.bars{display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:82px 1fr 24px;gap:10px;align-items:center;font-size:.92rem}
+.bar i{display:block;height:9px;border-radius:9px;background:linear-gradient(90deg,var(--gold),#b98a2a)}
+.bar div{background:rgba(255,255,255,.07);border-radius:9px;height:9px}
+.bar b{text-align:right;color:var(--gold-soft)}
+details{margin-top:38px;border-top:1px solid var(--gold-dim);padding-top:16px}
+summary{cursor:pointer;font-family:var(--serif);font-size:1.35rem;color:var(--gold-soft)}
+details p,details li{color:var(--muted);max-width:75ch}
+footer{margin-top:60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--gold-faint);padding-top:16px}
+
+@media (max-width:1020px){.options{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:940px){.rgrid{grid-template-columns:1fr}.people{grid-template-columns:1fr}.people .rule{display:none}.moment{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.wrap{padding:28px 16px 60px}.panel{padding:20px 18px}.row3{grid-template-columns:1fr 1fr}.row3 label:last-child{grid-column:1/-1}.options{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.moment{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Davison relationship chart</h1>
+    <p class="lede">Enter two birth details and get one chart for the relationship itself, cast for the midpoint in time and place between the two births.</p>
+  </header>
+
+  <form class="panel" id="form" autocomplete="off" novalidate>
+    <div class="people">
+      <div class="person" id="wrapA"></div>
+      <div class="rule"></div>
+      <div class="person" id="wrapB"></div>
+    </div>
+
+    <div class="options">
+      <label>House system
+        <select id="o_house">
+          <option value="P">Placidus</option><option value="K">Koch</option><option value="W">Whole Sign</option>
+          <option value="E">Equal</option><option value="O">Porphyry</option><option value="R">Regiomontanus</option><option value="C">Campanus</option>
+        </select>
+      </label>
+      <label>Zodiac
+        <select id="o_zodiac">
+          <option value="tropical">Tropical</option><option value="lahiri">Sidereal, Lahiri</option>
+          <option value="fagan_bradley">Sidereal, Fagan/Bradley</option><option value="raman">Sidereal, Raman</option><option value="krishnamurti">Sidereal, Krishnamurti</option>
+        </select>
+      </label>
+      <label>North Node
+        <select id="o_node"><option value="true">True node</option><option value="mean">Mean node</option></select>
+      </label>
+      <label>Midpoint of places
+        <select id="o_mid"><option value="arithmetic">Average of coordinates</option><option value="greatcircle">Great-circle midpoint</option></select>
+      </label>
+      <label>Aspects
+        <select id="o_aspects"><option value="major">Major only</option><option value="all">Major and minor</option></select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn" type="submit" id="go">Calculate Davison chart</button>
+      <button class="link" type="button" id="example">Fill in an example</button>
+    </div>
+    <div id="msg"></div>
+  </form>
+
+  <section id="results" aria-live="polite">
+    <div class="result-head"><h2 id="rTitle"></h2></div>
+    <div id="rNotices"></div>
+    <div class="moment" id="rMoment"></div>
+
+    <div class="rgrid">
+      <div class="wheel">
+        <div id="wheelBox"></div>
+        <div class="wheel-tools">
+          <button class="ghost" type="button" id="dlSvg">Download wheel (SVG)</button>
+          <button class="ghost" type="button" id="cpJson">Copy data (JSON)</button>
+        </div>
+      </div>
+      <div>
+        <div class="sect"><h2>Positions</h2><div id="rPlanets"></div></div>
+        <div class="sect"><h2>House cusps</h2><div id="rHouses"></div></div>
+      </div>
+    </div>
+
+    <div class="rgrid sect">
+      <div><h2>Aspects</h2><div id="rAspects"></div></div>
+      <div>
+        <h2>Aspect grid</h2><div id="rGrid" class="grid-wrap"></div>
+        <h2 style="margin-top:38px">Elements and modes</h2><div id="rBalance"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="hint" style="margin-top:18px">The midpoint place is often in the middle of nowhere. That is expected and does not affect the chart. Only its latitude and longitude are used, for the houses and angles.</p>
+</div>
+
+<datalist id="tzlist"></datalist>
+
+<script>
+'use strict';
+/* ============================== helpers ============================== */
+const $ = (id) => document.getElementById(id);
+const norm = (x) => ((x % 360) + 360) % 360;
+const rad = (d) => (d * Math.PI) / 180;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const VS = '\uFE0E'; // force text (not emoji) presentation
+
+const SIGNS = [
+  { n: 'Aries', g: '♈', el: 'Fire', mo: 'Cardinal' }, { n: 'Taurus', g: '♉', el: 'Earth', mo: 'Fixed' },
+  { n: 'Gemini', g: '♊', el: 'Air', mo: 'Mutable' }, { n: 'Cancer', g: '♋', el: 'Water', mo: 'Cardinal' },
+  { n: 'Leo', g: '♌', el: 'Fire', mo: 'Fixed' }, { n: 'Virgo', g: '♍', el: 'Earth', mo: 'Mutable' },
+  { n: 'Libra', g: '♎', el: 'Air', mo: 'Cardinal' }, { n: 'Scorpio', g: '♏', el: 'Water', mo: 'Fixed' },
+  { n: 'Sagittarius', g: '♐', el: 'Fire', mo: 'Mutable' }, { n: 'Capricorn', g: '♑', el: 'Earth', mo: 'Cardinal' },
+  { n: 'Aquarius', g: '♒', el: 'Air', mo: 'Fixed' }, { n: 'Pisces', g: '♓', el: 'Water', mo: 'Mutable' },
+];
+const GLYPH = { sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇', node: '☊', snode: '☋' };
+const CUSTOM = new Set(['chiron', 'lilith', 'pof']); // drawn as shapes: no font reliably has these
+const BODY_COLOR = {
+  sun: '#ffd166', moon: '#dfe6ff', mercury: '#9de3ff', venus: '#ff9ec7', mars: '#ff6b6b', jupiter: '#ffb15c', saturn: '#c9b18a',
+  uranus: '#7ff0e0', neptune: '#8aa8ff', pluto: '#c88bff', node: '#f0e6ff', snode: '#f0e6ff', chiron: '#b4e08a', lilith: '#d9a0ff', pof: '#ffe08a',
+};
+const PLANET_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+const ASPECT_BODIES = [...PLANET_KEYS, 'node', 'chiron', 'lilith', 'pof'];
+const ASPECTS = [
+  { n: 'Conjunction', a: 0, orb: 8, c: '#f0d27a', s: '☌', major: true },
+  { n: 'Opposition', a: 180, orb: 8, c: '#ff7a90', s: '☍', major: true },
+  { n: 'Trine', a: 120, orb: 7, c: '#6fd6c4', s: '△', major: true },
+  { n: 'Square', a: 90, orb: 7, c: '#ff7a90', s: '□', major: true },
+  { n: 'Sextile', a: 60, orb: 5, c: '#7db4ff', s: '⚹', major: true },
+  { n: 'Quincunx', a: 150, orb: 3, c: '#c9a8ff', s: 'Qx', major: false },
+  { n: 'Semi-sextile', a: 30, orb: 2, c: '#a99cc8', s: 'Ss', major: false },
+  { n: 'Semi-square', a: 45, orb: 2, c: '#e59aa9', s: '∠', major: false },
+  { n: 'Sesqui-square', a: 135, orb: 2, c: '#e59aa9', s: 'Sq', major: false },
+];
+
+function fmtDT(s) {
+  // server sends "yyyy-LL-dd HH:mm[:ss]"; render as dd/mm/yyyy HH:mm
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(s || '');
+  if (!m) return esc(s);
+  const [, y, mo, d, h, mi] = m;
+  return `${d}/${mo}/${y} ${h}:${mi}`;
+}
+
+function dms(lon) {
+  lon = norm(lon);
+  const s = Math.floor(lon / 30);
+  const inSign = lon - s * 30;
+  const d = Math.floor(inSign);
+  const m = Math.floor((inSign - d) * 60);
+  return { s, d, m };
+}
+const posText = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′`; };
+const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${SIGNS[p.s].g}${VS}</span> ${SIGNS[p.s].n}`; };
+const fmtLat = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`;
+const fmtLon = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`;
+const sep = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+
+/* custom-drawn glyphs, centred on 0,0 in a roughly 22x22 box */
+function customGlyph(key, col) {
+  const st = `fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"`;
+  if (key === 'chiron') return `<g ${st}><circle cx="0" cy="6" r="3.2"/><path d="M0 2.8V-9M0 -3.5L5.5 -9M0 -3.5L5.5 1.5"/></g>`;
+  if (key === 'pof') return `<g ${st}><circle cx="0" cy="0" r="7"/><path d="M-4.6 -4.6L4.6 4.6M4.6 -4.6L-4.6 4.6"/></g>`;
+  if (key === 'lilith') return `<g ${st}><path d="M2.5 -9.5A6.5 6.5 0 1 0 2.5 3A4.6 4.6 0 1 1 2.5 -9.5Z" fill="${col}" stroke="none"/><path d="M0 3.5V10.5M-3 7H3"/></g>`;
+  return '';
+}
+function glyphHtml(key) {
+  if (CUSTOM.has(key)) return `<svg class="gl" width="19" height="19" viewBox="-11 -11 22 22" aria-hidden="true">${customGlyph(key, 'currentColor')}</svg>`;
+  return `<span class="gl">${GLYPH[key] || ''}${VS}</span>`;
+}
+function glyphSvg(key, x, y, size, col) {
+  if (CUSTOM.has(key)) return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(size / 20).toFixed(2)})">${customGlyph(key, col)}</g>`;
+  return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${size}" fill="${col}" text-anchor="middle" dominant-baseline="central" font-family="'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols','DejaVu Sans',sans-serif">${GLYPH[key]}${VS}</text>`;
+}
+
+/* ============================== form ============================== */
+function personCard(id, title) {
+  return `
+    <h3>${title}</h3>
+    <label>Name<input id="${id}_name" type="text" placeholder="Optional" maxlength="60"></label>
+    <div class="row2">
+      <label>Birth date<input id="${id}_date" type="date" min="1800-01-01" max="2399-12-31"></label>
+      <label>Birth time (local)<input id="${id}_time" type="time"></label>
+    </div>
+    <label>Birth place
+      <div class="ac"><input id="${id}_place" type="text" placeholder="Search a city, for example Dhaka" role="combobox" aria-autocomplete="list" aria-expanded="false"><ul id="${id}_sug" class="sug" role="listbox"></ul></div>
+    </label>
+    <div class="row3">
+      <label>Latitude<input id="${id}_lat" type="number" step="any" min="-90" max="90" placeholder="23.8103"></label>
+      <label>Longitude<input id="${id}_lon" type="number" step="any" min="-180" max="180" placeholder="90.4125"></label>
+      <label>Time zone<input id="${id}_tz" type="text" list="tzlist" placeholder="Detected from coordinates"></label>
+    </div>
+    <p class="hint" id="${id}_hint">South and west are negative. A time zone like UTC+6 also works.</p>`;
+}
+$('wrapA').innerHTML = personCard('pA', 'Person A');
+$('wrapB').innerHTML = personCard('pB', 'Person B');
+
+try {
+  const zones = Intl.supportedValuesOf('timeZone');
+  $('tzlist').innerHTML = zones.map((z) => `<option value="${z}">`).join('');
+} catch { /* older browser: free text still works */ }
+
+function wireSearch(id) {
+  const inp = $(id + '_place'), ul = $(id + '_sug');
+  let timer, seq = 0;
+  const close = () => { ul.style.display = 'none'; inp.setAttribute('aria-expanded', 'false'); };
+  inp.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = inp.value.trim();
+    if (q.length < 2) { close(); return; }
+    timer = setTimeout(async () => {
+      const mine = ++seq;
+      try {
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=en&format=json`);
+        const j = await r.json();
+        if (mine !== seq) return;
+        const res = j.results || [];
+        ul._res = res;
+        ul.innerHTML = res.length
+          ? res.map((c, i) => `<li role="option" data-i="${i}">${esc(c.name)}<small>${esc([c.admin1, c.country].filter(Boolean).join(', '))}</small></li>`).join('')
+          : '<li class="none">No match. Enter the coordinates below instead.</li>';
+      } catch {
+        if (mine !== seq) return;
+        ul._res = [];
+        ul.innerHTML = '<li class="none">City search needs an internet connection. Enter the coordinates below instead.</li>';
+      }
+      ul.style.display = 'block';
+      inp.setAttribute('aria-expanded', 'true');
+    }, 320);
+  });
+  ul.addEventListener('pointerdown', (e) => {
+    const li = e.target.closest('li[data-i]');
+    if (!li) return;
+    e.preventDefault();
+    const c = ul._res[Number(li.dataset.i)];
+    inp.value = [c.name, c.admin1, c.country].filter(Boolean).join(', ');
+    $(id + '_lat').value = c.latitude.toFixed(4);
+    $(id + '_lon').value = c.longitude.toFixed(4);
+    $(id + '_tz').value = c.timezone || '';
+    $(id + '_hint').textContent = 'Coordinates and time zone filled from the city search.';
+    close();
+  });
+  inp.addEventListener('blur', () => setTimeout(close, 160));
+  // typing coordinates by hand invalidates the previous time zone
+  for (const f of ['lat', 'lon']) {
+    $(`${id}_${f}`).addEventListener('input', () => {
+      $(id + '_tz').value = '';
+      $(id + '_hint').textContent = 'Time zone will be detected from these coordinates.';
+    });
+  }
+}
+wireSearch('pA'); wireSearch('pB');
+
+$('example').addEventListener('click', () => {
+  const set = (id, v) => { $(id).value = v; };
+  set('pA_name', 'Person A'); set('pA_date', '1988-03-21'); set('pA_time', '08:15');
+  set('pA_place', 'Dhaka, Dhaka Division, Bangladesh'); set('pA_lat', '23.8103'); set('pA_lon', '90.4125'); set('pA_tz', 'Asia/Dhaka');
+  set('pB_name', 'Person B'); set('pB_date', '1991-09-02'); set('pB_time', '19:40');
+  set('pB_place', 'London, England, United Kingdom'); set('pB_lat', '51.5074'); set('pB_lon', '-0.1278'); set('pB_tz', 'Europe/London');
+});
+
+const readPerson = (id, fallback) => ({
+  name: $(id + '_name').value.trim() || fallback,
+  date: $(id + '_date').value, time: $(id + '_time').value,
+  lat: $(id + '_lat').value, lon: $(id + '_lon').value, tz: $(id + '_tz').value.trim(),
+});
+
+function showMsg(text, isErr = true) {
+  $('msg').innerHTML = text ? `<div class="notice ${isErr ? 'err' : ''}">${esc(text)}</div>` : '';
+}
+
+let lastData = null, lastSvg = '';
+
+$('form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showMsg('');
+  const a = readPerson('pA', 'Person A'), b = readPerson('pB', 'Person B');
+  for (const [p, label] of [[a, 'Person A'], [b, 'Person B']]) {
+    if (!p.date) return showMsg(`${label}: enter a birth date.`);
+    if (!p.time) return showMsg(`${label}: enter a birth time.`);
+    if (p.lat === '' || p.lon === '') return showMsg(`${label}: search for a birth place or enter latitude and longitude.`);
+  }
+  const options = {
+    houseSystem: $('o_house').value, zodiac: $('o_zodiac').value, node: $('o_node').value, midpoint: $('o_mid').value,
+  };
+  const btn = $('go');
+  btn.disabled = true; btn.textContent = 'Calculating…';
+  $('results').style.display = 'none'; // never show an old chart next to a new error
+  try {
+    const data = await callApi({ a, b, options });
+    // show the detected time zones in the form
+    ['pA', 'pB'].forEach((id, i) => { if (!$(id + '_tz').value) $(id + '_tz').value = data.persons[i].tz; });
+    render(data, $('o_aspects').value === 'all');
+    $('results').style.display = 'block';
+    $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  } catch (err) {
+    showMsg(err.message || String(err));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Calculate Davison chart';
+  }
+});
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// The page may be opened from the calculator server itself, from another local server
+// (Live Server, etc.) or straight from disk. Find the real calculator server either way.
+let API_BASE = null; // '' means "same address as this page"
+
+async function probe(base, ms) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(base + '/api/health', { cache: 'no-store', signal: ctl.signal });
+    const h = await r.json();
+    return h && h.ok ? h : null;
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
+async function findServer() {
+  if (API_BASE !== null) return API_BASE;
+  const candidates = [];
+  if (location.protocol.startsWith('http')) candidates.push('');
+  for (let port = 3000; port <= 3010; port++) candidates.push(`http://localhost:${port}`, `http://127.0.0.1:${port}`);
+  const found = await Promise.all(candidates.map((c) => probe(c, 1500)));
+  const i = found.findIndex(Boolean);
+  API_BASE = i === -1 ? null : candidates[i];
+  return API_BASE;
+}
+
+// One automatic retry covers a dropped connection or an empty reply.
+async function callApi(payload) {
+  let problem = '';
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const base = await findServer();
+    if (base === null) {
+      const where = location.origin === 'null' ? 'a file on your computer' : location.origin;
+      throw new Error(`The calculator server was not found (this page was opened from ${where}). Start it with "npm start" in the project folder, keep that terminal window open, and try again.`);
+    }
+    let r, text;
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 20000);
+    try {
+      r = await fetch(base + '/api/davison', { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: ctl.signal });
+      text = await r.text();
+    } catch {
+      problem = 'the page lost contact with the calculator server';
+      API_BASE = null; await sleep(350); continue;
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!text.trim()) { problem = `the server sent an empty reply (HTTP ${r.status})`; API_BASE = null; await sleep(350); continue; }
+    let data;
+    try { data = JSON.parse(text); }
+    catch { problem = `something other than the calculator answered (HTTP ${r.status})`; API_BASE = null; await sleep(350); continue; }
+    if (!r.ok) throw new Error(data.error || `The server returned HTTP ${r.status}.`);
+    return data;
+  }
+  throw new Error(`Calculation failed: ${problem}. Check that "npm start" is still running and look at its terminal window for an error message.`);
+}
+
+/* ============================== aspects ============================== */
+function computeAspects(ch, includeMinor) {
+  const pts = ch.bodies.filter((b) => ASPECT_BODIES.includes(b.key)).map((b) => ({ key: b.key, name: b.name, lon: b.lon, speed: b.speed }));
+  pts.push({ key: 'asc', name: 'Ascendant', lon: ch.asc, speed: 0 }, { key: 'mc', name: 'Midheaven', lon: ch.mc, speed: 0 });
+  const list = ASPECTS.filter((a) => a.major || includeMinor);
+  const out = [];
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = i + 1; j < pts.length; j++) {
+      const A = pts[i], B = pts[j];
+      if (['asc', 'mc'].includes(A.key) && ['asc', 'mc'].includes(B.key)) continue;
+      const d = sep(A.lon, B.lon);
+      let best = null;
+      for (const a of list) {
+        const orb = Math.abs(d - a.a);
+        if (orb <= a.orb && (!best || orb < best.orb)) best = { a, orb };
+      }
+      if (!best) continue;
+      const dt = 0.01; // days: does the orb shrink or grow?
+      const d2 = sep(A.lon + A.speed * dt, B.lon + B.speed * dt);
+      const still = A.speed === 0 && B.speed === 0;
+      out.push({ i, j, A, B, asp: best.a, orb: best.orb, applying: still ? null : Math.abs(d2 - best.a.a) < best.orb });
+    }
+  }
+  return { pts, out };
+}
+
+/* ============================== wheel ============================== */
+function drawWheel(data, aspects) {
+  const ch = data.chart, S = 680, cx = 340, cy = 340;
+  const R = { out: 306, signIn: 264, tick: 256, plan: 227, deg: 201, houseIn: 176, num: 161, asp: 146 };
+  const GOLD = '#e6c76a', GOLD_DIM = 'rgba(230,199,106,0.32)', MUTED = '#b4a5d2';
+  const ELFILL = ['rgba(255,122,90,0.13)', 'rgba(160,200,120,0.11)', 'rgba(125,180,255,0.12)', 'rgba(111,214,196,0.12)']; // fire, earth, air, water
+  const asc = ch.asc;
+  const P = (r, l) => { const a = rad(180 + (l - asc)); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
+  const f = (n) => n.toFixed(1);
+  const pt = (r, l) => { const [x, y] = P(r, l); return `${f(x)} ${f(y)}`; };
+  const FONT = "'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols','DejaVu Sans',sans-serif";
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" role="img" aria-label="Davison chart wheel">`;
+  s += `<defs><radialGradient id="wbg" cx="50%" cy="50%" r="72%"><stop offset="0" stop-color="#2d1758"/><stop offset="1" stop-color="#140a29"/></radialGradient></defs>`;
+  s += `<rect width="${S}" height="${S}" rx="26" fill="url(#wbg)"/>`;
+
+  // zodiac ring
+  for (let i = 0; i < 12; i++) {
+    const l1 = i * 30, l2 = l1 + 30;
+    s += `<path d="M${pt(R.out, l1)} A${R.out} ${R.out} 0 0 0 ${pt(R.out, l2)} L${pt(R.signIn, l2)} A${R.signIn} ${R.signIn} 0 0 1 ${pt(R.signIn, l1)} Z" fill="${ELFILL[i % 4]}" stroke="${GOLD_DIM}" stroke-width="1"/>`;
+    const [gx, gy] = P((R.out + R.signIn) / 2, l1 + 15);
+    s += `<text x="${f(gx)}" y="${f(gy)}" font-size="23" fill="${GOLD}" text-anchor="middle" dominant-baseline="central" font-family="${FONT}"><title>${SIGNS[i].n}</title>${SIGNS[i].g}${VS}</text>`;
+  }
+  // degree ticks + 0° labels at each sign boundary
+  for (let d = 0; d < 360; d++) {
+    const isBoundary = d % 30 === 0;
+    const isTen = d % 10 === 0;
+    const isFive = d % 5 === 0;
+    const len = isBoundary ? 12 : isTen ? 9 : isFive ? 6 : 3.5;
+    const [x1, y1] = P(R.tick, d), [x2, y2] = P(R.tick - len, d);
+    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${isBoundary ? GOLD : GOLD_DIM}" stroke-width="${isBoundary ? 1.4 : isTen ? 1.0 : 0.6}"/>`;
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${R.tick}" fill="none" stroke="${GOLD_DIM}"/>`;
+  // 0° marker at each sign boundary — tiny text just inside tick ring
+  for (let i = 0; i < 12; i++) {
+    const lon = i * 30;
+    const [lx, ly] = P(R.tick - 22, lon);
+    s += `<text x="${f(lx)}" y="${f(ly)}" font-size="9" fill="${GOLD_DIM}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">0°</text>`;
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${R.houseIn}" fill="rgba(10,4,24,0.35)" stroke="${GOLD_DIM}"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="${R.asp}" fill="rgba(10,4,24,0.35)" stroke="${GOLD_DIM}"/>`;
+
+  // house cusps and numbers
+  ch.cusps.forEach((c, i) => {
+    const angular = i % 3 === 0;
+    const [x1, y1] = P(R.asp, c), [x2, y2] = P(angular ? R.out : R.tick, c);
+    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${angular ? GOLD : 'rgba(230,199,106,0.38)'}" stroke-width="${angular ? 1.8 : 0.9}"/>`;
+    const midLon = c + norm(ch.cusps[(i + 1) % 12] - c) / 2;
+    const [nx, ny] = P(R.num, midLon);
+    s += `<text x="${f(nx)}" y="${f(ny)}" font-size="12" fill="${MUTED}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${i + 1}</text>`;
+  });
+  // angle labels outside the ring
+  [['AC', asc], ['DC', asc + 180], ['MC', ch.mc], ['IC', ch.mc + 180]].forEach(([t, l]) => {
+    const [x, y] = P(R.out + 18, l);
+    s += `<text x="${f(x)}" y="${f(y)}" font-size="12" font-weight="700" fill="${GOLD}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${t}</text>`;
+  });
+
+  // Build display position map BEFORE drawing aspect lines,
+  // so lines connect to where glyphs actually appear, not the raw ecliptic position.
+  // We run the same spread algorithm here to get disp values.
+  const rawForMap = ch.bodies.filter((b) => b.key !== 'snode').map((b) => ({ b })).sort((x, y) => x.b.lon - y.b.lon);
+  const nMap = rawForMap.length;
+  let startMap = 0, widestMap = -1;
+  for (let i = 0; i < nMap; i++) {
+    const g = norm(rawForMap[(i + 1) % nMap].b.lon - rawForMap[i].b.lon);
+    if (g > widestMap) { widestMap = g; startMap = (i + 1) % nMap; }
+  }
+  const itemsMap = rawForMap.slice(startMap).concat(rawForMap.slice(0, startMap));
+  itemsMap.forEach((it, k) => { it.disp = k === 0 ? it.b.lon : itemsMap[k - 1].disp + norm(it.b.lon - itemsMap[k - 1].b.lon); });
+  const minSepMap = 8.6;
+  for (let pass = 0; pass < 3000; pass++) {
+    let moved = false;
+    for (let k = 0; k < nMap - 1; k++) {
+      const gap = itemsMap[k + 1].disp - itemsMap[k].disp;
+      if (gap < minSepMap - 0.005) { const push = (minSepMap - gap) / 2; itemsMap[k].disp -= push; itemsMap[k + 1].disp += push; moved = true; }
+    }
+    if (!moved) break;
+  }
+  const dispOf = {};
+  itemsMap.forEach((it) => { dispOf[it.b.key] = it.disp; });
+  // Angles are not spread — they stay at their true ecliptic position
+  dispOf.asc = ch.asc; dispOf.mc = ch.mc;
+
+  // aspect lines — endpoints at display positions so they connect to glyphs
+  for (const a of aspects.out) {
+    const lonA = dispOf[a.A.key] ?? a.A.lon;
+    const lonB = dispOf[a.B.key] ?? a.B.lon;
+    const [x1, y1] = P(R.asp, lonA), [x2, y2] = P(R.asp, lonB);
+    const tight = 1 - a.orb / a.asp.orb;
+    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${a.asp.c}" stroke-width="${a.asp.major ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${a.asp.major ? '' : ' stroke-dasharray="4 3"'}><title>${a.A.name} ${a.asp.n} ${a.B.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
+  }
+
+  // planets: spread out crowded glyphs, keep a tick at the true position
+  const raw = ch.bodies.filter((b) => b.key !== 'snode').map((b) => ({ b })).sort((x, y) => x.b.lon - y.b.lon);
+  const n = raw.length;
+  let start = 0, widest = -1;
+  for (let i = 0; i < n; i++) { // open the circle at its widest gap so clusters never wrap around
+    const g = norm(raw[(i + 1) % n].b.lon - raw[i].b.lon);
+    if (g > widest) { widest = g; start = (i + 1) % n; }
+  }
+  const items = raw.slice(start).concat(raw.slice(0, start));
+  items.forEach((it, k) => { it.disp = k === 0 ? it.b.lon : items[k - 1].disp + norm(it.b.lon - items[k - 1].b.lon); });
+  const minSep = 8.6;
+  for (let pass = 0; pass < 3000; pass++) {
+    let moved = false;
+    for (let k = 0; k < n - 1; k++) {
+      const gap = items[k + 1].disp - items[k].disp;
+      if (gap < minSep - 0.005) { const push = (minSep - gap) / 2; items[k].disp -= push; items[k + 1].disp += push; moved = true; }
+    }
+    if (!moved) break;
+  }
+  for (const it of items) {
+    const b = it.b, col = BODY_COLOR[b.key] || '#fff';
+    const [tx1, ty1] = P(R.tick, b.lon), [tx2, ty2] = P(R.tick - 13, b.lon);
+    s += `<line x1="${f(tx1)}" y1="${f(ty1)}" x2="${f(tx2)}" y2="${f(ty2)}" stroke="${col}" stroke-width="2" stroke-linecap="round"/>`;
+    const off = Math.abs(norm(it.disp - b.lon + 180) - 180);
+    if (off > 1.2) {
+      const [cx1, cy1] = P(R.tick - 13, b.lon), [cx2, cy2] = P(R.plan + 14, it.disp);
+      s += `<line x1="${f(cx1)}" y1="${f(cy1)}" x2="${f(cx2)}" y2="${f(cy2)}" stroke="${col}" stroke-opacity="0.45" stroke-width="0.8"/>`;
+    }
+    const [gx, gy] = P(R.plan, it.disp), [dx, dy] = P(R.deg, it.disp);
+    const p = dms(b.lon);
+    s += `<g><title>${b.name} ${p.d}°${String(p.m).padStart(2, '0')}′ ${SIGNS[p.s].n}${b.speed < 0 ? ' (retrograde)' : ''}, house ${b.house}</title>`;
+    s += glyphSvg(b.key, gx, gy, 20, col);
+    s += `<text x="${f(dx)}" y="${f(dy)}" font-size="11" fill="${MUTED}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${p.d}°</text>`;
+    if (b.speed < 0 && b.key !== 'node') s += `<text x="${f(gx + 11)}" y="${f(gy + 9)}" font-size="9" font-weight="700" fill="#ff7a90" font-family="Nunito,sans-serif">R</text>`;
+    s += `</g>`;
+  }
+  s += `<text x="${cx}" y="${cy + 4}" font-size="17" fill="rgba(230,199,106,0.28)" text-anchor="middle" font-family="'Cormorant Garamond',Georgia,serif" font-style="italic">Davison</text>`;
+  s += `</svg>`;
+  return s;
+}
+
+/* ============================== render ============================== */
+function render(data, includeMinor) {
+  lastData = data;
+  const ch = data.chart, m = data.meta, dv = data.davison;
+  const [A, B] = data.persons;
+  $('rTitle').textContent = `${A.name} and ${B.name}`;
+
+  const notes = m.warnings.map((w) => `<div class="notice">${esc(w)}</div>`).join('');
+  $('rNotices').innerHTML = notes;
+
+  $('rMoment').innerHTML = `
+    <div><span>Davison moment (UT)</span><b>${fmtDT(dv.utc)}</b></div>
+    <div><span>Midpoint place</span><b>${fmtLat(dv.lat)}, ${fmtLon(dv.lon)}</b></div>
+    <div><span>Local time there (${esc(dv.tz)}, UTC${esc(dv.offset)})</span><b>${fmtDT(dv.local)}</b></div>
+    <div><span>Zodiac</span><b>${esc(m.zodiac)}${m.ayanamsa != null ? ` <small style="font-size:.9rem;color:var(--muted)">(${m.ayanamsa.toFixed(3)}°)</small>` : ''}</b></div>
+    <div><span>Houses</span><b>${esc(m.houseSystemUsed)}</b></div>
+    <div><span>Ephemeris</span><b>${esc(m.ephemeris)}</b></div>`;
+
+  const asp = computeAspects(ch, includeMinor);
+  lastSvg = drawWheel(data, asp);
+  $('wheelBox').innerHTML = lastSvg;
+
+  // positions table
+  const rowsAngles = [
+    ['Ascendant', 'AC', ch.asc, 1], ['Midheaven', 'MC', ch.mc, 10], ['Vertex', 'Vx', ch.vertex, null],
+  ].map(([n, ab, l, h]) => `<tr><td><span class="gl" style="font-size:.78rem;color:var(--gold)">${ab}</span> ${n}</td><td class="pos">${posHtml(l)}</td><td>${h ?? ''}</td><td></td></tr>`).join('');
+  const rowsBodies = ch.bodies.map((b) => {
+    const motion = b.key === 'pof' ? '' : b.speed < 0 ? '<span class="retro">Retrograde</span>' : 'Direct';
+    return `<tr><td>${glyphHtml(b.key)} ${esc(b.name)}</td><td class="pos">${posHtml(b.lon)}</td><td>${b.house}</td><td>${motion}</td></tr>`;
+  }).join('');
+  $('rPlanets').innerHTML = `<table><thead><tr><th>Point</th><th>Position</th><th>House</th><th>Motion</th></tr></thead><tbody>${rowsAngles}${rowsBodies}</tbody></table>`;
+
+  // houses
+  const hrow = (i) => `<tr><td>${i + 1}</td><td class="pos">${posHtml(ch.cusps[i])}</td></tr>`;
+  const half = (from) => `<table><thead><tr><th>House</th><th>Cusp</th></tr></thead><tbody>${[0, 1, 2, 3, 4, 5].map((k) => hrow(from + k)).join('')}</tbody></table>`;
+  $('rHouses').innerHTML = `<div class="two">${half(0)}${half(6)}</div>`;
+
+  // aspect list
+  const sorted = [...asp.out].sort((x, y) => x.orb - y.orb);
+  const arow = (a) => {
+    const dot = `<span style="color:${a.asp.c}">●</span>`;
+    const mv = a.applying === null ? '' : a.applying ? 'Applying' : 'Separating';
+    const nm = (P) => (P.key === 'asc' ? 'Ascendant' : P.key === 'mc' ? 'Midheaven' : `${glyphHtml(P.key)} ${esc(P.name)}`);
+    return `<tr><td>${nm(a.A)}</td><td>${dot} ${a.asp.n}</td><td>${nm(a.B)}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
+  };
+  $('rAspects').innerHTML = sorted.length
+    ? `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th><th></th></tr></thead><tbody>${sorted.map(arow).join('')}</tbody></table>`
+    : '<p class="hint">No aspects within the orbs.</p>';
+
+  // aspect grid (lower triangle)
+  const map = {};
+  asp.out.forEach((a) => { map[a.i + '-' + a.j] = a; });
+  const hd = (P) => (P.key === 'asc' ? 'AC' : P.key === 'mc' ? 'MC' : glyphHtml(P.key));
+  let g = '<table class="agrid"><thead><tr><th></th>' + asp.pts.slice(0, -1).map((P) => `<th>${hd(P)}</th>`).join('') + '</tr></thead><tbody>';
+  for (let r = 1; r < asp.pts.length; r++) {
+    g += `<tr><th>${hd(asp.pts[r])}</th>`;
+    for (let c = 0; c < asp.pts.length - 1; c++) {
+      if (c >= r) { g += '<td class="empty"></td>'; continue; }
+      const a = map[c + '-' + r];
+      g += a ? `<td title="${esc(a.A.name)} ${a.asp.n} ${esc(a.B.name)}, orb ${a.orb.toFixed(1)}°" style="color:${a.asp.c}"><span class="gl">${a.asp.s}</span></td>` : '<td></td>';
+    }
+    g += '</tr>';
+  }
+  $('rGrid').innerHTML = g + '</tbody></table>';
+
+  // balance
+  const planets = ch.bodies.filter((b) => PLANET_KEYS.includes(b.key));
+  const count = (key, val) => planets.filter((b) => SIGNS[Math.floor(norm(b.lon) / 30)][key] === val).length;
+  const bar = (label, n) => `<div class="bar"><span>${label}</span><div><i style="width:${(n / planets.length) * 100}%"></i></div><b>${n}</b></div>`;
+  $('rBalance').innerHTML = `<div class="bars">${['Fire', 'Earth', 'Air', 'Water'].map((e) => bar(e, count('el', e))).join('')}</div>
+    <div class="bars" style="margin-top:16px">${['Cardinal', 'Fixed', 'Mutable'].map((e) => bar(e, count('mo', e))).join('')}</div>`;
+}
+
+/* ============================== tools ============================== */
+$('dlSvg').addEventListener('click', () => {
+  if (!lastSvg) return;
+  const blob = new Blob([lastSvg], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'davison-chart.svg';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+$('cpJson').addEventListener('click', async () => {
+  if (!lastData) return;
+  const text = JSON.stringify(lastData, null, 2);
+  try { await navigator.clipboard.writeText(text); $('cpJson').textContent = 'Copied'; }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); $('cpJson').textContent = 'Copied'; } catch { $('cpJson').textContent = 'Copy failed'; }
+    ta.remove();
+  }
+  setTimeout(() => { $('cpJson').textContent = 'Copy data (JSON)'; }, 1800);
+});
+
+</script>
+</body>
+</html>
