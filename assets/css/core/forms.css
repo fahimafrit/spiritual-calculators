@@ -109,33 +109,78 @@
 }
 
 /* ── Birth-data forms (astrology) ─────────────────────────────────────
-   One or two people (name, date, time, birth place) plus a collapsible
-   block of chart options. Built by FormKit's 'birth-data' and
-   'two-birth-data' layouts. */
+   One or two people (name, date, time, birth place, coordinates) plus
+   a collapsible block of chart options. Built by FormKit's
+   'birth-data' and 'two-birth-data' layouts. Same structure and
+   control sizes as the original Davison form, in the repo's colors. */
 
 .form-card--birth {
     display: block;
+    padding: 30px 32px;
+    border-radius: 20px;
 }
 
 .form-people {
     display: grid;
-    gap: 32px;
+    gap: 34px;
+}
+
+.form-people--1 {
+    grid-template-columns: 1fr;
 }
 
 .form-people--2 {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1px 1fr;
+}
+
+.form-people .rule {
+    background: var(--line);
 }
 
 .form-section h3 {
     margin: 0 0 16px;
-    font-size: 17px;
+    font-size: 1.35rem;
     font-weight: 800;
     color: var(--ink);
 }
 
-.form-section > .field,
-.form-section > .field-row {
-    margin-bottom: 14px;
+.form-card--birth .field {
+    flex: none;
+    min-width: 0;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+
+.form-card--birth .field label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+}
+
+.form-card--birth .field input,
+.form-card--birth .field select {
+    background: #ffffff;
+    border: 1px solid rgba(36, 26, 68, 0.16);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--ink);
+    font-size: 0.98rem;
+    font-family: 'Nunito', sans-serif;
+    line-height: 1.6;
+    outline: none;
+    width: 100%;
+}
+
+.form-card--birth .field select {
+    height: 43px;
+}
+
+.form-card--birth .field input:focus,
+.form-card--birth .field select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15);
 }
 
 .field-row {
@@ -144,31 +189,10 @@
     gap: 12px;
 }
 
-.field select {
-    background: #ffffff;
-    border: 1px solid rgba(36, 26, 68, 0.16);
-    border-radius: 10px;
-    padding: 12px 14px;
-    color: var(--ink);
-    font-size: 16px;
-    font-family: 'Nunito', sans-serif;
-    outline: none;
-    width: 100%;
-}
-
-/* Every input box and drop-down in a birth-data form is exactly the
-   same height, whatever the browser's own default for each control. */
-.form-card--birth .field input,
-.form-card--birth .field select {
-    height: 48px;
-    padding-top: 0;
-    padding-bottom: 0;
-    line-height: normal;
-}
-
-.field select:focus {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15);
+.coord-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr;
+    gap: 12px;
 }
 
 .field-place .ac {
@@ -191,16 +215,15 @@
     overflow: auto;
 }
 
-.sug[hidden],
-.coord-grid[hidden] {
+.sug[hidden] {
     display: none;
 }
 
 .sug li {
-    padding: 9px 10px;
+    padding: 8px 10px;
     border-radius: 7px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 0.95rem;
     color: var(--ink);
 }
 
@@ -212,7 +235,7 @@
 .sug li small {
     display: block;
     color: var(--ink-soft);
-    font-size: 12px;
+    font-size: 0.8rem;
 }
 
 .sug li.none {
@@ -224,31 +247,24 @@
     background: none;
 }
 
-.field-status {
-    margin: 0;
-    min-height: 1.2em;
-    font-size: 12px;
-    color: var(--ink-soft);
-}
-
 .field-hint {
-    margin: 0;
-    font-size: 12px;
+    margin: -4px 0 0;
+    min-height: 1.2em;
+    font-size: 0.8rem;
     color: var(--ink-soft);
 }
 
 .link-btn {
     background: none;
     border: none;
-    padding: 4px 0;
+    padding: 6px 2px;
     color: var(--gold);
     font-family: 'Nunito', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 3px;
     cursor: pointer;
-    align-self: flex-start;
 }
 
 .link-btn:focus-visible,
@@ -257,31 +273,16 @@
     outline-offset: 2px;
 }
 
-.coord-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1.3fr;
-    gap: 12px;
-    margin-top: 6px;
-}
-
-.coord-grid .field {
-    min-width: 0;
-}
-
-.coord-grid .field-hint {
-    grid-column: 1 / -1;
-}
-
 .form-options {
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--line-soft);
+    margin-top: 26px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
 }
 
 .form-options summary {
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 800;
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--gold);
     text-decoration: underline;
     text-underline-offset: 3px;
@@ -308,31 +309,59 @@
 
 .form-options-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 14px;
-    margin-top: 14px;
-}
-
-.form-options-grid .field {
-    min-width: 0;
+    margin-top: 18px;
 }
 
 .form-actions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 26px;
+    gap: 14px;
+    margin-top: 22px;
 }
 
-.form-actions #submit-btn {
-    min-width: 240px;
+.form-card--birth #submit-btn {
+    border-radius: 999px;
+    padding: 13px 30px;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: normal;
+    text-transform: none;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1020px) {
+    .form-options-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 940px) {
     .form-people--2 {
         grid-template-columns: 1fr;
+    }
+
+    .form-people .rule {
+        height: 1px;
+    }
+}
+
+@media (max-width: 620px) {
+    .form-card--birth {
+        padding: 20px 18px;
+    }
+
+    .coord-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .coord-grid .field:last-of-type {
+        grid-column: 1 / -1;
+    }
+
+    .form-options-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -344,16 +373,6 @@
 
     .field {
         min-width: 140px;
-    }
-}
-
-@media (max-width: 520px) {
-    .coord-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .coord-grid .field:last-of-type {
-        grid-column: 1 / -1;
     }
 }
 
@@ -370,9 +389,5 @@
 
     #submit-btn {
         width: 100%;
-    }
-
-    .form-actions #submit-btn {
-        min-width: 0;
     }
 }

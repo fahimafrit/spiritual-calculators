@@ -180,6 +180,8 @@ const FormKit = (function () {
     if (digits.length === 4 && typeof onComplete === 'function') onComplete();
   }
 
+  const PLACE_HINT = 'South and west are negative. A time zone like UTC+6 also works.';
+
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
   /* ---- Field markup -------------------------------------------------- */
@@ -204,24 +206,22 @@ const FormKit = (function () {
           <input id="${field.id}" type="text" placeholder="Search a city, for example Dhaka" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="${p}_sug" />
           <ul id="${p}_sug" class="sug" role="listbox" hidden></ul>
         </div>
-        <p class="field-status" id="${p}_status" aria-live="polite"></p>
-        <button type="button" class="link-btn" id="${p}_manual" aria-expanded="false" aria-controls="${p}_coords">Enter coordinates manually</button>
-        <div class="coord-grid" id="${p}_coords" hidden>
-          <div class="field">
-            <label for="${p}_lat">Latitude</label>
-            <input id="${p}_lat" type="text" inputmode="decimal" placeholder="23.8103" autocomplete="off" />
-          </div>
-          <div class="field">
-            <label for="${p}_lon">Longitude</label>
-            <input id="${p}_lon" type="text" inputmode="decimal" placeholder="90.4125" autocomplete="off" />
-          </div>
-          <div class="field">
-            <label for="${p}_tz">Time zone</label>
-            <input id="${p}_tz" type="text" list="fk-tzlist" placeholder="Auto-detected" autocomplete="off" />
-          </div>
-          <p class="field-hint">South and west are negative. A time zone like UTC+6 also works.</p>
+      </div>
+      <div class="coord-grid">
+        <div class="field">
+          <label for="${p}_lat">Latitude</label>
+          <input id="${p}_lat" type="text" inputmode="decimal" placeholder="23.8103" autocomplete="off" />
         </div>
-      </div>`;
+        <div class="field">
+          <label for="${p}_lon">Longitude</label>
+          <input id="${p}_lon" type="text" inputmode="decimal" placeholder="90.4125" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="${p}_tz">Time zone</label>
+          <input id="${p}_tz" type="text" list="fk-tzlist" placeholder="Auto-detected" autocomplete="off" />
+        </div>
+      </div>
+      <p class="field-hint" id="${p}_hint" aria-live="polite">${PLACE_HINT}</p>`;
     }
     if (field.type === 'select') {
       return `      <div class="field">
@@ -255,7 +255,7 @@ const FormKit = (function () {
       <h3>${person.title}</h3>
 ${rows.join('\n')}
     </section>`;
-    }).join('\n');
+    }).join('\n    <div class="rule"></div>\n');
 
     const selects = fields.filter((f) => f.type === 'select');
     const options = selects.length
@@ -415,8 +415,8 @@ ${people}
 
   const TIME_OK = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-  function setStatus(prefix, text) {
-    const el = byId(prefix + '_status');
+  function setHint(prefix, text) {
+    const el = byId(prefix + '_hint');
     if (el) el.textContent = text;
   }
 
@@ -426,7 +426,6 @@ ${people}
     const input = byId(prefix + '_tz');
     if (!input || !tz) return;
     if (!input.value) input.value = tz;
-    setStatus(prefix, `Time zone: ${input.value}`);
   }
 
   function readValues(fields) {
@@ -477,17 +476,12 @@ ${people}
     const input = byId(field.id);
     const list = byId(p + '_sug');
     const latIn = byId(p + '_lat'), lonIn = byId(p + '_lon'), tzIn = byId(p + '_tz');
-    const toggle = byId(p + '_manual'), coords = byId(p + '_coords');
-    let results = [], active = -1, timer, seq = 0, fromSearch = false;
+    let results = [], active = -1, timer, seq = 0;
 
     const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); active = -1; };
     const open = () => { list.hidden = false; input.setAttribute('aria-expanded', 'true'); };
     const mark = () => {
       [...list.querySelectorAll('li[data-i]')].forEach((li, i) => li.classList.toggle('active', i === active));
-    };
-    const showCoords = (show) => {
-      coords.hidden = !show;
-      toggle.setAttribute('aria-expanded', String(show));
     };
 
     function choose(c) {
@@ -495,20 +489,11 @@ ${people}
       latIn.value = Number(c.lat).toFixed(4);
       lonIn.value = Number(c.lon).toFixed(4);
       tzIn.value = c.tz || '';
-      fromSearch = true;
-      setStatus(p, c.tz ? `Time zone: ${c.tz}` : 'Time zone will be detected from the location.');
+      setHint(p, 'Coordinates and time zone filled from the city search.');
       close();
     }
 
-    toggle.addEventListener('click', () => showCoords(coords.hidden));
-
     input.addEventListener('input', () => {
-      // the search box no longer matches the city that filled the coordinates
-      if (fromSearch) {
-        fromSearch = false;
-        latIn.value = ''; lonIn.value = ''; tzIn.value = '';
-        setStatus(p, '');
-      }
       clearTimeout(timer);
       const q = input.value.trim();
       if (q.length < 2) { close(); return; }
@@ -520,11 +505,11 @@ ${people}
           results = found;
           list.innerHTML = found.length
             ? found.map((c, i) => `<li role="option" data-i="${i}">${esc(c.name)}<small>${esc(c.sub)}</small></li>`).join('')
-            : '<li class="none">No match. Use "Enter coordinates manually" instead.</li>';
+            : '<li class="none">No match. Enter the coordinates below instead.</li>';
         } catch (err) {
           if (mine !== seq) return;
           results = [];
-          list.innerHTML = '<li class="none">City search is unavailable. Use "Enter coordinates manually" instead.</li>';
+          list.innerHTML = '<li class="none">City search needs an internet connection. Enter the coordinates below instead.</li>';
         }
         active = -1;
         open();
@@ -547,17 +532,11 @@ ${people}
     });
     input.addEventListener('blur', () => setTimeout(close, 160));
 
-    // a time zone typed by hand is shown as the one in use
-    tzIn.addEventListener('input', () => {
-      setStatus(p, tzIn.value.trim() ? `Time zone: ${tzIn.value.trim()}` : 'Time zone will be detected from the coordinates.');
-    });
-
     // typing coordinates by hand invalidates the previous time zone
     [latIn, lonIn].forEach((el) => {
       el.addEventListener('input', () => {
-        fromSearch = false;
         tzIn.value = '';
-        setStatus(p, 'Time zone will be detected from these coordinates.');
+        setHint(p, 'Time zone will be detected from these coordinates.');
       });
     });
   }
@@ -597,10 +576,6 @@ ${people}
         Object.keys(fields.example).forEach((id) => {
           const el = byId(id);
           if (el) el.value = fields.example[id];
-        });
-        fields.filter((f) => f.type === 'place').forEach((f) => {
-          const tz = byId(f.prefix + '_tz').value;
-          setStatus(f.prefix, tz ? `Time zone: ${tz}` : '');
         });
       });
     }
