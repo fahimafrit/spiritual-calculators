@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Davison Relationship Chart Calculator</title>
-<meta name="description" content="Calculate a Davison relationship chart from two birth charts using Swiss Ephemeris. Midpoint in time and place, full wheel, houses, aspects.">
+<meta name="description" content="Calculate a Davison relationship chart from two birth charts. Midpoint in time and place, full wheel, houses, aspects.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -227,7 +227,7 @@ const ASPECTS = [
 ];
 
 function fmtDT(s) {
-  // server sends "yyyy-LL-dd HH:mm[:ss]"; render as dd/mm/yyyy HH:mm
+  // the calculator sends "yyyy-mm-dd HH:mm[:ss]"; render as dd/mm/yyyy HH:mm
   const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(s || '');
   if (!m) return esc(s);
   const [, y, mo, d, h, mi] = m;
@@ -392,63 +392,30 @@ $('form').addEventListener('submit', async (e) => {
   }
 });
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const API_URL = '../../../calculate.php?slug=davison-chart';
+const GENERIC_ERROR = 'Something went wrong. Please try again.';
+const textOf = (html) => new DOMParser().parseFromString(html, 'text/html').body.textContent.trim();
 
-// The page may be opened from the calculator server itself, from another local server
-// (Live Server, etc.) or straight from disk. Find the real calculator server either way.
-let API_BASE = null; // '' means "same address as this page"
+// Sends both people and the options to the calculator endpoint as plain form fields.
+async function callApi({ a, b, options }) {
+  const body = new URLSearchParams();
+  [['a', a], ['b', b]].forEach(([prefix, p]) => {
+    ['name', 'date', 'time', 'lat', 'lon', 'tz'].forEach((f) => body.set(`${prefix}_${f}`, String(p[f] ?? '')));
+  });
+  body.set('house', options.houseSystem);
+  body.set('zodiac', options.zodiac);
+  body.set('node', options.node);
+  body.set('midpoint', options.midpoint);
 
-async function probe(base, ms) {
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), ms);
+  let data;
   try {
-    const r = await fetch(base + '/api/health', { cache: 'no-store', signal: ctl.signal });
-    const h = await r.json();
-    return h && h.ok ? h : null;
-  } catch { return null; }
-  finally { clearTimeout(timer); }
-}
-
-async function findServer() {
-  if (API_BASE !== null) return API_BASE;
-  const candidates = [];
-  if (location.protocol.startsWith('http')) candidates.push('');
-  for (let port = 3000; port <= 3010; port++) candidates.push(`http://localhost:${port}`, `http://127.0.0.1:${port}`);
-  const found = await Promise.all(candidates.map((c) => probe(c, 1500)));
-  const i = found.findIndex(Boolean);
-  API_BASE = i === -1 ? null : candidates[i];
-  return API_BASE;
-}
-
-// One automatic retry covers a dropped connection or an empty reply.
-async function callApi(payload) {
-  let problem = '';
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const base = await findServer();
-    if (base === null) {
-      const where = location.origin === 'null' ? 'a file on your computer' : location.origin;
-      throw new Error(`The calculator server was not found (this page was opened from ${where}). Start it with "npm start" in the project folder, keep that terminal window open, and try again.`);
-    }
-    let r, text;
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 20000);
-    try {
-      r = await fetch(base + '/api/davison', { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: ctl.signal });
-      text = await r.text();
-    } catch {
-      problem = 'the page lost contact with the calculator server';
-      API_BASE = null; await sleep(350); continue;
-    } finally {
-      clearTimeout(timer);
-    }
-    if (!text.trim()) { problem = `the server sent an empty reply (HTTP ${r.status})`; API_BASE = null; await sleep(350); continue; }
-    let data;
-    try { data = JSON.parse(text); }
-    catch { problem = `something other than the calculator answered (HTTP ${r.status})`; API_BASE = null; await sleep(350); continue; }
-    if (!r.ok) throw new Error(data.error || `The server returned HTTP ${r.status}.`);
-    return data;
+    const r = await fetch(API_URL, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    data = await r.json();
+  } catch {
+    throw new Error(GENERIC_ERROR);
   }
-  throw new Error(`Calculation failed: ${problem}. Check that "npm start" is still running and look at its terminal window for an error message.`);
+  if (!data || data.valid !== true) throw new Error(textOf((data && data.errorsHtml) || '') || GENERIC_ERROR);
+  return data;
 }
 
 /* ============================== aspects ============================== */
@@ -625,8 +592,7 @@ function render(data, includeMinor) {
     <div><span>Midpoint place</span><b>${fmtLat(dv.lat)}, ${fmtLon(dv.lon)}</b></div>
     <div><span>Local time there (${esc(dv.tz)}, UTC${esc(dv.offset)})</span><b>${fmtDT(dv.local)}</b></div>
     <div><span>Zodiac</span><b>${esc(m.zodiac)}${m.ayanamsa != null ? ` <small style="font-size:.9rem;color:var(--muted)">(${m.ayanamsa.toFixed(3)}°)</small>` : ''}</b></div>
-    <div><span>Houses</span><b>${esc(m.houseSystemUsed)}</b></div>
-    <div><span>Ephemeris</span><b>${esc(m.ephemeris)}</b></div>`;
+    <div><span>Houses</span><b>${esc(m.houseSystemUsed)}</b></div>`;
 
   const asp = computeAspects(ch, includeMinor);
   lastSvg = drawWheel(data, asp);

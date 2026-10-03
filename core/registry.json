@@ -13,6 +13,7 @@
     "soul-urge-number": { "category": "numerology" },
     "personality-number": { "category": "numerology" },
     "birthday-number": { "category": "numerology" },
-    "life-path-compatibility": { "category": "numerology" }
+    "life-path-compatibility": { "category": "numerology" },
+    "davison-chart": { "category": "astrology" }
   }
 }
