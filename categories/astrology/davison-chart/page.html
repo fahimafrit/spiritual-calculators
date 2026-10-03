@@ -214,17 +214,17 @@ const BODY_COLOR = {
 };
 const PLANET_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
 const ASPECT_BODIES = [...PLANET_KEYS, 'node', 'chiron', 'lilith', 'pof'];
-const ASPECTS = [
-  { n: 'Conjunction', a: 0, orb: 8, c: '#f0d27a', s: '☌', major: true },
-  { n: 'Opposition', a: 180, orb: 8, c: '#ff7a90', s: '☍', major: true },
-  { n: 'Trine', a: 120, orb: 7, c: '#6fd6c4', s: '△', major: true },
-  { n: 'Square', a: 90, orb: 7, c: '#ff7a90', s: '□', major: true },
-  { n: 'Sextile', a: 60, orb: 5, c: '#7db4ff', s: '⚹', major: true },
-  { n: 'Quincunx', a: 150, orb: 3, c: '#c9a8ff', s: 'Qx', major: false },
-  { n: 'Semi-sextile', a: 30, orb: 2, c: '#a99cc8', s: 'Ss', major: false },
-  { n: 'Semi-square', a: 45, orb: 2, c: '#e59aa9', s: '∠', major: false },
-  { n: 'Sesqui-square', a: 135, orb: 2, c: '#e59aa9', s: 'Sq', major: false },
-];
+const ASPECT_INFO = {
+  conjunction:  { n: 'Conjunction',  c: '#f0d27a', s: '☌' },
+  opposition:   { n: 'Opposition',   c: '#ff7a90', s: '☍' },
+  trine:        { n: 'Trine',        c: '#6fd6c4', s: '△' },
+  square:       { n: 'Square',       c: '#ff7a90', s: '□' },
+  sextile:      { n: 'Sextile',      c: '#7db4ff', s: '⚹' },
+  quincunx:     { n: 'Quincunx',     c: '#c9a8ff', s: 'Qx' },
+  semisextile:  { n: 'Semi-sextile', c: '#a99cc8', s: 'Ss' },
+  semisquare:   { n: 'Semi-square',  c: '#e59aa9', s: '∠' },
+  sesquisquare: { n: 'Sesqui-square', c: '#e59aa9', s: 'Sq' },
+};
 
 function fmtDT(s) {
   // the calculator sends "yyyy-mm-dd HH:mm[:ss]"; render as dd/mm/yyyy HH:mm
@@ -246,7 +246,8 @@ const posText = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).pad
 const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${SIGNS[p.s].g}${VS}</span> ${SIGNS[p.s].n}`; };
 const fmtLat = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`;
 const fmtLon = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`;
-const sep = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
+const ASPECT_ORBS = { conjunction: 8, opposition: 8, trine: 7, square: 7, sextile: 5, quincunx: 3, semisextile: 2, semisquare: 2, sesquisquare: 2 };
+const sc_aspect_orb = (key) => ASPECT_ORBS[key] || 5;
 
 /* custom-drawn glyphs, centred on 0,0 in a roughly 22x22 box */
 function customGlyph(key, col) {
@@ -374,6 +375,7 @@ $('form').addEventListener('submit', async (e) => {
   }
   const options = {
     houseSystem: $('o_house').value, zodiac: $('o_zodiac').value, node: $('o_node').value, midpoint: $('o_mid').value,
+    aspects: $('o_aspects').value,
   };
   const btn = $('go');
   btn.disabled = true; btn.textContent = 'Calculating…';
@@ -382,7 +384,7 @@ $('form').addEventListener('submit', async (e) => {
     const data = await callApi({ a, b, options });
     // show the detected time zones in the form
     ['pA', 'pB'].forEach((id, i) => { if (!$(id + '_tz').value) $(id + '_tz').value = data.persons[i].tz; });
-    render(data, $('o_aspects').value === 'all');
+    render(data);
     $('results').style.display = 'block';
     $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   } catch (err) {
@@ -419,33 +421,13 @@ async function callApi({ a, b, options }) {
 }
 
 /* ============================== aspects ============================== */
-function computeAspects(ch, includeMinor) {
-  const pts = ch.bodies.filter((b) => ASPECT_BODIES.includes(b.key)).map((b) => ({ key: b.key, name: b.name, lon: b.lon, speed: b.speed }));
-  pts.push({ key: 'asc', name: 'Ascendant', lon: ch.asc, speed: 0 }, { key: 'mc', name: 'Midheaven', lon: ch.mc, speed: 0 });
-  const list = ASPECTS.filter((a) => a.major || includeMinor);
-  const out = [];
-  for (let i = 0; i < pts.length; i++) {
-    for (let j = i + 1; j < pts.length; j++) {
-      const A = pts[i], B = pts[j];
-      if (['asc', 'mc'].includes(A.key) && ['asc', 'mc'].includes(B.key)) continue;
-      const d = sep(A.lon, B.lon);
-      let best = null;
-      for (const a of list) {
-        const orb = Math.abs(d - a.a);
-        if (orb <= a.orb && (!best || orb < best.orb)) best = { a, orb };
-      }
-      if (!best) continue;
-      const dt = 0.01; // days: does the orb shrink or grow?
-      const d2 = sep(A.lon + A.speed * dt, B.lon + B.speed * dt);
-      const still = A.speed === 0 && B.speed === 0;
-      out.push({ i, j, A, B, asp: best.a, orb: best.orb, applying: still ? null : Math.abs(d2 - best.a.a) < best.orb });
-    }
-  }
-  return { pts, out };
-}
+// Aspects are now computed server-side. The page receives:
+//   data.aspects.points  — list of aspect points (key, name, lon, speed)
+//   data.aspects.aspects — list of aspects (i, j, aspect, orb, applying)
+//   data.balance         — { elements: {Fire,Earth,Air,Water}, modes: {Cardinal,Fixed,Mutable} }
 
 /* ============================== wheel ============================== */
-function drawWheel(data, aspects) {
+function drawWheel(data, asp) {
   const ch = data.chart, S = 680, cx = 340, cy = 340;
   const R = { out: 306, signIn: 264, tick: 256, plan: 227, deg: 201, houseIn: 176, num: 161, asp: 146 };
   const GOLD = '#e6c76a', GOLD_DIM = 'rgba(230,199,106,0.32)', MUTED = '#b4a5d2';
@@ -528,12 +510,15 @@ function drawWheel(data, aspects) {
   dispOf.asc = ch.asc; dispOf.mc = ch.mc;
 
   // aspect lines — endpoints at display positions so they connect to glyphs
-  for (const a of aspects.out) {
-    const lonA = dispOf[a.A.key] ?? a.A.lon;
-    const lonB = dispOf[a.B.key] ?? a.B.lon;
+  for (const a of aspects.aspects) {
+    const ptA = aspects.points[a.i], ptB = aspects.points[a.j];
+    const info = ASPECT_INFO[a.aspect];
+    const lonA = dispOf[ptA.key] ?? ptA.lon;
+    const lonB = dispOf[ptB.key] ?? ptB.lon;
     const [x1, y1] = P(R.asp, lonA), [x2, y2] = P(R.asp, lonB);
-    const tight = 1 - a.orb / a.asp.orb;
-    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${a.asp.c}" stroke-width="${a.asp.major ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${a.asp.major ? '' : ' stroke-dasharray="4 3"'}><title>${a.A.name} ${a.asp.n} ${a.B.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
+    const tight = 1 - a.orb / sc_aspect_orb(a.aspect);
+    const isMajor = ['conjunction', 'opposition', 'trine', 'square', 'sextile'].includes(a.aspect);
+    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${info.c}" stroke-width="${isMajor ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${isMajor ? '' : ' stroke-dasharray="4 3"'}><title>${ptA.name} ${info.n} ${ptB.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
   }
 
   // planets: spread out crowded glyphs, keep a tick at the true position
@@ -578,7 +563,7 @@ function drawWheel(data, aspects) {
 }
 
 /* ============================== render ============================== */
-function render(data, includeMinor) {
+function render(data) {
   lastData = data;
   const ch = data.chart, m = data.meta, dv = data.davison;
   const [A, B] = data.persons;
@@ -594,7 +579,7 @@ function render(data, includeMinor) {
     <div><span>Zodiac</span><b>${esc(m.zodiac)}${m.ayanamsa != null ? ` <small style="font-size:.9rem;color:var(--muted)">(${m.ayanamsa.toFixed(3)}°)</small>` : ''}</b></div>
     <div><span>Houses</span><b>${esc(m.houseSystemUsed)}</b></div>`;
 
-  const asp = computeAspects(ch, includeMinor);
+  const asp = data.aspects;
   lastSvg = drawWheel(data, asp);
   $('wheelBox').innerHTML = lastSvg;
 
@@ -614,12 +599,13 @@ function render(data, includeMinor) {
   $('rHouses').innerHTML = `<div class="two">${half(0)}${half(6)}</div>`;
 
   // aspect list
-  const sorted = [...asp.out].sort((x, y) => x.orb - y.orb);
+  const sorted = [...asp.aspects].sort((x, y) => x.orb - y.orb);
   const arow = (a) => {
-    const dot = `<span style="color:${a.asp.c}">●</span>`;
+    const info = ASPECT_INFO[a.aspect];
+    const dot = `<span style="color:${info.c}">●</span>`;
     const mv = a.applying === null ? '' : a.applying ? 'Applying' : 'Separating';
     const nm = (P) => (P.key === 'asc' ? 'Ascendant' : P.key === 'mc' ? 'Midheaven' : `${glyphHtml(P.key)} ${esc(P.name)}`);
-    return `<tr><td>${nm(a.A)}</td><td>${dot} ${a.asp.n}</td><td>${nm(a.B)}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
+    return `<tr><td>${nm(asp.points[a.i])}</td><td> ${dot} ${info.n}</td><td>${nm(asp.points[a.j])}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
   };
   $('rAspects').innerHTML = sorted.length
     ? `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th><th></th></tr></thead><tbody>${sorted.map(arow).join('')}</tbody></table>`
@@ -627,26 +613,26 @@ function render(data, includeMinor) {
 
   // aspect grid (lower triangle)
   const map = {};
-  asp.out.forEach((a) => { map[a.i + '-' + a.j] = a; });
+  asp.aspects.forEach((a) => { map[a.i + '-' + a.j] = a; });
   const hd = (P) => (P.key === 'asc' ? 'AC' : P.key === 'mc' ? 'MC' : glyphHtml(P.key));
-  let g = '<table class="agrid"><thead><tr><th></th>' + asp.pts.slice(0, -1).map((P) => `<th>${hd(P)}</th>`).join('') + '</tr></thead><tbody>';
-  for (let r = 1; r < asp.pts.length; r++) {
-    g += `<tr><th>${hd(asp.pts[r])}</th>`;
-    for (let c = 0; c < asp.pts.length - 1; c++) {
+  let g = '<table class="agrid"><thead><tr><th></th>' + asp.points.slice(0, -1).map((P) => `<th>${hd(P)}</th>`).join('') + '</tr></thead><tbody>';
+  for (let r = 1; r < asp.points.length; r++) {
+    g += `<tr><th>${hd(asp.points[r])}</th>`;
+    for (let c = 0; c < asp.points.length - 1; c++) {
       if (c >= r) { g += '<td class="empty"></td>'; continue; }
       const a = map[c + '-' + r];
-      g += a ? `<td title="${esc(a.A.name)} ${a.asp.n} ${esc(a.B.name)}, orb ${a.orb.toFixed(1)}°" style="color:${a.asp.c}"><span class="gl">${a.asp.s}</span></td>` : '<td></td>';
+      g += a ? `<td title="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].c}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>` : '<td></td>';
     }
     g += '</tr>';
   }
   $('rGrid').innerHTML = g + '</tbody></table>';
 
   // balance
-  const planets = ch.bodies.filter((b) => PLANET_KEYS.includes(b.key));
-  const count = (key, val) => planets.filter((b) => SIGNS[Math.floor(norm(b.lon) / 30)][key] === val).length;
-  const bar = (label, n) => `<div class="bar"><span>${label}</span><div><i style="width:${(n / planets.length) * 100}%"></i></div><b>${n}</b></div>`;
-  $('rBalance').innerHTML = `<div class="bars">${['Fire', 'Earth', 'Air', 'Water'].map((e) => bar(e, count('el', e))).join('')}</div>
-    <div class="bars" style="margin-top:16px">${['Cardinal', 'Fixed', 'Mutable'].map((e) => bar(e, count('mo', e))).join('')}</div>`;
+  const bal = data.balance;
+  const bar = (label, n, total) => `<div class="bar"><span>${label}</span><div><i style="width:${(n / total) * 100}%"></i></div><b>${n}</b></div>`;
+  const total = Object.values(bal.elements).reduce((a, b) => a + b, 0);
+  $('rBalance').innerHTML = `<div class="bars">${['Fire', 'Earth', 'Air', 'Water'].map((e) => bar(e, bal.elements[e], total)).join('')}</div>
+    <div class="bars" style="margin-top:16px">${['Cardinal', 'Fixed', 'Mutable'].map((e) => bar(e, bal.modes[e], total)).join('')}</div>`;
 }
 
 /* ============================== tools ============================== */

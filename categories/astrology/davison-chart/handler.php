@@ -18,6 +18,7 @@ if (!defined('SPIRITUAL_APP')) {
 
 require_once SPIRITUAL_ROOT . '/categories/astrology/_shared/swetest.php';
 require_once SPIRITUAL_ROOT . '/categories/astrology/_shared/timezone.php';
+require_once SPIRITUAL_ROOT . '/categories/astrology/_shared/aspects.php';
 
 final class DavisonInputError extends Exception
 {
@@ -146,6 +147,7 @@ return function (array $input): array {
         'sidereal' => $sidereal,
     ];
     $method = ($input['midpoint'] ?? 'arithmetic') === 'greatcircle' ? 'greatcircle' : 'arithmetic';
+    $aspectsMode = ($input['aspects'] ?? 'major') === 'all' ? 'all' : 'major';
 
     // The Davison method: midpoint in time (UT) and midpoint in space.
     $jdMid = ($a['jd'] + $b['jd']) / 2;
@@ -207,5 +209,7 @@ return function (array $input): array {
             'mc' => $chart['mc'],
             'vertex' => $chart['vertex'],
         ],
+        'aspects' => sc_compute_aspects($chart, $aspectsMode === 'all'),
+        'balance' => sc_element_mode_balance($chart),
     ];
 };
