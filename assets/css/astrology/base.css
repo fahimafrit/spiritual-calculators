@@ -1,0 +1,305 @@
+/* ============================================================
+   assets/css/astrology/base.css
+   Core shared stylesheet for every astrology calculator (Davison
+   chart, and whatever follows). One file, so every tool in the
+   silo looks and behaves the same, in the same default light UI
+   as the numerology and destiny-matrix tools.
+
+   Structure:
+   1. Design tokens
+   2. Base / typography
+   3. Result shell (card, titles, notices)
+   4. Chart summary (key moments grid)
+   5. Chart layout (wheel + tables)
+   6. Tables, glyphs, aspect grid, balance bars
+   7. Buttons and small print
+   8. Responsive rules
+
+   The form itself (cards, fields, birth-place search, chart
+   options) lives in assets/css/core/forms.css, linked before
+   this file.
+   ============================================================ */
+
+/* ── 1. Design tokens ──────────────────────────────────── */
+:root {
+    --violet-deep: #1a1040;
+    --violet-mid: #2e1a63;
+    --violet-soft: #4a2f8a;
+    --gold: #a9782f;
+    --gold-bright: #c0923f;
+    --ink: #000000;
+    --ink-soft: #000000;
+    --ink-faint: #9ca3af;
+    --ink-muted: #4b4766;
+    --surface: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --card-border: rgba(36, 26, 68, 0.10);
+    --line: rgba(36, 26, 68, 0.22);
+    --line-soft: rgba(36, 26, 68, 0.12);
+    --alert: #c0392b;
+    --notice: #d9822b;
+    --radius: 16px;
+    --shadow: 0 16px 40px rgba(36, 26, 68, 0.10);
+    --glyph-font: 'Segoe UI Symbol', 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'Apple Symbols', 'DejaVu Sans', sans-serif;
+}
+
+/* ── 2. Base / typography ──────────────────────────────── */
+* { box-sizing: border-box; }
+
+/* Kept bare (not scoped to .container): a standalone file opened
+   directly still needs a sane default when previewed via a local
+   server. No page-level background/padding/font here on purpose —
+   this file is embedded into an existing page via shortcode in
+   production, so it must not restyle the host page's <body>. */
+body { margin: 0; }
+
+.container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 16px;
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+}
+
+.container h1, .container h2, .container h3 {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+/* ── 3. Result shell ───────────────────────────────────── */
+.result-wrap { margin-top: 48px; }
+
+.result-card {
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+
+.result-title {
+    text-align: center;
+    font-size: clamp(22px, 3vw, 30px);
+    margin: 0 0 18px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 16px;
+}
+
+.sect { margin-top: 44px; }
+.sect:first-child { margin-top: 0; }
+
+.notice {
+    border-left: 3px solid var(--notice);
+    background: rgba(217, 130, 43, 0.10);
+    padding: 10px 14px;
+    border-radius: 0 10px 10px 0;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+/* ── 4. Chart summary ──────────────────────────────────── */
+.moment {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px 32px;
+    margin: 18px 0 34px;
+    padding: 20px 0;
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+}
+
+.moment span {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+}
+
+.moment b {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.moment small {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-muted);
+}
+
+/* ── 5. Chart layout ───────────────────────────────────── */
+.rgrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: 44px;
+    align-items: start;
+}
+
+.rgrid + .rgrid { margin-top: 44px; }
+
+.wheel svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 26px;
+    box-shadow: var(--shadow);
+}
+
+.wheel-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 26px;
+}
+
+.grid-wrap { overflow-x: auto; }
+
+/* ── 6. Tables, glyphs, aspect grid, balance bars ──────── */
+.container table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+}
+
+.container th {
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+}
+
+.container td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--line-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+td.pos { white-space: nowrap; }
+.retro { color: var(--alert); font-weight: 800; }
+
+.gl {
+    font-family: var(--glyph-font);
+    display: inline-block;
+    min-width: 1.2em;
+    text-align: center;
+}
+svg.gl { vertical-align: -3px; }
+
+.container table.agrid {
+    width: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.container table.agrid th,
+.container table.agrid td {
+    width: 34px;
+    height: 32px;
+    padding: 0;
+    text-align: center;
+    border: 1px solid var(--line-soft);
+    font-size: 14px;
+}
+
+.container table.agrid th {
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 13px;
+}
+
+.container table.agrid td.empty { background: rgba(36, 26, 68, 0.04); }
+
+.bars { display: grid; gap: 9px; }
+
+.bar {
+    display: grid;
+    grid-template-columns: 82px 1fr 24px;
+    gap: 10px;
+    align-items: center;
+    font-size: 14.5px;
+}
+
+.bar div {
+    background: rgba(36, 26, 68, 0.08);
+    border-radius: 9px;
+    height: 9px;
+}
+
+.bar i {
+    display: block;
+    height: 9px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+}
+
+.bar b { text-align: right; }
+
+.bars + .bars { margin-top: 16px; }
+
+/* ── 7. Buttons and small print ────────────────────────── */
+.tool-btn {
+    background: #ffffff;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tool-btn:hover { background: rgba(169, 120, 47, 0.12); }
+
+.tool-btn:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.fineprint {
+    margin: 18px 0 0;
+    font-size: 13px;
+    color: var(--ink-muted);
+    text-align: center;
+}
+
+.none-found {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-muted);
+}
+
+/* ── 8. Responsive ─────────────────────────────────────── */
+@media (max-width: 940px) {
+    .rgrid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+    .result-card { padding: 22px 16px; }
+    .two { grid-template-columns: 1fr; }
+    .container th, .container td { padding: 6px 5px; }
+    .container table { font-size: 13.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+}
