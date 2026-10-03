@@ -212,8 +212,6 @@ const BODY_COLOR = {
   sun: '#ffd166', moon: '#dfe6ff', mercury: '#9de3ff', venus: '#ff9ec7', mars: '#ff6b6b', jupiter: '#ffb15c', saturn: '#c9b18a',
   uranus: '#7ff0e0', neptune: '#8aa8ff', pluto: '#c88bff', node: '#f0e6ff', snode: '#f0e6ff', chiron: '#b4e08a', lilith: '#d9a0ff', pof: '#ffe08a',
 };
-const PLANET_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
-const ASPECT_BODIES = [...PLANET_KEYS, 'node', 'chiron', 'lilith', 'pof'];
 const ASPECT_INFO = {
   conjunction:  { n: 'Conjunction',  c: '#f0d27a', s: '☌' },
   opposition:   { n: 'Opposition',   c: '#ff7a90', s: '☍' },
@@ -246,8 +244,6 @@ const posText = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).pad
 const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${SIGNS[p.s].g}${VS}</span> ${SIGNS[p.s].n}`; };
 const fmtLat = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`;
 const fmtLon = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`;
-const ASPECT_ORBS = { conjunction: 8, opposition: 8, trine: 7, square: 7, sextile: 5, quincunx: 3, semisextile: 2, semisquare: 2, sesquisquare: 2 };
-const sc_aspect_orb = (key) => ASPECT_ORBS[key] || 5;
 
 /* custom-drawn glyphs, centred on 0,0 in a roughly 22x22 box */
 function customGlyph(key, col) {
@@ -408,6 +404,7 @@ async function callApi({ a, b, options }) {
   body.set('zodiac', options.zodiac);
   body.set('node', options.node);
   body.set('midpoint', options.midpoint);
+  body.set('aspects', options.aspects);
 
   let data;
   try {
@@ -421,9 +418,9 @@ async function callApi({ a, b, options }) {
 }
 
 /* ============================== aspects ============================== */
-// Aspects are now computed server-side. The page receives:
+// Aspects are computed server-side. The page receives:
 //   data.aspects.points  — list of aspect points (key, name, lon, speed)
-//   data.aspects.aspects — list of aspects (i, j, aspect, orb, applying)
+//   data.aspects.aspects — list of aspects (i, j, aspect, orb, applying, maxOrb, major)
 //   data.balance         — { elements: {Fire,Earth,Air,Water}, modes: {Cardinal,Fixed,Mutable} }
 
 /* ============================== wheel ============================== */
@@ -510,15 +507,14 @@ function drawWheel(data, asp) {
   dispOf.asc = ch.asc; dispOf.mc = ch.mc;
 
   // aspect lines — endpoints at display positions so they connect to glyphs
-  for (const a of aspects.aspects) {
-    const ptA = aspects.points[a.i], ptB = aspects.points[a.j];
+  for (const a of asp.aspects) {
+    const ptA = asp.points[a.i], ptB = asp.points[a.j];
     const info = ASPECT_INFO[a.aspect];
     const lonA = dispOf[ptA.key] ?? ptA.lon;
     const lonB = dispOf[ptB.key] ?? ptB.lon;
     const [x1, y1] = P(R.asp, lonA), [x2, y2] = P(R.asp, lonB);
-    const tight = 1 - a.orb / sc_aspect_orb(a.aspect);
-    const isMajor = ['conjunction', 'opposition', 'trine', 'square', 'sextile'].includes(a.aspect);
-    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${info.c}" stroke-width="${isMajor ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${isMajor ? '' : ' stroke-dasharray="4 3"'}><title>${ptA.name} ${info.n} ${ptB.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
+    const tight = 1 - a.orb / a.maxOrb;
+    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${info.c}" stroke-width="${a.major ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${a.major ? '' : ' stroke-dasharray="4 3"'}><title>${ptA.name} ${info.n} ${ptB.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
   }
 
   // planets: spread out crowded glyphs, keep a tick at the true position
@@ -605,7 +601,7 @@ function render(data) {
     const dot = `<span style="color:${info.c}">●</span>`;
     const mv = a.applying === null ? '' : a.applying ? 'Applying' : 'Separating';
     const nm = (P) => (P.key === 'asc' ? 'Ascendant' : P.key === 'mc' ? 'Midheaven' : `${glyphHtml(P.key)} ${esc(P.name)}`);
-    return `<tr><td>${nm(asp.points[a.i])}</td><td> ${dot} ${info.n}</td><td>${nm(asp.points[a.j])}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
+    return `<tr><td>${nm(asp.points[a.i])}</td><td>${dot} ${info.n}</td><td>${nm(asp.points[a.j])}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
   };
   $('rAspects').innerHTML = sorted.length
     ? `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th><th></th></tr></thead><tbody>${sorted.map(arow).join('')}</tbody></table>`

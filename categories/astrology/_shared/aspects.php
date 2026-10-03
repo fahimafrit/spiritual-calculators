@@ -114,7 +114,9 @@ function sc_compute_aspects(array $chart, bool $includeMinor): array
             // Applying/separating test
             $dt = 0.01; // days
             $d2 = sc_sep($A['lon'] + $A['speed'] * $dt, $B['lon'] + $B['speed'] * $dt);
-            $still = $A['speed'] === 0 && $B['speed'] === 0;
+            // Compare as floats: a fixed point may carry speed 0.0 (Part of
+            // Fortune) or 0 (Ascendant/Midheaven); both mean "not moving".
+            $still = (float) $A['speed'] === 0.0 && (float) $B['speed'] === 0.0;
             $applying = $still ? null : (abs($d2 - $defs[$best][0]) < $bestOrb);
 
             $out[] = [
@@ -123,6 +125,8 @@ function sc_compute_aspects(array $chart, bool $includeMinor): array
                 'aspect' => $best,
                 'orb' => $bestOrb,
                 'applying' => $applying,
+                'maxOrb' => $defs[$best][1],
+                'major' => $defs[$best][2],
             ];
         }
     }
