@@ -1,194 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Davison Relationship Chart Calculator</title>
-<meta name="description" content="Calculate a Davison relationship chart from two birth charts. Midpoint in time and place, full wheel, houses, aspects.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --ink:#12071f; --deep:#241046; --panel:rgba(255,255,255,.045);
-  --gold:#e6c76a; --gold-soft:#f4e4a6; --gold-dim:rgba(230,199,106,.28); --gold-faint:rgba(230,199,106,.12);
-  --text:#efe8fb; --muted:#b4a5d2; --field:rgba(10,4,24,.6);
-  --rose:#ff7a90; --teal:#6fd6c4; --blue:#7db4ff; --amber:#ffc46b;
-  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
-  --sans:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --glyphs:'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols','DejaVu Sans',sans-serif;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{
-  margin:0; font-family:var(--sans); color:var(--text); line-height:1.6; min-height:100vh;
-  background:
-    radial-gradient(1100px 620px at 12% -8%, #3b1b70 0%, transparent 62%),
-    radial-gradient(900px 600px at 105% 8%, #2b1256 0%, transparent 60%),
-    linear-gradient(165deg,#12071f 0%,#1c0d38 55%,#140a29 100%);
-  background-attachment:fixed;
-}
-.wrap{max-width:1180px;margin:0 auto;padding:44px 24px 80px}
-h1,h2,h3{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:.01em}
-h1{font-size:clamp(2.5rem,5.4vw,3.9rem);line-height:1.05;color:var(--gold-soft)}
-h2{font-size:1.7rem;color:var(--gold);margin-bottom:14px}
-h3{font-size:1.35rem;color:var(--gold-soft)}
-.lede{max-width:62ch;color:var(--muted);font-size:1.05rem;margin:14px 0 0}
-a{color:var(--gold)}
-.gl{font-family:var(--glyphs);display:inline-block;min-width:1.2em;text-align:center}
-svg.gl{vertical-align:-3px}
+<meta name="description" content="Calculate a Davison relationship chart from two birth charts. Midpoint in time and place, full wheel, houses, aspects." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
-/* ---- form ---- */
-.panel{border:1px solid var(--gold-dim);border-radius:20px;background:var(--panel);padding:30px 32px;margin-top:34px}
-.people{display:grid;grid-template-columns:1fr 1px 1fr;gap:34px}
-.people .rule{background:var(--gold-dim)}
-.person h3{margin-bottom:16px}
-label{display:block;font-size:.86rem;color:var(--muted);margin-bottom:12px;font-weight:600}
-input,select{
-  display:block;width:100%;margin-top:5px;padding:10px 12px;font:inherit;font-size:.98rem;color:var(--text);
-  background:var(--field);border:1px solid rgba(230,199,106,.24);border-radius:10px;color-scheme:dark;
-}
-input::placeholder{color:rgba(180,165,210,.55)}
-input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:12px}
-.ac{position:relative}
-.sug{display:none;list-style:none;margin:4px 0 0;padding:4px;position:absolute;z-index:20;left:0;right:0;background:#22103f;border:1px solid var(--gold-dim);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.5);max-height:260px;overflow:auto}
-.sug li{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:.95rem}
-.sug li:hover{background:var(--gold-faint)}
-.sug li small{display:block;color:var(--muted);font-size:.8rem}
-.sug li.none{color:var(--muted);cursor:default}
-.sug li.none:hover{background:none}
-.options{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:26px;padding-top:24px;border-top:1px solid var(--gold-dim)}
-.actions{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:22px}
-button{font:inherit;cursor:pointer}
-.btn{border:0;border-radius:999px;padding:13px 30px;font-weight:700;font-size:1rem;color:#2a1600;background:linear-gradient(135deg,#f6e3a1,#dcae3d);box-shadow:0 8px 24px rgba(220,174,61,.25)}
-.btn:hover{filter:brightness(1.06)}
-.btn[disabled]{opacity:.6;cursor:progress}
-.link{background:none;border:0;color:var(--gold);padding:6px 2px;text-decoration:underline;text-underline-offset:3px}
-.ghost{background:none;border:1px solid var(--gold-dim);color:var(--gold-soft);border-radius:999px;padding:9px 18px;font-weight:600}
-.ghost:hover{background:var(--gold-faint)}
-.hint{font-size:.8rem;color:var(--muted);margin:-4px 0 0;min-height:1.2em}
-.notice{border-left:3px solid var(--amber);background:rgba(255,196,107,.09);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0;font-size:.93rem}
-.notice.err{border-color:var(--rose);background:rgba(255,122,144,.1)}
-
-/* ---- results ---- */
-#results{display:none;margin-top:56px}
-.result-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px;margin-bottom:8px}
-.result-head h2{font-size:2.3rem;margin:0;color:var(--gold-soft)}
-.moment{display:grid;grid-template-columns:repeat(3,auto);gap:10px 44px;justify-content:start;margin:16px 0 34px;padding:18px 0;border-top:1px solid var(--gold-dim);border-bottom:1px solid var(--gold-dim)}
-.moment div span{display:block;font-size:.8rem;color:var(--muted)}
-.moment div b{font-family:var(--serif);font-size:1.5rem;font-weight:600;color:var(--text)}
-.rgrid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:44px;align-items:start}
-.wheel svg{width:100%;height:auto;display:block;border-radius:26px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-.wheel-tools{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-table{width:100%;border-collapse:collapse;font-size:.95rem}
-th{font-weight:600;color:var(--muted);text-align:left;font-size:.82rem;padding:6px 8px;border-bottom:1px solid var(--gold-dim)}
-td{padding:7px 8px;border-bottom:1px solid rgba(230,199,106,.09);font-variant-numeric:tabular-nums}
-td.pos{white-space:nowrap}
-.retro{color:var(--rose);font-weight:700}
-.sect{margin-top:46px}
-.sect:first-child{margin-top:0}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}
-.grid-wrap{overflow-x:auto}
-table.agrid{width:auto;border-collapse:separate;border-spacing:0}
-table.agrid th,table.agrid td{width:34px;height:32px;padding:0;text-align:center;border:1px solid rgba(230,199,106,.13);font-size:.9rem}
-table.agrid th{color:var(--gold-soft);border-color:rgba(230,199,106,.13)}
-table.agrid td.empty{background:rgba(255,255,255,.02)}
-.bars{display:grid;gap:9px}
-.bar{display:grid;grid-template-columns:82px 1fr 24px;gap:10px;align-items:center;font-size:.92rem}
-.bar i{display:block;height:9px;border-radius:9px;background:linear-gradient(90deg,var(--gold),#b98a2a)}
-.bar div{background:rgba(255,255,255,.07);border-radius:9px;height:9px}
-.bar b{text-align:right;color:var(--gold-soft)}
-details{margin-top:38px;border-top:1px solid var(--gold-dim);padding-top:16px}
-summary{cursor:pointer;font-family:var(--serif);font-size:1.35rem;color:var(--gold-soft)}
-details p,details li{color:var(--muted);max-width:75ch}
-footer{margin-top:60px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--gold-faint);padding-top:16px}
-
-@media (max-width:1020px){.options{grid-template-columns:repeat(3,1fr)}}
-@media (max-width:940px){.rgrid{grid-template-columns:1fr}.people{grid-template-columns:1fr}.people .rule{display:none}.moment{grid-template-columns:1fr 1fr}}
-@media (max-width:620px){.wrap{padding:28px 16px 60px}.panel{padding:20px 18px}.row3{grid-template-columns:1fr 1fr}.row3 label:last-child{grid-column:1/-1}.options{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.moment{grid-template-columns:1fr}}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-</style>
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/astrology/base.css" />
 </head>
+
 <body>
-<div class="wrap">
-  <header>
-    <h1>Davison relationship chart</h1>
-    <p class="lede">Enter two birth details and get one chart for the relationship itself, cast for the midpoint in time and place between the two births.</p>
-  </header>
 
-  <form class="panel" id="form" autocomplete="off" novalidate>
-    <div class="people">
-      <div class="person" id="wrapA"></div>
-      <div class="rule"></div>
-      <div class="person" id="wrapB"></div>
-    </div>
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output" id="msg"></div>
 
-    <div class="options">
-      <label>House system
-        <select id="o_house">
-          <option value="P">Placidus</option><option value="K">Koch</option><option value="W">Whole Sign</option>
-          <option value="E">Equal</option><option value="O">Porphyry</option><option value="R">Regiomontanus</option><option value="C">Campanus</option>
-        </select>
-      </label>
-      <label>Zodiac
-        <select id="o_zodiac">
-          <option value="tropical">Tropical</option><option value="lahiri">Sidereal, Lahiri</option>
-          <option value="fagan_bradley">Sidereal, Fagan/Bradley</option><option value="raman">Sidereal, Raman</option><option value="krishnamurti">Sidereal, Krishnamurti</option>
-        </select>
-      </label>
-      <label>North Node
-        <select id="o_node"><option value="true">True node</option><option value="mean">Mean node</option></select>
-      </label>
-      <label>Midpoint of places
-        <select id="o_mid"><option value="arithmetic">Average of coordinates</option><option value="greatcircle">Great-circle midpoint</option></select>
-      </label>
-      <label>Aspects
-        <select id="o_aspects"><option value="major">Major only</option><option value="all">Major and minor</option></select>
-      </label>
-    </div>
+  <div class="result-wrap display-none" id="results" aria-live="polite">
+    <div class="result-card">
+      <h2 class="result-title" id="rTitle"></h2>
+      <div id="rNotices"></div>
+      <div class="moment" id="rMoment"></div>
 
-    <div class="actions">
-      <button class="btn" type="submit" id="go">Calculate Davison chart</button>
-      <button class="link" type="button" id="example">Fill in an example</button>
-    </div>
-    <div id="msg"></div>
-  </form>
-
-  <section id="results" aria-live="polite">
-    <div class="result-head"><h2 id="rTitle"></h2></div>
-    <div id="rNotices"></div>
-    <div class="moment" id="rMoment"></div>
-
-    <div class="rgrid">
-      <div class="wheel">
-        <div id="wheelBox"></div>
-        <div class="wheel-tools">
-          <button class="ghost" type="button" id="dlSvg">Download wheel (SVG)</button>
-          <button class="ghost" type="button" id="cpJson">Copy data (JSON)</button>
+      <div class="rgrid">
+        <div class="wheel">
+          <div id="wheelBox"></div>
+          <div class="wheel-tools">
+            <button class="tool-btn" type="button" id="dlSvg">Download wheel (SVG)</button>
+            <button class="tool-btn" type="button" id="cpJson">Copy data (JSON)</button>
+          </div>
+        </div>
+        <div>
+          <div class="sect"><h2 class="section-title">Positions</h2><div id="rPlanets"></div></div>
+          <div class="sect"><h2 class="section-title">House cusps</h2><div id="rHouses"></div></div>
         </div>
       </div>
-      <div>
-        <div class="sect"><h2>Positions</h2><div id="rPlanets"></div></div>
-        <div class="sect"><h2>House cusps</h2><div id="rHouses"></div></div>
+
+      <div class="rgrid">
+        <div class="sect"><h2 class="section-title">Aspects</h2><div id="rAspects"></div></div>
+        <div>
+          <div class="sect"><h2 class="section-title">Aspect grid</h2><div id="rGrid" class="grid-wrap"></div></div>
+          <div class="sect"><h2 class="section-title">Elements and modes</h2><div id="rBalance"></div></div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="rgrid sect">
-      <div><h2>Aspects</h2><div id="rAspects"></div></div>
-      <div>
-        <h2>Aspect grid</h2><div id="rGrid" class="grid-wrap"></div>
-        <h2 style="margin-top:38px">Elements and modes</h2><div id="rBalance"></div>
-      </div>
-    </div>
-  </section>
-
-  <p class="hint" style="margin-top:18px">The midpoint place is often in the middle of nowhere. That is expected and does not affect the chart. Only its latitude and longitude are used, for the houses and angles.</p>
+  <p class="fineprint">The midpoint place is often in the middle of nowhere. That is expected and does not affect the chart. Only its latitude and longitude are used, for the houses and angles.</p>
 </div>
 
-<datalist id="tzlist"></datalist>
-
+<script src="../../../assets/js/core/forms.js"></script>
 <script>
 'use strict';
 /* ============================== helpers ============================== */
@@ -212,19 +76,17 @@ const BODY_COLOR = {
   sun: '#ffd166', moon: '#dfe6ff', mercury: '#9de3ff', venus: '#ff9ec7', mars: '#ff6b6b', jupiter: '#ffb15c', saturn: '#c9b18a',
   uranus: '#7ff0e0', neptune: '#8aa8ff', pluto: '#c88bff', node: '#f0e6ff', snode: '#f0e6ff', chiron: '#b4e08a', lilith: '#d9a0ff', pof: '#ffe08a',
 };
-const PLANET_KEYS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
-const ASPECT_BODIES = [...PLANET_KEYS, 'node', 'chiron', 'lilith', 'pof'];
-const ASPECTS = [
-  { n: 'Conjunction', a: 0, orb: 8, c: '#f0d27a', s: '☌', major: true },
-  { n: 'Opposition', a: 180, orb: 8, c: '#ff7a90', s: '☍', major: true },
-  { n: 'Trine', a: 120, orb: 7, c: '#6fd6c4', s: '△', major: true },
-  { n: 'Square', a: 90, orb: 7, c: '#ff7a90', s: '□', major: true },
-  { n: 'Sextile', a: 60, orb: 5, c: '#7db4ff', s: '⚹', major: true },
-  { n: 'Quincunx', a: 150, orb: 3, c: '#c9a8ff', s: 'Qx', major: false },
-  { n: 'Semi-sextile', a: 30, orb: 2, c: '#a99cc8', s: 'Ss', major: false },
-  { n: 'Semi-square', a: 45, orb: 2, c: '#e59aa9', s: '∠', major: false },
-  { n: 'Sesqui-square', a: 135, orb: 2, c: '#e59aa9', s: 'Sq', major: false },
-];
+const ASPECT_INFO = {
+  conjunction:  { n: 'Conjunction',  c: '#f0d27a', cl: '#b8861b', s: '☌' },
+  opposition:   { n: 'Opposition',   c: '#ff7a90', cl: '#c0392b', s: '☍' },
+  trine:        { n: 'Trine',        c: '#6fd6c4', cl: '#1f8a70', s: '△' },
+  square:       { n: 'Square',       c: '#ff7a90', cl: '#c0392b', s: '□' },
+  sextile:      { n: 'Sextile',      c: '#7db4ff', cl: '#2f6fb5', s: '⚹' },
+  quincunx:     { n: 'Quincunx',     c: '#c9a8ff', cl: '#7a4fc0', s: 'Qx' },
+  semisextile:  { n: 'Semi-sextile', c: '#a99cc8', cl: '#6f6590', s: 'Ss' },
+  semisquare:   { n: 'Semi-square',  c: '#e59aa9', cl: '#b5566b', s: '∠' },
+  sesquisquare: { n: 'Sesqui-square', c: '#e59aa9', cl: '#b5566b', s: 'Sq' },
+};
 
 function fmtDT(s) {
   // the calculator sends "yyyy-mm-dd HH:mm[:ss]"; render as dd/mm/yyyy HH:mm
@@ -246,7 +108,6 @@ const posText = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).pad
 const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${SIGNS[p.s].g}${VS}</span> ${SIGNS[p.s].n}`; };
 const fmtLat = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`;
 const fmtLon = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`;
-const sep = (a, b) => Math.abs(((a - b + 540) % 360) - 180);
 
 /* custom-drawn glyphs, centred on 0,0 in a roughly 22x22 box */
 function customGlyph(key, col) {
@@ -265,131 +126,49 @@ function glyphSvg(key, x, y, size, col) {
   return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${size}" fill="${col}" text-anchor="middle" dominant-baseline="central" font-family="'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols','DejaVu Sans',sans-serif">${GLYPH[key]}${VS}</text>`;
 }
 
+
 /* ============================== form ============================== */
-function personCard(id, title) {
-  return `
-    <h3>${title}</h3>
-    <label>Name<input id="${id}_name" type="text" placeholder="Optional" maxlength="60"></label>
-    <div class="row2">
-      <label>Birth date<input id="${id}_date" type="date" min="1800-01-01" max="2399-12-31"></label>
-      <label>Birth time (local)<input id="${id}_time" type="time"></label>
-    </div>
-    <label>Birth place
-      <div class="ac"><input id="${id}_place" type="text" placeholder="Search a city, for example Dhaka" role="combobox" aria-autocomplete="list" aria-expanded="false"><ul id="${id}_sug" class="sug" role="listbox"></ul></div>
-    </label>
-    <div class="row3">
-      <label>Latitude<input id="${id}_lat" type="number" step="any" min="-90" max="90" placeholder="23.8103"></label>
-      <label>Longitude<input id="${id}_lon" type="number" step="any" min="-180" max="180" placeholder="90.4125"></label>
-      <label>Time zone<input id="${id}_tz" type="text" list="tzlist" placeholder="Detected from coordinates"></label>
-    </div>
-    <p class="hint" id="${id}_hint">South and west are negative. A time zone like UTC+6 also works.</p>`;
-}
-$('wrapA').innerHTML = personCard('pA', 'Person A');
-$('wrapB').innerHTML = personCard('pB', 'Person B');
-
-try {
-  const zones = Intl.supportedValuesOf('timeZone');
-  $('tzlist').innerHTML = zones.map((z) => `<option value="${z}">`).join('');
-} catch { /* older browser: free text still works */ }
-
-function wireSearch(id) {
-  const inp = $(id + '_place'), ul = $(id + '_sug');
-  let timer, seq = 0;
-  const close = () => { ul.style.display = 'none'; inp.setAttribute('aria-expanded', 'false'); };
-  inp.addEventListener('input', () => {
-    clearTimeout(timer);
-    const q = inp.value.trim();
-    if (q.length < 2) { close(); return; }
-    timer = setTimeout(async () => {
-      const mine = ++seq;
-      try {
-        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=en&format=json`);
-        const j = await r.json();
-        if (mine !== seq) return;
-        const res = j.results || [];
-        ul._res = res;
-        ul.innerHTML = res.length
-          ? res.map((c, i) => `<li role="option" data-i="${i}">${esc(c.name)}<small>${esc([c.admin1, c.country].filter(Boolean).join(', '))}</small></li>`).join('')
-          : '<li class="none">No match. Enter the coordinates below instead.</li>';
-      } catch {
-        if (mine !== seq) return;
-        ul._res = [];
-        ul.innerHTML = '<li class="none">City search needs an internet connection. Enter the coordinates below instead.</li>';
-      }
-      ul.style.display = 'block';
-      inp.setAttribute('aria-expanded', 'true');
-    }, 320);
-  });
-  ul.addEventListener('pointerdown', (e) => {
-    const li = e.target.closest('li[data-i]');
-    if (!li) return;
-    e.preventDefault();
-    const c = ul._res[Number(li.dataset.i)];
-    inp.value = [c.name, c.admin1, c.country].filter(Boolean).join(', ');
-    $(id + '_lat').value = c.latitude.toFixed(4);
-    $(id + '_lon').value = c.longitude.toFixed(4);
-    $(id + '_tz').value = c.timezone || '';
-    $(id + '_hint').textContent = 'Coordinates and time zone filled from the city search.';
-    close();
-  });
-  inp.addEventListener('blur', () => setTimeout(close, 160));
-  // typing coordinates by hand invalidates the previous time zone
-  for (const f of ['lat', 'lon']) {
-    $(`${id}_${f}`).addEventListener('input', () => {
-      $(id + '_tz').value = '';
-      $(id + '_hint').textContent = 'Time zone will be detected from these coordinates.';
-    });
-  }
-}
-wireSearch('pA'); wireSearch('pB');
-
-$('example').addEventListener('click', () => {
-  const set = (id, v) => { $(id).value = v; };
-  set('pA_name', 'Person A'); set('pA_date', '1988-03-21'); set('pA_time', '08:15');
-  set('pA_place', 'Dhaka, Dhaka Division, Bangladesh'); set('pA_lat', '23.8103'); set('pA_lon', '90.4125'); set('pA_tz', 'Asia/Dhaka');
-  set('pB_name', 'Person B'); set('pB_date', '1991-09-02'); set('pB_time', '19:40');
-  set('pB_place', 'London, England, United Kingdom'); set('pB_lat', '51.5074'); set('pB_lon', '-0.1278'); set('pB_tz', 'Europe/London');
+// The form is the shared astrology birth-data form (assets/js/core/forms.js).
+const fields = FormKit.render($('calc-form'), 'two-birth-data', {
+  submitLabel: 'Calculate Davison chart',
+  options: ['house', 'zodiac', 'node', 'midpoint', 'aspects'],
+  example: {
+    a_name: 'Person A', a_date: '21/03/1988', a_time: '08:15',
+    a_place: 'Dhaka, Dhaka Division, Bangladesh', a_lat: '23.8103', a_lon: '90.4125', a_tz: 'Asia/Dhaka',
+    b_name: 'Person B', b_date: '02/09/1991', b_time: '19:40',
+    b_place: 'London, England, United Kingdom', b_lat: '51.5074', b_lon: '-0.1278', b_tz: 'Europe/London',
+  },
 });
 
-const readPerson = (id, fallback) => ({
-  name: $(id + '_name').value.trim() || fallback,
-  date: $(id + '_date').value, time: $(id + '_time').value,
-  lat: $(id + '_lat').value, lon: $(id + '_lon').value, tz: $(id + '_tz').value.trim(),
-});
-
-function showMsg(text, isErr = true) {
-  $('msg').innerHTML = text ? `<div class="notice ${isErr ? 'err' : ''}">${esc(text)}</div>` : '';
+function showMsg(text) {
+  $('msg').innerHTML = text ? `<p>${esc(text)}</p>` : '';
 }
 
 let lastData = null, lastSvg = '';
 
-$('form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function runCalculation(server) {
   showMsg('');
-  const a = readPerson('pA', 'Person A'), b = readPerson('pB', 'Person B');
-  for (const [p, label] of [[a, 'Person A'], [b, 'Person B']]) {
-    if (!p.date) return showMsg(`${label}: enter a birth date.`);
-    if (!p.time) return showMsg(`${label}: enter a birth time.`);
-    if (p.lat === '' || p.lon === '') return showMsg(`${label}: search for a birth place or enter latitude and longitude.`);
-  }
-  const options = {
-    houseSystem: $('o_house').value, zodiac: $('o_zodiac').value, node: $('o_node').value, midpoint: $('o_mid').value,
-  };
-  const btn = $('go');
+  const btn = $('submit-btn');
   btn.disabled = true; btn.textContent = 'Calculating…';
-  $('results').style.display = 'none'; // never show an old chart next to a new error
+  $('results').classList.add('display-none'); // never show an old chart next to a new error
   try {
-    const data = await callApi({ a, b, options });
+    const data = await callApi(server);
     // show the detected time zones in the form
-    ['pA', 'pB'].forEach((id, i) => { if (!$(id + '_tz').value) $(id + '_tz').value = data.persons[i].tz; });
-    render(data, $('o_aspects').value === 'all');
-    $('results').style.display = 'block';
+    FormKit.setTimeZone('a', data.persons[0].tz);
+    FormKit.setTimeZone('b', data.persons[1].tz);
+    render(data);
+    $('results').classList.remove('display-none');
     $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   } catch (err) {
     showMsg(err.message || String(err));
   } finally {
     btn.disabled = false; btn.textContent = 'Calculate Davison chart';
   }
+}
+
+FormKit.wire(fields, {
+  onSubmit: (values, server) => runCalculation(server),
+  onError: showMsg,
 });
 
 const API_URL = '../../../calculate.php?slug=davison-chart';
@@ -397,21 +176,16 @@ const GENERIC_ERROR = 'Something went wrong. Please try again.';
 const textOf = (html) => new DOMParser().parseFromString(html, 'text/html').body.textContent.trim();
 
 // Sends both people and the options to the calculator endpoint as plain form fields.
-async function callApi({ a, b, options }) {
-  const body = new URLSearchParams();
-  [['a', a], ['b', b]].forEach(([prefix, p]) => {
-    ['name', 'date', 'time', 'lat', 'lon', 'tz'].forEach((f) => body.set(`${prefix}_${f}`, String(p[f] ?? '')));
-  });
-  body.set('house', options.houseSystem);
-  body.set('zodiac', options.zodiac);
-  body.set('node', options.node);
-  body.set('midpoint', options.midpoint);
-
+async function callApi(server) {
   let data;
   try {
-    const r = await fetch(API_URL, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+    const r = await fetch(API_URL, {
+      method: 'POST', cache: 'no-store',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(server),
+    });
     data = await r.json();
-  } catch {
+  } catch (err) {
     throw new Error(GENERIC_ERROR);
   }
   if (!data || data.valid !== true) throw new Error(textOf((data && data.errorsHtml) || '') || GENERIC_ERROR);
@@ -419,33 +193,13 @@ async function callApi({ a, b, options }) {
 }
 
 /* ============================== aspects ============================== */
-function computeAspects(ch, includeMinor) {
-  const pts = ch.bodies.filter((b) => ASPECT_BODIES.includes(b.key)).map((b) => ({ key: b.key, name: b.name, lon: b.lon, speed: b.speed }));
-  pts.push({ key: 'asc', name: 'Ascendant', lon: ch.asc, speed: 0 }, { key: 'mc', name: 'Midheaven', lon: ch.mc, speed: 0 });
-  const list = ASPECTS.filter((a) => a.major || includeMinor);
-  const out = [];
-  for (let i = 0; i < pts.length; i++) {
-    for (let j = i + 1; j < pts.length; j++) {
-      const A = pts[i], B = pts[j];
-      if (['asc', 'mc'].includes(A.key) && ['asc', 'mc'].includes(B.key)) continue;
-      const d = sep(A.lon, B.lon);
-      let best = null;
-      for (const a of list) {
-        const orb = Math.abs(d - a.a);
-        if (orb <= a.orb && (!best || orb < best.orb)) best = { a, orb };
-      }
-      if (!best) continue;
-      const dt = 0.01; // days: does the orb shrink or grow?
-      const d2 = sep(A.lon + A.speed * dt, B.lon + B.speed * dt);
-      const still = A.speed === 0 && B.speed === 0;
-      out.push({ i, j, A, B, asp: best.a, orb: best.orb, applying: still ? null : Math.abs(d2 - best.a.a) < best.orb });
-    }
-  }
-  return { pts, out };
-}
+// Aspects are computed server-side. The page receives:
+//   data.aspects.points  — list of aspect points (key, name, lon, speed)
+//   data.aspects.aspects — list of aspects (i, j, aspect, orb, applying, maxOrb, major)
+//   data.balance         — { elements: {Fire,Earth,Air,Water}, modes: {Cardinal,Fixed,Mutable} }
 
 /* ============================== wheel ============================== */
-function drawWheel(data, aspects) {
+function drawWheel(data, asp) {
   const ch = data.chart, S = 680, cx = 340, cy = 340;
   const R = { out: 306, signIn: 264, tick: 256, plan: 227, deg: 201, houseIn: 176, num: 161, asp: 146 };
   const GOLD = '#e6c76a', GOLD_DIM = 'rgba(230,199,106,0.32)', MUTED = '#b4a5d2';
@@ -528,12 +282,14 @@ function drawWheel(data, aspects) {
   dispOf.asc = ch.asc; dispOf.mc = ch.mc;
 
   // aspect lines — endpoints at display positions so they connect to glyphs
-  for (const a of aspects.out) {
-    const lonA = dispOf[a.A.key] ?? a.A.lon;
-    const lonB = dispOf[a.B.key] ?? a.B.lon;
+  for (const a of asp.aspects) {
+    const ptA = asp.points[a.i], ptB = asp.points[a.j];
+    const info = ASPECT_INFO[a.aspect];
+    const lonA = dispOf[ptA.key] ?? ptA.lon;
+    const lonB = dispOf[ptB.key] ?? ptB.lon;
     const [x1, y1] = P(R.asp, lonA), [x2, y2] = P(R.asp, lonB);
-    const tight = 1 - a.orb / a.asp.orb;
-    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${a.asp.c}" stroke-width="${a.asp.major ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${a.asp.major ? '' : ' stroke-dasharray="4 3"'}><title>${a.A.name} ${a.asp.n} ${a.B.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
+    const tight = 1 - a.orb / a.maxOrb;
+    s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${info.c}" stroke-width="${a.major ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${a.major ? '' : ' stroke-dasharray="4 3"'}><title>${ptA.name} ${info.n} ${ptB.name} (orb ${a.orb.toFixed(1)}°)</title></line>`;
   }
 
   // planets: spread out crowded glyphs, keep a tick at the true position
@@ -578,7 +334,7 @@ function drawWheel(data, aspects) {
 }
 
 /* ============================== render ============================== */
-function render(data, includeMinor) {
+function render(data) {
   lastData = data;
   const ch = data.chart, m = data.meta, dv = data.davison;
   const [A, B] = data.persons;
@@ -591,10 +347,10 @@ function render(data, includeMinor) {
     <div><span>Davison moment (UT)</span><b>${fmtDT(dv.utc)}</b></div>
     <div><span>Midpoint place</span><b>${fmtLat(dv.lat)}, ${fmtLon(dv.lon)}</b></div>
     <div><span>Local time there (${esc(dv.tz)}, UTC${esc(dv.offset)})</span><b>${fmtDT(dv.local)}</b></div>
-    <div><span>Zodiac</span><b>${esc(m.zodiac)}${m.ayanamsa != null ? ` <small style="font-size:.9rem;color:var(--muted)">(${m.ayanamsa.toFixed(3)}°)</small>` : ''}</b></div>
+    <div><span>Zodiac</span><b>${esc(m.zodiac)}${m.ayanamsa != null ? ` <small>(${m.ayanamsa.toFixed(3)}°)</small>` : ''}</b></div>
     <div><span>Houses</span><b>${esc(m.houseSystemUsed)}</b></div>`;
 
-  const asp = computeAspects(ch, includeMinor);
+  const asp = data.aspects;
   lastSvg = drawWheel(data, asp);
   $('wheelBox').innerHTML = lastSvg;
 
@@ -614,39 +370,40 @@ function render(data, includeMinor) {
   $('rHouses').innerHTML = `<div class="two">${half(0)}${half(6)}</div>`;
 
   // aspect list
-  const sorted = [...asp.out].sort((x, y) => x.orb - y.orb);
+  const sorted = [...asp.aspects].sort((x, y) => x.orb - y.orb);
   const arow = (a) => {
-    const dot = `<span style="color:${a.asp.c}">●</span>`;
+    const info = ASPECT_INFO[a.aspect];
+    const dot = `<span style="color:${info.cl}">●</span>`;
     const mv = a.applying === null ? '' : a.applying ? 'Applying' : 'Separating';
     const nm = (P) => (P.key === 'asc' ? 'Ascendant' : P.key === 'mc' ? 'Midheaven' : `${glyphHtml(P.key)} ${esc(P.name)}`);
-    return `<tr><td>${nm(a.A)}</td><td>${dot} ${a.asp.n}</td><td>${nm(a.B)}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
+    return `<tr><td>${nm(asp.points[a.i])}</td><td>${dot} ${info.n}</td><td>${nm(asp.points[a.j])}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
   };
   $('rAspects').innerHTML = sorted.length
     ? `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th><th></th></tr></thead><tbody>${sorted.map(arow).join('')}</tbody></table>`
-    : '<p class="hint">No aspects within the orbs.</p>';
+    : '<p class="none-found">No aspects within the orbs.</p>';
 
   // aspect grid (lower triangle)
   const map = {};
-  asp.out.forEach((a) => { map[a.i + '-' + a.j] = a; });
+  asp.aspects.forEach((a) => { map[a.i + '-' + a.j] = a; });
   const hd = (P) => (P.key === 'asc' ? 'AC' : P.key === 'mc' ? 'MC' : glyphHtml(P.key));
-  let g = '<table class="agrid"><thead><tr><th></th>' + asp.pts.slice(0, -1).map((P) => `<th>${hd(P)}</th>`).join('') + '</tr></thead><tbody>';
-  for (let r = 1; r < asp.pts.length; r++) {
-    g += `<tr><th>${hd(asp.pts[r])}</th>`;
-    for (let c = 0; c < asp.pts.length - 1; c++) {
+  let g = '<table class="agrid"><thead><tr><th></th>' + asp.points.slice(0, -1).map((P) => `<th>${hd(P)}</th>`).join('') + '</tr></thead><tbody>';
+  for (let r = 1; r < asp.points.length; r++) {
+    g += `<tr><th>${hd(asp.points[r])}</th>`;
+    for (let c = 0; c < asp.points.length - 1; c++) {
       if (c >= r) { g += '<td class="empty"></td>'; continue; }
       const a = map[c + '-' + r];
-      g += a ? `<td title="${esc(a.A.name)} ${a.asp.n} ${esc(a.B.name)}, orb ${a.orb.toFixed(1)}°" style="color:${a.asp.c}"><span class="gl">${a.asp.s}</span></td>` : '<td></td>';
+      g += a ? `<td title="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].cl}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>` : '<td></td>';
     }
     g += '</tr>';
   }
   $('rGrid').innerHTML = g + '</tbody></table>';
 
   // balance
-  const planets = ch.bodies.filter((b) => PLANET_KEYS.includes(b.key));
-  const count = (key, val) => planets.filter((b) => SIGNS[Math.floor(norm(b.lon) / 30)][key] === val).length;
-  const bar = (label, n) => `<div class="bar"><span>${label}</span><div><i style="width:${(n / planets.length) * 100}%"></i></div><b>${n}</b></div>`;
-  $('rBalance').innerHTML = `<div class="bars">${['Fire', 'Earth', 'Air', 'Water'].map((e) => bar(e, count('el', e))).join('')}</div>
-    <div class="bars" style="margin-top:16px">${['Cardinal', 'Fixed', 'Mutable'].map((e) => bar(e, count('mo', e))).join('')}</div>`;
+  const bal = data.balance;
+  const bar = (label, n, total) => `<div class="bar"><span>${label}</span><div><i style="width:${(n / total) * 100}%"></i></div><b>${n}</b></div>`;
+  const total = Object.values(bal.elements).reduce((a, b) => a + b, 0);
+  $('rBalance').innerHTML = `<div class="bars">${['Fire', 'Earth', 'Air', 'Water'].map((e) => bar(e, bal.elements[e], total)).join('')}</div>
+    <div class="bars" style="margin-top:16px">${['Cardinal', 'Fixed', 'Mutable'].map((e) => bar(e, bal.modes[e], total)).join('')}</div>`;
 }
 
 /* ============================== tools ============================== */

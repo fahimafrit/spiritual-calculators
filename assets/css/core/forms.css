@@ -12,7 +12,9 @@
    these rules if a given calculator genuinely needs to differ.
 
    Covers: .form-card, .field (+ label/input/placeholder/focus),
-   #submit-btn (+ hover), .error-output, .display-none.
+   #submit-btn (+ hover), .error-output, .display-none, and the
+   birth-data forms (.form-card--birth: people sections, birth-place
+   search, manual coordinates, chart options).
    ════════════════════════════════════════════════════════════════════ */
 
 .form-card {
@@ -84,6 +86,13 @@
     box-shadow: 0 10px 24px rgba(169, 120, 47, 0.28);
 }
 
+#submit-btn:disabled {
+    opacity: 0.6;
+    cursor: progress;
+    transform: none;
+    box-shadow: none;
+}
+
 .error-output {
     color: #c0392b;
     text-align: center;
@@ -97,6 +106,263 @@
 
 .display-none {
     display: none !important;
+}
+
+/* ── Birth-data forms (astrology) ─────────────────────────────────────
+   One or two people (name, date, time, birth place, coordinates) plus
+   a collapsible block of chart options. Built by FormKit's
+   'birth-data' and 'two-birth-data' layouts. Same structure and
+   control sizes as the original Davison form, in the repo's colors. */
+
+.form-card--birth {
+    display: block;
+    padding: 30px 32px;
+    border-radius: 20px;
+}
+
+.form-people {
+    display: grid;
+    gap: 34px;
+}
+
+.form-people--1 {
+    grid-template-columns: 1fr;
+}
+
+.form-people--2 {
+    grid-template-columns: 1fr 1px 1fr;
+}
+
+.form-people .rule {
+    background: var(--line);
+}
+
+.form-section h3 {
+    margin: 0 0 16px;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--ink);
+}
+
+.form-card--birth .field {
+    flex: none;
+    min-width: 0;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+
+.form-card--birth .field label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+}
+
+.form-card--birth .field input,
+.form-card--birth .field select {
+    background: #ffffff;
+    border: 1px solid rgba(36, 26, 68, 0.16);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--ink);
+    font-size: 0.98rem;
+    font-family: 'Nunito', sans-serif;
+    line-height: 1.6;
+    outline: none;
+    width: 100%;
+}
+
+.form-card--birth .field select {
+    height: 43px;
+}
+
+.form-card--birth .field input:focus,
+.form-card--birth .field select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(169, 120, 47, 0.15);
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.coord-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.3fr;
+    gap: 12px;
+}
+
+.field-place .ac {
+    position: relative;
+}
+
+.sug {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 4px;
+    position: absolute;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    max-height: 260px;
+    overflow: auto;
+}
+
+.sug[hidden] {
+    display: none;
+}
+
+.sug li {
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--ink);
+}
+
+.sug li:hover,
+.sug li.active {
+    background: rgba(169, 120, 47, 0.12);
+}
+
+.sug li small {
+    display: block;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+}
+
+.sug li.none {
+    cursor: default;
+    color: var(--ink-soft);
+}
+
+.sug li.none:hover {
+    background: none;
+}
+
+.field-hint {
+    margin: -4px 0 0;
+    min-height: 1.2em;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+.link-btn {
+    background: none;
+    border: none;
+    padding: 6px 2px;
+    color: var(--gold);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.link-btn:focus-visible,
+.form-options summary:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.form-options {
+    margin-top: 26px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+}
+
+.form-options summary {
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    list-style: none;
+    display: inline-block;
+}
+
+.form-options summary::-webkit-details-marker {
+    display: none;
+}
+
+.form-options summary::marker {
+    content: '';
+}
+
+.form-options .summary-open,
+.form-options[open] .summary-closed {
+    display: none;
+}
+
+.form-options[open] .summary-open {
+    display: inline;
+}
+
+.form-options-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.form-card--birth #submit-btn {
+    border-radius: 999px;
+    padding: 13px 30px;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+@media (max-width: 1020px) {
+    .form-options-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 940px) {
+    .form-people--2 {
+        grid-template-columns: 1fr;
+    }
+
+    .form-people .rule {
+        height: 1px;
+    }
+}
+
+@media (max-width: 620px) {
+    .form-card--birth {
+        padding: 20px 18px;
+    }
+
+    .coord-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .coord-grid .field:last-of-type {
+        grid-column: 1 / -1;
+    }
+
+    .form-options-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 640px) {
