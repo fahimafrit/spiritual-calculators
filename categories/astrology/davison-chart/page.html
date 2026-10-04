@@ -53,6 +53,7 @@
 </div>
 
 <script src="../../../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/astrology/zodiac.js"></script>
 <script>
 'use strict';
 /* ============================== helpers ============================== */
@@ -60,16 +61,9 @@ const $ = (id) => document.getElementById(id);
 const norm = (x) => ((x % 360) + 360) % 360;
 const rad = (d) => (d * Math.PI) / 180;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const VS = '\uFE0E'; // force text (not emoji) presentation
+// The twelve signs and the text-presentation selector come from the shared astrology script.
+const { SIGNS, VS } = Zodiac;
 
-const SIGNS = [
-  { n: 'Aries', g: '♈', el: 'Fire', mo: 'Cardinal' }, { n: 'Taurus', g: '♉', el: 'Earth', mo: 'Fixed' },
-  { n: 'Gemini', g: '♊', el: 'Air', mo: 'Mutable' }, { n: 'Cancer', g: '♋', el: 'Water', mo: 'Cardinal' },
-  { n: 'Leo', g: '♌', el: 'Fire', mo: 'Fixed' }, { n: 'Virgo', g: '♍', el: 'Earth', mo: 'Mutable' },
-  { n: 'Libra', g: '♎', el: 'Air', mo: 'Cardinal' }, { n: 'Scorpio', g: '♏', el: 'Water', mo: 'Fixed' },
-  { n: 'Sagittarius', g: '♐', el: 'Fire', mo: 'Mutable' }, { n: 'Capricorn', g: '♑', el: 'Earth', mo: 'Cardinal' },
-  { n: 'Aquarius', g: '♒', el: 'Air', mo: 'Fixed' }, { n: 'Pisces', g: '♓', el: 'Water', mo: 'Mutable' },
-];
 const GLYPH = { sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇', node: '☊', snode: '☋' };
 const CUSTOM = new Set(['chiron', 'lilith', 'pof']); // drawn as shapes: no font reliably has these
 const BODY_COLOR = {
@@ -105,7 +99,7 @@ function dms(lon) {
   return { s, d, m };
 }
 const posText = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′`; };
-const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${SIGNS[p.s].g}${VS}</span> ${SIGNS[p.s].n}`; };
+const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${Zodiac.glyph(p.s)}</span> ${SIGNS[p.s].name}`; };
 const fmtLat = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`;
 const fmtLon = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`;
 
@@ -219,7 +213,7 @@ function drawWheel(data, asp) {
     const l1 = i * 30, l2 = l1 + 30;
     s += `<path d="M${pt(R.out, l1)} A${R.out} ${R.out} 0 0 0 ${pt(R.out, l2)} L${pt(R.signIn, l2)} A${R.signIn} ${R.signIn} 0 0 1 ${pt(R.signIn, l1)} Z" fill="${ELFILL[i % 4]}" stroke="${GOLD_DIM}" stroke-width="1"/>`;
     const [gx, gy] = P((R.out + R.signIn) / 2, l1 + 15);
-    s += `<text x="${f(gx)}" y="${f(gy)}" font-size="23" fill="${GOLD}" text-anchor="middle" dominant-baseline="central" font-family="${FONT}"><title>${SIGNS[i].n}</title>${SIGNS[i].g}${VS}</text>`;
+    s += `<text x="${f(gx)}" y="${f(gy)}" font-size="23" fill="${GOLD}" text-anchor="middle" dominant-baseline="central" font-family="${FONT}"><title>${SIGNS[i].name}</title>${Zodiac.glyph(i)}</text>`;
   }
   // degree ticks + 0° labels at each sign boundary
   for (let d = 0; d < 360; d++) {
@@ -322,7 +316,7 @@ function drawWheel(data, asp) {
     }
     const [gx, gy] = P(R.plan, it.disp), [dx, dy] = P(R.deg, it.disp);
     const p = dms(b.lon);
-    s += `<g><title>${b.name} ${p.d}°${String(p.m).padStart(2, '0')}′ ${SIGNS[p.s].n}${b.speed < 0 ? ' (retrograde)' : ''}, house ${b.house}</title>`;
+    s += `<g><title>${b.name} ${p.d}°${String(p.m).padStart(2, '0')}′ ${SIGNS[p.s].name}${b.speed < 0 ? ' (retrograde)' : ''}, house ${b.house}</title>`;
     s += glyphSvg(b.key, gx, gy, 20, col);
     s += `<text x="${f(dx)}" y="${f(dy)}" font-size="11" fill="${MUTED}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${p.d}°</text>`;
     if (b.speed < 0 && b.key !== 'node') s += `<text x="${f(gx + 11)}" y="${f(gy + 9)}" font-size="9" font-weight="700" fill="#ff7a90" font-family="Nunito,sans-serif">R</text>`;

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Random Zodiac Sign Generator</title>
+<meta name="description" content="Pick a random zodiac sign out of the twelve. See its symbol, dates, element, modality and ruling planet." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/astrology/base.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card">
+    <button id="submit-btn" type="button">Generate a zodiac sign</button>
+  </div>
+
+  <div class="result-wrap display-none" id="results" aria-live="polite">
+    <div class="result-card">
+      <div class="sign-display">
+        <span class="gl sign-glyph" id="sGlyph" aria-hidden="true"></span>
+        <h2 class="result-title" id="sName"></h2>
+        <p class="sign-symbol" id="sSymbol"></p>
+      </div>
+      <div class="moment" id="sFacts"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/astrology/zodiac.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   Random Zodiac Sign Generator
+   A plain random pick of one of the twelve signs. The sign list comes
+   from the shared astrology script (assets/js/astrology/zodiac.js);
+   there is no calculation and nothing to look up on the server.
+   ════════════════════════════════════════════════════════════════════ */
+
+const $ = (id) => document.getElementById(id);
+const { SIGNS } = Zodiac;
+
+const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPIN_TICKS = 11;      // signs flashed before the final one lands
+const SPIN_STEP_MS = 70;
+
+const randomIndex = () => Math.floor(Math.random() * SIGNS.length);
+
+function showSign(i) {
+  const s = SIGNS[i];
+  $('sGlyph').textContent = Zodiac.glyph(i);
+  $('sName').textContent = s.name;
+  $('sSymbol').textContent = s.symbol;
+  $('sFacts').innerHTML = [
+    ['Dates', s.dates],
+    ['Element', s.element],
+    ['Modality', s.mode],
+    ['Ruling planet', s.ruler],
+  ].map(([label, value]) => `<div><span>${label}</span><b>${value}</b></div>`).join('');
+}
+
+let spinning = false;
+
+function generate() {
+  if (spinning) return;
+  const results = $('results');
+  const button = $('submit-btn');
+  const target = randomIndex();
+
+  results.classList.remove('display-none');
+  button.textContent = 'Generate again';
+
+  if (REDUCED_MOTION) {
+    showSign(target);
+    return;
+  }
+
+  // Flash through a few signs before landing, so a repeat pick is still visibly a new draw.
+  // aria-busy keeps screen readers quiet until the final sign is shown.
+  spinning = true;
+  results.setAttribute('aria-busy', 'true');
+  let shown = -1;
+  let tick = 0;
+  const timer = setInterval(() => {
+    tick++;
+    if (tick >= SPIN_TICKS) {
+      clearInterval(timer);
+      showSign(target);
+      spinning = false;
+      results.removeAttribute('aria-busy');
+      return;
+    }
+    let i;
+    do { i = randomIndex(); } while (i === shown || i === target);
+    shown = i;
+    showSign(i);
+  }, SPIN_STEP_MS);
+}
+
+$('submit-btn').addEventListener('click', generate);
+</script>
+</body>
+</html>
