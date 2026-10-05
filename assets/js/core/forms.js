@@ -180,6 +180,50 @@ const FormKit = (function () {
     if (digits.length === 4 && typeof onComplete === 'function') onComplete();
   }
 
+  /* ---- Date checks for calculators that run in the browser ------------
+     The same rules the server-side calculators apply (Destiny Matrix,
+     Numerology): dd/mm/yyyy, a real calendar date, a year of 100 or
+     later, and a date of birth cannot be in the future. Same wording
+     as their error messages too, so every calculator reads the same.
+
+       const r = FormKit.checkDate(values.date1, { birth: true });
+       if (r.error) ...   // r.date is a Date at local midnight, or null
+
+     opts.label  names the date, as Compatibility Matrix does with
+                 "Partner 1": "Partner 1 date is not valid or empty. ..."
+     opts.birth  also rejects a date after today (a target date, which
+                 may lie ahead, leaves this off). */
+  function parseDate(text) {
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(text));
+    if (!m) return null;
+    const day = Number(m[1]), month = Number(m[2]), year = Number(m[3]);
+    if (year < 100) return null;
+    const d = new Date(year, month - 1, day);
+    if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+    return d;
+  }
+
+  function checkDate(text, opts) {
+    opts = opts || {};
+    const d = parseDate(text);
+    if (!d) {
+      return {
+        date: null,
+        error: opts.label
+          ? `${opts.label} date is not valid or empty. Use DD/MM/YYYY.`
+          : 'Date is not valid or one of the fields is empty. Use dd/mm/yyyy.',
+      };
+    }
+    if (opts.birth) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (d > today) {
+        return { date: null, error: opts.label ? `${opts.label} date can't be in the future.` : "Date can't be in the future." };
+      }
+    }
+    return { date: d, error: '' };
+  }
+
   const PLACE_HINT = 'South and west are negative. A time zone like UTC+6 also works.';
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -633,5 +677,5 @@ ${people}
     window.history.pushState({}, '', url);
   }
 
-  return { LAYOUTS, render, wire, maskDateInput, prefillFromUrl, updateUrlParams, setTimeZone, setPlaceSearch };
+  return { LAYOUTS, render, wire, maskDateInput, parseDate, checkDate, prefillFromUrl, updateUrlParams, setTimeZone, setPlaceSearch };
 })();

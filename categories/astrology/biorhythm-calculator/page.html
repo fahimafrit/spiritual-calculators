@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Biorhythm Calculator</title>
+<meta name="description" content="Calculate your biorhythm cycles for any date. Physical, emotional and intellectual cycles with an interactive chart, critical days and a 30-day forecast." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/astrology/base.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output" id="msg"></div>
+
+  <div class="result-wrap display-none" id="results" aria-live="polite">
+    <div class="result-card">
+      <h2 class="result-title" id="rTitle"></h2>
+      <div class="moment" id="rMoment"></div>
+
+      <div class="sect">
+        <h2 class="section-title">Cycle values</h2>
+        <div class="bars" id="rBars"></div>
+      </div>
+
+      <div class="sect">
+        <h2 class="section-title">Biorhythm chart</h2>
+        <div class="bio-chart-controls" id="chartControls">
+          <span class="spacer"></span>
+          <button class="tool-btn" type="button" id="resetZoom">Reset zoom</button>
+        </div>
+        <div class="bio-chart">
+          <canvas id="bioChart" role="img" aria-label="Biorhythm chart of the selected cycles"></canvas>
+          <div class="bio-tip" id="chartTip"></div>
+        </div>
+        <div class="wheel-tools">
+          <button class="tool-btn" type="button" id="cpLink">Copy link</button>
+          <button class="tool-btn" type="button" id="prtPage">Print</button>
+          <button class="tool-btn" type="button" id="dlChart">Download chart (PNG)</button>
+        </div>
+      </div>
+
+      <div class="sect">
+        <h2 class="section-title">Critical days: next 30 days</h2>
+        <div class="crit-list" id="rCrit"></div>
+      </div>
+
+      <div class="sect">
+        <h2 class="section-title">30-day forecast</h2>
+        <div class="forecast-wrap">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Day</th><th>Phys</th><th>Emot</th><th>Intel</th><th>Avg</th><th>Trend</th><th></th></tr>
+            </thead>
+            <tbody id="rForecast"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   Biorhythm Calculator
+   Each cycle is a sine wave that starts at zero on the day of birth:
+   value = sin(2π × days lived ÷ period), shown as a percentage from
+   -100 to +100. The wave crosses zero twice per period; those days
+   are the critical days. The three classic cycles are physical (23
+   days), emotional (28) and intellectual (33). Five secondary cycles
+   can be added to the chart.
+
+   Everything is calculated in the browser, so the chart can be
+   dragged and zoomed without any request to the server.
+   ════════════════════════════════════════════════════════════════════ */
+
+const $ = (id) => document.getElementById(id);
+
+const CYCLES = [
+  { key: 'physical',     label: 'Physical',     period: 23, color: '#c0392b', classic: true  },
+  { key: 'emotional',    label: 'Emotional',    period: 28, color: '#2f6fb5', classic: true  },
+  { key: 'intellectual', label: 'Intellectual', period: 33, color: '#1f8a70', classic: true  },
+  { key: 'intuition',    label: 'Intuition',    period: 38, color: '#b8861b', classic: false },
+  { key: 'aesthetic',    label: 'Aesthetic',    period: 43, color: '#7a4fc0', classic: false },
+  { key: 'awareness',    label: 'Awareness',    period: 48, color: '#138d9a', classic: false },
+  { key: 'spiritual',    label: 'Spiritual',    period: 53, color: '#d9822b', classic: false },
+  { key: 'wisdom',       label: 'Wisdom',       period: 57, color: '#6b8e23', classic: false },
+];
+const CLASSIC = CYCLES.filter((c) => c.classic);
+
+const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const state = {
+  dob: null,
+  target: null,
+  visible: new Set(CLASSIC.map((c) => c.key)),
+  zoom: 1,
+  panOffset: 0,   // days between the chart centre and the target date
+  chartDays: 60,  // days across the chart at zoom 1
+  chart: null,    // geometry of the last drawn chart, used by the tooltip and drag
+};
+
+/* ============================== helpers ============================== */
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad2 = (n) => String(n).padStart(2, '0');
+const fmtDMY = (d) => `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+const fmtPct = (p) => `${p > 0 ? '+' : ''}${p}%`;
+const fmtLong = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const fmtShort = (d) => d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+
+function todayMidnight() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/* ============================== form ============================== */
+// The shared two-date form (assets/js/core/forms.js), labelled for this calculator.
+const fields = FormKit.render($('calc-form'), 'two-dob', {
+  submitLabel: 'Calculate biorhythms',
+  date1: { label: 'Date of birth', placeholder: 'dd/mm/yyyy', focusPlaceholder: undefined, urlParam: 'dob' },
+  date2: { label: 'Target date', placeholder: 'dd/mm/yyyy', focusPlaceholder: undefined, urlParam: 'target' },
+});
+
+$('date2').value = fmtDMY(todayMidnight());
+
+function showMsg(text) {
+  $('msg').innerHTML = text ? `<p>${esc(text)}</p>` : '';
+}
+
+/* ============================== validation ============================== */
+function parseDate(str) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(str).trim());
+  if (!m) return null;
+  const dd = Number(m[1]), mm = Number(m[2]), yyyy = Number(m[3]);
+  if (yyyy < 1900) return null;
+  const d = new Date(yyyy, mm - 1, dd);
+  if (d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null;
+  return d;
+}
+
+// Returns { dob, target } or { error }.
+function validate(values) {
+  const dobText = values.date1.trim();
+  const targetText = values.date2.trim();
+
+  if (!dobText) return { error: 'Enter your date of birth.' };
+  const dob = parseDate(dobText);
+  if (!dob) return { error: 'Enter a valid date of birth as dd/mm/yyyy.' };
+  if (dob > todayMidnight()) return { error: 'The date of birth cannot be in the future.' };
+
+  let target = todayMidnight();
+  if (targetText) {
+    target = parseDate(targetText);
+    if (!target) return { error: 'Enter a valid target date as dd/mm/yyyy.' };
+  }
+  if (target < dob) return { error: 'The target date cannot be before the date of birth.' };
+
+  return { dob, target };
+}
+
+/* ============================== biorhythm math ============================== */
+function daysBetween(a, b) {
+  const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((ub - ua) / 86400000);
+}
+
+const cycleValue = (days, period) => Math.sin((2 * Math.PI * days) / period);
+const cyclePercent = (days, period) => Math.round(cycleValue(days, period) * 100);
+// A day is critical when the wave is crossing zero.
+const isCritical = (days, period) => Math.abs(cycleValue(days, period)) < 0.1;
+
+const activeCycles = () => CYCLES.filter((c) => state.visible.has(c.key));
+
+/* ============================== calculate ============================== */
+function runCalculation(values, { updateUrl = true } = {}) {
+  showMsg('');
+  const result = validate(values);
+  if (result.error) {
+    showMsg(result.error);
+    $('results').classList.add('display-none'); // never leave an old result next to a new error
+    return;
+  }
+
+  state.dob = result.dob;
+  state.target = result.target;
+  state.zoom = 1;
+  state.panOffset = 0;
+
+  $('date2').value = fmtDMY(state.target);
+  $('results').classList.remove('display-none');
+
+  renderSummary();
+  renderChart();
+  renderCritical();
+  renderForecast();
+
+  if (updateUrl) {
+    FormKit.updateUrlParams(fields, { date1: fmtDMY(state.dob), date2: fmtDMY(state.target) });
+  }
+
+  $('results').scrollIntoView({ behavior: REDUCED_MOTION ? 'auto' : 'smooth', block: 'start' });
+}
+
+/* ============================== summary and cycle values ============================== */
+function renderSummary() {
+  const days = daysBetween(state.dob, state.target);
+  const values = activeCycles().map((c) => ({ ...c, pct: cyclePercent(days, c.period) }));
+  const strongest = values.reduce((a, b) => (Math.abs(a.pct) >= Math.abs(b.pct) ? a : b));
+  const weakest = values.reduce((a, b) => (Math.abs(a.pct) <= Math.abs(b.pct) ? a : b));
+
+  $('rTitle').textContent = `Biorhythm for ${fmtLong(state.target)}`;
+
+  $('rMoment').innerHTML = `
+    <div><span>Days lived</span><b>${days.toLocaleString('en-GB')}</b></div>
+    <div><span>Strongest cycle</span><b>${esc(strongest.label)} <small>(${fmtPct(strongest.pct)})</small></b></div>
+    <div><span>Weakest cycle</span><b>${esc(weakest.label)} <small>(${fmtPct(weakest.pct)})</small></b></div>
+    <div><span>Target date</span><b>${fmtLong(state.target)}</b></div>`;
+
+  $('rBars').innerHTML = values.map((c) => `
+    <div class="bar bar--cycle" style="--cycle-color:${c.color}">
+      <span>${esc(c.label)} <small>(${c.period} days)</small></span>
+      <div><i style="width:${(c.pct + 100) / 2}%"></i></div>
+      <b>${fmtPct(c.pct)}</b>
+    </div>`).join('');
+}
+
+/* ============================== chart controls ============================== */
+(function buildChartControls() {
+  const box = $('chartControls');
+  const spacer = box.querySelector('.spacer');
+  CYCLES.forEach((c) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'cycle-toggle';
+    btn.style.setProperty('--cycle-color', c.color);
+    btn.setAttribute('aria-pressed', state.visible.has(c.key) ? 'true' : 'false');
+    btn.innerHTML = `<i></i>${c.label}`;
+    btn.addEventListener('click', () => {
+      if (state.visible.has(c.key)) {
+        if (state.visible.size === 1) return; // keep at least one cycle on the chart
+        state.visible.delete(c.key);
+      } else {
+        state.visible.add(c.key);
+      }
+      btn.setAttribute('aria-pressed', state.visible.has(c.key) ? 'true' : 'false');
+      renderSummary();
+      renderChart();
+    });
+    box.insertBefore(btn, spacer);
+  });
+})();
+
+/* ============================== chart ============================== */
+const canvas = $('bioChart');
+const tip = $('chartTip');
+let chartFrame = null;
+
+function renderChart() {
+  if (chartFrame) cancelAnimationFrame(chartFrame);
+  chartFrame = requestAnimationFrame(drawChart);
+}
+
+// Chart colours come from the same tokens as the rest of the page.
+function themeColors() {
+  const css = getComputedStyle(document.documentElement);
+  const tok = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
+  return {
+    grid: tok('--line-soft', 'rgba(36,26,68,0.12)'),
+    axis: tok('--line', 'rgba(36,26,68,0.22)'),
+    label: tok('--ink-muted', '#4b4766'),
+    gold: tok('--gold', '#a9782f'),
+    target: tok('--violet-soft', '#4a2f8a'),
+  };
+}
+
+function drawChart() {
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth;
+  if (!W) return;
+  const H = Math.min(360, Math.max(240, W * 0.4));
+
+  canvas.style.height = H + 'px';
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const col = themeColors();
+
+  const pad = { top: 22, right: 16, bottom: 40, left: 46 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bottom;
+
+  const targetDays = daysBetween(state.dob, state.target);
+  const windowDays = Math.round(state.chartDays / state.zoom);
+  const centerDays = targetDays + state.panOffset;
+  const startDay = Math.round(centerDays - windowDays / 2);
+  const endDay = startDay + windowDays;
+
+  const xForDay = (d) => pad.left + ((d - startDay) / windowDays) * plotW;
+  const yForVal = (v) => pad.top + plotH / 2 - v * (plotH / 2 - 4);
+
+  // white background, so the downloaded PNG is not transparent
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // horizontal grid
+  ctx.strokeStyle = col.grid;
+  ctx.lineWidth = 1;
+  [-1, -0.5, 0, 0.5, 1].forEach((v) => {
+    const y = yForVal(v);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+  });
+
+  // vertical grid and date labels
+  const maxLabels = Math.min(10, Math.max(3, Math.floor(plotW / 72)));
+  const step = Math.max(1, Math.round(windowDays / maxLabels));
+  ctx.fillStyle = col.label;
+  ctx.font = '11px Nunito, sans-serif';
+  ctx.textAlign = 'center';
+  for (let d = Math.ceil(startDay / step) * step; d <= endDay; d += step) {
+    const x = xForDay(d);
+    ctx.strokeStyle = col.grid;
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+    const date = new Date(state.dob.getTime());
+    date.setDate(date.getDate() + d);
+    ctx.fillText(date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), x, H - pad.bottom + 15);
+  }
+
+  // percentage labels
+  ctx.textAlign = 'right';
+  [['100%', 1], ['50%', 0.5], ['0%', 0], ['-50%', -0.5], ['-100%', -1]].forEach(([label, v]) => {
+    ctx.fillText(label, pad.left - 7, yForVal(v) + 4);
+  });
+
+  // zero line
+  ctx.strokeStyle = col.axis;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left, yForVal(0)); ctx.lineTo(W - pad.right, yForVal(0)); ctx.stroke();
+
+  // today marker
+  const todayDays = daysBetween(state.dob, new Date());
+  if (todayDays >= startDay && todayDays <= endDay) {
+    const x = xForDay(todayDays);
+    ctx.strokeStyle = col.gold;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = col.gold;
+    ctx.font = '700 10px Nunito, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Today', x, pad.top - 8);
+  }
+
+  // target date marker
+  if (targetDays >= startDay && targetDays <= endDay && targetDays !== todayDays) {
+    const x = xForDay(targetDays);
+    ctx.strokeStyle = col.target;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H - pad.bottom); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // cycle curves, one point per pixel
+  activeCycles().forEach((c) => {
+    ctx.strokeStyle = c.color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const day = startDay + (px / plotW) * windowDays;
+      const x = pad.left + px;
+      const y = yForVal(cycleValue(day, c.period));
+      if (px === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  state.chart = { pad, plotW, startDay, windowDays, W, H };
+}
+
+/* ---- tooltip ---- */
+function showTip(evt) {
+  if (!state.chart) return;
+  const { pad, plotW, startDay, windowDays, W, H } = state.chart;
+  const rect = canvas.getBoundingClientRect();
+  const mx = evt.clientX - rect.left;
+  const my = evt.clientY - rect.top;
+
+  if (mx < pad.left || mx > W - pad.right || my < pad.top || my > H - pad.bottom) {
+    tip.style.display = 'none';
+    return;
+  }
+
+  const day = Math.round(startDay + ((mx - pad.left) / plotW) * windowDays);
+  const date = new Date(state.dob.getTime());
+  date.setDate(date.getDate() + day);
+
+  tip.innerHTML = `<div class="tip-date">${date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>`
+    + activeCycles().map((c) => `<div class="tip-row"><i style="background:${c.color}"></i><span>${esc(c.label)}</span><b style="color:${c.color}">${fmtPct(cyclePercent(day, c.period))}</b></div>`).join('');
+  tip.style.display = 'block';
+
+  let tx = mx + 12;
+  let ty = my + 12;
+  if (tx + tip.offsetWidth + 4 > rect.width) tx = mx - tip.offsetWidth - 12;
+  if (ty + tip.offsetHeight + 4 > rect.height) ty = my - tip.offsetHeight - 12;
+  tip.style.left = Math.max(0, tx) + 'px';
+  tip.style.top = Math.max(0, ty) + 'px';
+}
+
+/* ---- drag to pan (mouse, pen and touch) ---- */
+let drag = null;
+
+canvas.addEventListener('pointerdown', (evt) => {
+  if (!state.chart) return;
+  drag = { x: evt.clientX, pan: state.panOffset };
+  canvas.setPointerCapture(evt.pointerId);
+  canvas.style.cursor = 'grabbing';
+});
+
+canvas.addEventListener('pointermove', (evt) => {
+  if (drag && state.chart) {
+    const { plotW, windowDays } = state.chart;
+    state.panOffset = Math.round(drag.pan - (evt.clientX - drag.x) * (windowDays / plotW));
+    renderChart();
+  }
+  showTip(evt);
+});
+
+function endDrag() {
+  drag = null;
+  canvas.style.cursor = 'crosshair';
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', () => { endDrag(); tip.style.display = 'none'; });
+canvas.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+
+/* ---- scroll wheel to zoom, keeping the date under the cursor in place ---- */
+canvas.addEventListener('wheel', (evt) => {
+  if (!state.chart) return;
+  evt.preventDefault();
+
+  const { pad, plotW, startDay, windowDays } = state.chart;
+  const rect = canvas.getBoundingClientRect();
+  const frac = (evt.clientX - rect.left - pad.left) / plotW;
+
+  const newZoom = Math.min(10, Math.max(0.25, state.zoom * (1 + (evt.deltaY > 0 ? -0.15 : 0.15))));
+  const newWindowDays = Math.round(state.chartDays / newZoom);
+  const dayUnderCursor = startDay + frac * windowDays;
+  const newStartDay = dayUnderCursor - frac * newWindowDays;
+
+  state.panOffset = Math.round((newStartDay + newWindowDays / 2) - daysBetween(state.dob, state.target));
+  state.zoom = newZoom;
+  renderChart();
+}, { passive: false });
+
+$('resetZoom').addEventListener('click', () => {
+  state.zoom = 1;
+  state.panOffset = 0;
+  renderChart();
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (state.chart) renderChart(); }, 120);
+});
+
+/* ============================== critical days ============================== */
+function renderCritical() {
+  const today = todayMidnight();
+  const found = [];
+
+  for (let i = 0; i <= 30; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const lived = daysBetween(state.dob, d);
+    const hits = CLASSIC.filter((c) => isCritical(lived, c.period));
+    if (hits.length) found.push({ date: d, hits });
+  }
+
+  if (!found.length) {
+    $('rCrit').innerHTML = '<p class="none-found">No critical days in the next 30 days.</p>';
+    return;
+  }
+
+  const kind = { 1: ['', 'Single critical day'], 2: ['double', 'Double critical day'], 3: ['triple', 'Triple critical day'] };
+  $('rCrit').innerHTML = found.map(({ date, hits }) => {
+    const [cls, label] = kind[hits.length];
+    const names = hits.map((c) => c.label);
+    return `
+    <div class="crit-item ${cls}">
+      <div class="crit-date">${fmtShort(date)}</div>
+      <div>
+        <div class="crit-type">${label}</div>
+        <div class="crit-text">${names.join(', ')}: crossing zero today, making outcomes unpredictable in ${names.map((n) => n.toLowerCase()).join(' and ')} energy.</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================== 30-day forecast ============================== */
+function renderForecast() {
+  const today = todayMidnight();
+  const avgOf = (lived) => Math.round(CLASSIC.reduce((sum, c) => sum + cyclePercent(lived, c.period), 0) / CLASSIC.length);
+  const arrows = { up: '<span class="trend-up">↑</span>', down: '<span class="trend-down">↓</span>', flat: '<span class="trend-flat">→</span>' };
+  const rows = [];
+
+  for (let i = 0; i <= 30; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const lived = daysBetween(state.dob, d);
+
+    const avg = avgOf(lived);
+    const prev = avgOf(lived - 1);
+    const trend = avg > prev ? 'up' : avg < prev ? 'down' : 'flat';
+
+    const tags = [];
+    if (i === 0) tags.push('<span class="tag tag-today">Today</span>');
+    const crit = CLASSIC.filter((c) => isCritical(lived, c.period)).length;
+    if (crit === 3) tags.push('<span class="tag tag-crit">Triple critical</span>');
+    else if (crit === 2) tags.push('<span class="tag tag-crit">Double critical</span>');
+    else if (crit === 1) tags.push('<span class="tag tag-crit">Critical</span>');
+    if (avg >= 70) tags.push('<span class="tag tag-peak">Peak</span>');
+    else if (avg <= -70) tags.push('<span class="tag tag-low">Low</span>');
+
+    const cells = CLASSIC.map((c) => `<td style="color:${c.color}">${fmtPct(cyclePercent(lived, c.period))}</td>`).join('');
+    rows.push(`<tr>
+      <td><b>${fmtShort(d)}</b></td>
+      <td class="dim">${lived.toLocaleString('en-GB')}</td>
+      ${cells}
+      <td class="avg ${avg >= 0 ? 'up' : 'neg'}">${fmtPct(avg)}</td>
+      <td>${arrows[trend]}</td>
+      <td>${tags.join('')}</td>
+    </tr>`);
+  }
+
+  $('rForecast').innerHTML = rows.join('');
+}
+
+/* ============================== tools ============================== */
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch { /* ignore */ }
+    ta.remove();
+    return ok;
+  }
+}
+
+$('cpLink').addEventListener('click', async () => {
+  const ok = await copyText(window.location.href);
+  $('cpLink').textContent = ok ? 'Copied' : 'Copy failed';
+  setTimeout(() => { $('cpLink').textContent = 'Copy link'; }, 1800);
+});
+
+$('prtPage').addEventListener('click', () => window.print());
+
+$('dlChart').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'biorhythm-chart.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* ============================== start ============================== */
+// Wired last, so everything above exists before a shared link calculates.
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values),
+});
+
+// A shared link (?dob=dd-mm-yyyy&target=dd-mm-yyyy) fills the form and calculates straight away.
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values, { updateUrl: false }));
+</script>
+</body>
+</html>

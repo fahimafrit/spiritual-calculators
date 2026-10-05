@@ -14,7 +14,8 @@
    6. Tables, glyphs, aspect grid, balance bars
    7. Sign display (a single sign as the result)
    8. Buttons and small print
-   9. Responsive rules
+   9. Biorhythm (cycle bars, chart, critical days, forecast)
+   10. Responsive rules
 
    The form itself (cards, fields, birth-place search, chart
    options) lives in assets/css/core/forms.css, linked before
@@ -317,7 +318,241 @@ svg.gl { vertical-align: -3px; }
     color: var(--ink-muted);
 }
 
-/* ── 9. Responsive ─────────────────────────────────────── */
+/* ── 9. Biorhythm ──────────────────────────────────────── */
+/* Cycle bars: same bar component as the element/mode balance, with a
+   wider label and value column and a per-cycle colour set inline. */
+.bar.bar--cycle {
+    grid-template-columns: 150px 1fr 56px;
+}
+
+.bar.bar--cycle small {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-muted);
+}
+
+.bar.bar--cycle div {
+    position: relative;
+    overflow: hidden;
+}
+
+.bar.bar--cycle i {
+    background: var(--cycle-color, var(--gold));
+}
+
+/* A faint centre mark: the bar fills from 0 % (left) to 100 % (right),
+   so the middle is the zero line of the cycle. */
+.bar.bar--cycle div::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--line);
+}
+
+.bar.bar--cycle b {
+    color: var(--cycle-color, var(--ink));
+    font-variant-numeric: tabular-nums;
+}
+
+/* Chart */
+.bio-chart-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+/* Each cycle is a checkbox: an empty box when it is off, a filled
+   box with a tick in the cycle's colour when it is on. */
+.cycle-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    color: var(--ink-muted);
+    border-radius: 999px;
+    padding: 6px 14px 6px 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cycle-toggle i {
+    position: relative;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--cycle-color, var(--gold));
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+.cycle-toggle[aria-checked="true"] {
+    border-color: var(--cycle-color, var(--gold));
+    background: rgba(36, 26, 68, 0.05);
+    background: color-mix(in srgb, var(--cycle-color, var(--gold)) 10%, #ffffff);
+    color: var(--ink);
+    font-weight: 800;
+}
+
+.cycle-toggle[aria-checked="true"] i {
+    background: var(--cycle-color, var(--gold));
+}
+
+.cycle-toggle[aria-checked="true"] i::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 0;
+    width: 4px;
+    height: 9px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.cycle-toggle:hover { border-color: var(--cycle-color, var(--gold)); }
+
+.cycle-toggle:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.tool-btn .ico {
+    font-family: var(--glyph-font);
+    display: inline-block;
+    min-width: 1em;
+    text-align: center;
+}
+
+.bio-chart {
+    position: relative;
+    width: 100%;
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.bio-chart canvas {
+    display: block;
+    width: 100%;
+    cursor: crosshair;
+    touch-action: pan-y;
+}
+
+.bio-tip {
+    position: absolute;
+    display: none;
+    min-width: 160px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.bio-tip .tip-date {
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.bio-tip .tip-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 2px 0;
+    color: var(--ink-muted);
+}
+
+.bio-tip .tip-row i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.bio-tip .tip-row b {
+    margin-left: auto;
+    padding-left: 14px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Critical days */
+.crit-list { display: grid; gap: 10px; }
+
+.crit-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    border: 1px solid var(--line-soft);
+    border-left: 3px solid var(--notice);
+    border-radius: 0 10px 10px 0;
+}
+
+.crit-item.double { border-left-color: var(--gold); }
+.crit-item.triple { border-left-color: var(--alert); }
+
+.crit-item .crit-date {
+    min-width: 96px;
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.crit-item .crit-type {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    margin-bottom: 2px;
+}
+
+.crit-item .crit-text {
+    font-size: 14px;
+    color: var(--ink-muted);
+}
+
+/* 30-day forecast */
+.forecast-wrap { overflow-x: auto; }
+
+.container td.up { color: #1f8a70; }
+.container td.neg { color: var(--alert); }
+.container td.avg { font-weight: 800; }
+.container td.dim { color: var(--ink-muted); font-size: 13px; }
+
+.trend-up { color: #1f8a70; font-weight: 800; }
+.trend-down { color: var(--alert); font-weight: 800; }
+.trend-flat { color: var(--ink-muted); font-weight: 800; }
+
+.tag {
+    display: inline-block;
+    margin: 1px 3px 1px 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.tag-today { background: rgba(169, 120, 47, 0.16); color: var(--gold); }
+.tag-peak { background: rgba(31, 138, 112, 0.14); color: #1f8a70; }
+.tag-low { background: rgba(192, 57, 43, 0.12); color: var(--alert); }
+.tag-crit { background: rgba(217, 130, 43, 0.16); color: #a85d12; }
+
+/* ── 10. Responsive ────────────────────────────────────── */
 @media (max-width: 940px) {
     .rgrid { grid-template-columns: 1fr; }
 }
@@ -328,6 +563,8 @@ svg.gl { vertical-align: -3px; }
     .two { grid-template-columns: 1fr; }
     .container th, .container td { padding: 6px 5px; }
     .container table { font-size: 13.5px; }
+    .bar.bar--cycle { grid-template-columns: 112px 1fr 50px; }
+    .crit-item { flex-direction: column; gap: 4px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
