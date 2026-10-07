@@ -139,13 +139,20 @@ body { margin: 0; }
 
 /* ── 5. Chart layout ───────────────────────────────────── */
 .rgrid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    display: flex;
     gap: 44px;
-    align-items: start;
+    align-items: flex-start;
 }
 
-.rgrid + .rgrid { margin-top: 44px; }
+.rgrid > .chart-left {
+    flex: 1.12;
+    min-width: 0;
+}
+
+.rgrid > .chart-right {
+    flex: 1;
+    min-width: 0;
+}
 
 .wheel svg {
     width: 100%;
