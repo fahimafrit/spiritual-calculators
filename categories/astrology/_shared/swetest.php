@@ -267,3 +267,19 @@ function sc_swe_ayanamsa(float $jd, string $ayanamsaKey): ?float
 
     return null;
 }
+
+
+/** Tropical longitude of the Sun in degrees (0-360) at a moment (jd in UT). */
+function sc_swe_sun(float $jd): float
+{
+    $out = sc_swe_run([
+        '-bj' . sc_swe_number($jd), '-ut', '-p0', '-fPl', '-g,', '-eswe',
+        '-edir' . sc_swe_ephemeris_dir(), '-head',
+    ]);
+
+    if (!preg_match('/^Sun\s*,\s*(-?\d+(?:\.\d+)?)/m', $out, $m)) {
+        throw new RuntimeException('Could not read the Sun position from swetest.');
+    }
+
+    return sc_swe_norm360((float) $m[1]);
+}

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sun Sign Calculator</title>
+<meta name="description" content="Find your Sun sign from your date of birth. Add your birth time and place for an exact result on the days the Sun changes sign." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/astrology/base.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output" id="msg"></div>
+
+  <div class="result-wrap display-none" id="results" aria-live="polite">
+    <div class="result-card">
+      <div id="sNotices"></div>
+      <div class="sign-display">
+        <span class="gl sign-glyph" id="sGlyph" aria-hidden="true"></span>
+        <h2 class="result-title" id="sName"></h2>
+        <p class="sign-symbol" id="sSymbol"></p>
+      </div>
+      <div class="moment" id="sFacts"></div>
+      <div class="reading">
+        <h2 class="reading-title" id="sTitle"></h2>
+        <div id="sReading"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/astrology/zodiac.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   Sun Sign Calculator
+   The date of birth is required; the birth time and place are optional.
+   The calculator endpoint decides the sign and returns the reading.
+   ════════════════════════════════════════════════════════════════════ */
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const { SIGNS } = Zodiac;
+const SUBMIT_LABEL = 'Find my Sun sign';
+
+const fields = FormKit.render($('calc-form'), 'birth-date-optional', {
+  submitLabel: SUBMIT_LABEL,
+  options: [],
+  example: {
+    a_date: '21/03/1988', a_time: '08:15',
+    a_place: 'Dhaka, Dhaka Division, Bangladesh', a_lat: '23.8103', a_lon: '90.4125', a_tz: 'Asia/Dhaka',
+  },
+});
+
+function showMsg(text) {
+  $('msg').innerHTML = text ? `<p>${esc(text)}</p>` : '';
+}
+
+const API_URL = '../../../calculate.php?slug=sun-sign-calculator';
+const GENERIC_ERROR = 'Something went wrong. Please try again.';
+const textOf = (html) => new DOMParser().parseFromString(html, 'text/html').body.textContent.trim();
+
+async function callApi(server) {
+  let data;
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST', cache: 'no-store',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(server),
+    });
+    data = await r.json();
+  } catch (err) {
+    throw new Error(GENERIC_ERROR);
+  }
+  if (!data || data.valid !== true) throw new Error(textOf((data && data.errorsHtml) || '') || GENERIC_ERROR);
+  return data;
+}
+
+function render(data) {
+  const s = SIGNS[data.sign];
+  $('sGlyph').textContent = Zodiac.glyph(data.sign);
+  $('sName').textContent = s.name;
+  $('sSymbol').textContent = s.symbol;
+
+  const facts = [['Dates', s.dates], ['Element', s.element], ['Modality', s.mode], ['Ruling planet', s.ruler]];
+  if (data.exact) {
+    facts.unshift(['Sun position', `${data.degree}°${String(data.minute).padStart(2, '0')}′ ${esc(s.name)}`]);
+  }
+  $('sFacts').innerHTML = facts.map(([label, value]) => `<div><span>${label}</span><b>${value}</b></div>`).join('');
+
+  const notices = [];
+  if (data.cusp) {
+    notices.push(`The Sun moves from ${SIGNS[data.cusp.from].name} into ${SIGNS[data.cusp.to].name} on ${data.cusp.at}, so your Sun sign depends on your birth time and place. Add them above for an exact result.`);
+  }
+  (data.notices || []).forEach((n) => notices.push(n));
+  $('sNotices').innerHTML = notices.map((n) => `<div class="notice">${esc(n)}</div>`).join('');
+
+  $('sTitle').textContent = `${s.name}: ${data.title}`;
+  $('sReading').innerHTML = data.readingHtml;
+}
+
+async function runCalculation(server) {
+  showMsg('');
+  const btn = $('submit-btn');
+  btn.disabled = true; btn.textContent = 'Calculating…';
+  $('results').classList.add('display-none');
+  try {
+    const data = await callApi(server);
+    render(data);
+    $('results').classList.remove('display-none');
+    $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  } catch (err) {
+    showMsg(err.message || String(err));
+  } finally {
+    btn.disabled = false; btn.textContent = SUBMIT_LABEL;
+  }
+}
+
+FormKit.wire(fields, {
+  onSubmit: (values, server) => runCalculation(server),
+  onError: showMsg,
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,298 @@
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   assets/js/astrology/chart-wheel.js
+   ════════════════════════════════════════════════════════════════════
+   Shared chart display for every astrology page that shows a full
+   chart: the wheel, and the tables under it. Display only: no
+   calculation formulas, no interpretation text. Everything it draws
+   comes from the finished result the server sends.
+
+   Link it after zodiac.js and before the page's own script:
+
+     <script src="../../../assets/js/astrology/zodiac.js"></script>
+     <script src="../../../assets/js/astrology/chart-wheel.js"></script>
+
+   Input shapes (same as the server returns):
+     chart   { bodies, cusps, asc, mc, vertex }
+     aspects { points, aspects }
+     balance { elements, modes }
+
+   ChartView.drawWheel(chart, aspects, centerLabel, ariaLabel)  -> SVG text
+   ChartView.positionsHtml(chart)    ChartView.housesHtml(chart)
+   ChartView.aspectsHtml(aspects)    ChartView.gridHtml(aspects)
+   ChartView.balanceHtml(balance)    ChartView.signOf(lon)
+   ChartView.fmtDT / fmtLat / fmtLon / posHtml / esc / textOf
+   ChartView.wireTools({ svgButton, jsonButton, getSvg, getData, filename })
+   ════════════════════════════════════════════════════════════════════ */
+
+const ChartView = (function () {
+
+  const { SIGNS, VS } = Zodiac;
+
+  const norm = (x) => ((x % 360) + 360) % 360;
+  const rad = (d) => (d * Math.PI) / 180;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const textOf = (html) => new DOMParser().parseFromString(html, 'text/html').body.textContent.trim();
+
+  const GLYPH = { sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇', node: '☊', snode: '☋' };
+  const CUSTOM = new Set(['chiron', 'lilith', 'pof']); // drawn as shapes: no font reliably has these
+  const BODY_COLOR = {
+    sun: '#ffd166', moon: '#dfe6ff', mercury: '#9de3ff', venus: '#ff9ec7', mars: '#ff6b6b', jupiter: '#ffb15c', saturn: '#c9b18a',
+    uranus: '#7ff0e0', neptune: '#8aa8ff', pluto: '#c88bff', node: '#f0e6ff', snode: '#f0e6ff', chiron: '#b4e08a', lilith: '#d9a0ff', pof: '#ffe08a',
+  };
+  const ASPECT_INFO = {
+    conjunction:  { n: 'Conjunction',   c: '#f0d27a', cl: '#b8861b', s: '☌' },
+    opposition:   { n: 'Opposition',    c: '#ff7a90', cl: '#c0392b', s: '☍' },
+    trine:        { n: 'Trine',         c: '#6fd6c4', cl: '#1f8a70', s: '△' },
+    square:       { n: 'Square',        c: '#ff7a90', cl: '#c0392b', s: '□' },
+    sextile:      { n: 'Sextile',       c: '#7db4ff', cl: '#2f6fb5', s: '⚹' },
+    quincunx:     { n: 'Quincunx',      c: '#c9a8ff', cl: '#7a4fc0', s: 'Qx' },
+    semisextile:  { n: 'Semi-sextile',  c: '#a99cc8', cl: '#6f6590', s: 'Ss' },
+    semisquare:   { n: 'Semi-square',   c: '#e59aa9', cl: '#b5566b', s: '∠' },
+    sesquisquare: { n: 'Sesqui-square', c: '#e59aa9', cl: '#b5566b', s: 'Sq' },
+  };
+  const FONT = "'Segoe UI Symbol','Noto Sans Symbols 2','Noto Sans Symbols','Apple Symbols','DejaVu Sans',sans-serif";
+
+  /* ---------- formatting ---------- */
+
+  function fmtDT(s) {
+    // the server sends "yyyy-mm-dd HH:mm[:ss]"; show dd/mm/yyyy HH:mm
+    const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(s || '');
+    if (!m) return esc(s);
+    const [, y, mo, d, h, mi] = m;
+    return `${d}/${mo}/${y} ${h}:${mi}`;
+  }
+
+  function dms(lon) {
+    lon = norm(lon);
+    const s = Math.floor(lon / 30);
+    const inSign = lon - s * 30;
+    const d = Math.floor(inSign);
+    const m = Math.floor((inSign - d) * 60);
+    return { s, d, m };
+  }
+  const signOf = (lon) => SIGNS[Math.floor(norm(lon) / 30)];
+  const posHtml = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ <span class="gl">${Zodiac.glyph(p.s)}</span> ${SIGNS[p.s].name}`; };
+  // Same position without the glyph span, for places where a span would pick up other styles (e.g. .moment).
+  const posPlain = (lon) => { const p = dms(lon); return `${p.d}°${String(p.m).padStart(2, '0')}′ ${Zodiac.glyph(p.s)} ${SIGNS[p.s].name}`; };
+  const fmtLat = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`;
+  const fmtLon = (v) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`;
+
+  /* ---------- glyphs ---------- */
+
+  function customGlyph(key, col) {
+    const st = `fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"`;
+    if (key === 'chiron') return `<g ${st}><circle cx="0" cy="6" r="3.2"/><path d="M0 2.8V-9M0 -3.5L5.5 -9M0 -3.5L5.5 1.5"/></g>`;
+    if (key === 'pof') return `<g ${st}><circle cx="0" cy="0" r="7"/><path d="M-4.6 -4.6L4.6 4.6M4.6 -4.6L-4.6 4.6"/></g>`;
+    if (key === 'lilith') return `<g ${st}><path d="M2.5 -9.5A6.5 6.5 0 1 0 2.5 3A4.6 4.6 0 1 1 2.5 -9.5Z" fill="${col}" stroke="none"/><path d="M0 3.5V10.5M-3 7H3"/></g>`;
+    return '';
+  }
+  function glyphHtml(key) {
+    if (CUSTOM.has(key)) return `<svg class="gl" width="19" height="19" viewBox="-11 -11 22 22" aria-hidden="true">${customGlyph(key, 'currentColor')}</svg>`;
+    return `<span class="gl">${GLYPH[key] || ''}${VS}</span>`;
+  }
+  function glyphSvg(key, x, y, size, col) {
+    if (CUSTOM.has(key)) return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${(size / 20).toFixed(2)})">${customGlyph(key, col)}</g>`;
+    return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" font-size="${size}" fill="${col}" text-anchor="middle" dominant-baseline="central" font-family="${FONT}">${GLYPH[key]}${VS}</text>`;
+  }
+
+  /* ---------- wheel ---------- */
+
+  // Spreads crowded glyphs apart. Returns each body's display longitude by key.
+  function spreadBodies(bodies) {
+    const raw = bodies.filter((b) => b.key !== 'snode').map((b) => ({ b })).sort((x, y) => x.b.lon - y.b.lon);
+    const n = raw.length;
+    let start = 0, widest = -1;
+    for (let i = 0; i < n; i++) { // open the circle at its widest gap so clusters never wrap around
+      const g = norm(raw[(i + 1) % n].b.lon - raw[i].b.lon);
+      if (g > widest) { widest = g; start = (i + 1) % n; }
+    }
+    const items = raw.slice(start).concat(raw.slice(0, start));
+    items.forEach((it, k) => { it.disp = k === 0 ? it.b.lon : items[k - 1].disp + norm(it.b.lon - items[k - 1].b.lon); });
+    const minSep = 8.6;
+    for (let pass = 0; pass < 3000; pass++) {
+      let moved = false;
+      for (let k = 0; k < n - 1; k++) {
+        const gap = items[k + 1].disp - items[k].disp;
+        if (gap < minSep - 0.005) { const push = (minSep - gap) / 2; items[k].disp -= push; items[k + 1].disp += push; moved = true; }
+      }
+      if (!moved) break;
+    }
+    return items;
+  }
+
+  function drawWheel(ch, asp, centerLabel, ariaLabel) {
+    const S = 680, cx = 340, cy = 340;
+    const R = { out: 306, signIn: 264, tick: 256, plan: 227, deg: 201, houseIn: 176, num: 161, asp: 146 };
+    const GOLD = '#e6c76a', GOLD_DIM = 'rgba(230,199,106,0.32)', MUTED = '#b4a5d2';
+    const ELFILL = ['rgba(255,122,90,0.13)', 'rgba(160,200,120,0.11)', 'rgba(125,180,255,0.12)', 'rgba(111,214,196,0.12)']; // fire, earth, air, water
+    const asc = ch.asc;
+    const P = (r, l) => { const a = rad(180 + (l - asc)); return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
+    const f = (n) => n.toFixed(1);
+    const pt = (r, l) => { const [x, y] = P(r, l); return `${f(x)} ${f(y)}`; };
+
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" role="img" aria-label="${esc(ariaLabel)}">`;
+    s += `<defs><radialGradient id="wbg" cx="50%" cy="50%" r="72%"><stop offset="0" stop-color="#2d1758"/><stop offset="1" stop-color="#140a29"/></radialGradient></defs>`;
+    s += `<rect width="${S}" height="${S}" rx="26" fill="url(#wbg)"/>`;
+
+    // zodiac ring
+    for (let i = 0; i < 12; i++) {
+      const l1 = i * 30, l2 = l1 + 30;
+      s += `<path d="M${pt(R.out, l1)} A${R.out} ${R.out} 0 0 0 ${pt(R.out, l2)} L${pt(R.signIn, l2)} A${R.signIn} ${R.signIn} 0 0 1 ${pt(R.signIn, l1)} Z" fill="${ELFILL[i % 4]}" stroke="${GOLD_DIM}" stroke-width="1"/>`;
+      const [gx, gy] = P((R.out + R.signIn) / 2, l1 + 15);
+      s += `<text x="${f(gx)}" y="${f(gy)}" font-size="23" fill="${GOLD}" text-anchor="middle" dominant-baseline="central" font-family="${FONT}"><title>${SIGNS[i].name}</title>${Zodiac.glyph(i)}</text>`;
+    }
+    // degree ticks
+    for (let d = 0; d < 360; d++) {
+      const isBoundary = d % 30 === 0, isTen = d % 10 === 0, isFive = d % 5 === 0;
+      const len = isBoundary ? 12 : isTen ? 9 : isFive ? 6 : 3.5;
+      const [x1, y1] = P(R.tick, d), [x2, y2] = P(R.tick - len, d);
+      s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${isBoundary ? GOLD : GOLD_DIM}" stroke-width="${isBoundary ? 1.4 : isTen ? 1.0 : 0.6}"/>`;
+    }
+    s += `<circle cx="${cx}" cy="${cy}" r="${R.tick}" fill="none" stroke="${GOLD_DIM}"/>`;
+    // 0° marker at each sign boundary
+    for (let i = 0; i < 12; i++) {
+      const [lx, ly] = P(R.tick - 22, i * 30);
+      s += `<text x="${f(lx)}" y="${f(ly)}" font-size="9" fill="${GOLD_DIM}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">0°</text>`;
+    }
+    s += `<circle cx="${cx}" cy="${cy}" r="${R.houseIn}" fill="rgba(10,4,24,0.35)" stroke="${GOLD_DIM}"/>`;
+    s += `<circle cx="${cx}" cy="${cy}" r="${R.asp}" fill="rgba(10,4,24,0.35)" stroke="${GOLD_DIM}"/>`;
+
+    // house cusps and numbers
+    ch.cusps.forEach((c, i) => {
+      const angular = i % 3 === 0;
+      const [x1, y1] = P(R.asp, c), [x2, y2] = P(angular ? R.out : R.tick, c);
+      s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${angular ? GOLD : 'rgba(230,199,106,0.38)'}" stroke-width="${angular ? 1.8 : 0.9}"/>`;
+      const midLon = c + norm(ch.cusps[(i + 1) % 12] - c) / 2;
+      const [nx, ny] = P(R.num, midLon);
+      s += `<text x="${f(nx)}" y="${f(ny)}" font-size="12" fill="${MUTED}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${i + 1}</text>`;
+    });
+    // angle labels outside the ring
+    [['AC', asc], ['DC', asc + 180], ['MC', ch.mc], ['IC', ch.mc + 180]].forEach(([t, l]) => {
+      const [x, y] = P(R.out + 18, l);
+      s += `<text x="${f(x)}" y="${f(y)}" font-size="12" font-weight="700" fill="${GOLD}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${t}</text>`;
+    });
+
+    // glyph display positions, so aspect lines end where the glyphs are drawn
+    const items = spreadBodies(ch.bodies);
+    const dispOf = { asc: ch.asc, mc: ch.mc }; // angles are not spread
+    items.forEach((it) => { dispOf[it.b.key] = it.disp; });
+
+    for (const a of asp.aspects) {
+      const ptA = asp.points[a.i], ptB = asp.points[a.j];
+      const info = ASPECT_INFO[a.aspect];
+      const [x1, y1] = P(R.asp, dispOf[ptA.key] ?? ptA.lon), [x2, y2] = P(R.asp, dispOf[ptB.key] ?? ptB.lon);
+      const tight = 1 - a.orb / a.maxOrb;
+      s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${info.c}" stroke-width="${a.major ? 1.5 : 0.9}" stroke-opacity="${(0.45 + 0.5 * tight).toFixed(2)}"${a.major ? '' : ' stroke-dasharray="4 3"'}><title>${esc(ptA.name)} ${info.n} ${esc(ptB.name)} (orb ${a.orb.toFixed(1)}°)</title></line>`;
+    }
+
+    // planets: a tick at the true position, the glyph at its spread position
+    for (const it of items) {
+      const b = it.b, col = BODY_COLOR[b.key] || '#fff';
+      const [tx1, ty1] = P(R.tick, b.lon), [tx2, ty2] = P(R.tick - 13, b.lon);
+      s += `<line x1="${f(tx1)}" y1="${f(ty1)}" x2="${f(tx2)}" y2="${f(ty2)}" stroke="${col}" stroke-width="2" stroke-linecap="round"/>`;
+      const off = Math.abs(norm(it.disp - b.lon + 180) - 180);
+      if (off > 1.2) {
+        const [cx1, cy1] = P(R.tick - 13, b.lon), [cx2, cy2] = P(R.plan + 14, it.disp);
+        s += `<line x1="${f(cx1)}" y1="${f(cy1)}" x2="${f(cx2)}" y2="${f(cy2)}" stroke="${col}" stroke-opacity="0.45" stroke-width="0.8"/>`;
+      }
+      const [gx, gy] = P(R.plan, it.disp), [dx, dy] = P(R.deg, it.disp);
+      const p = dms(b.lon);
+      s += `<g><title>${esc(b.name)} ${p.d}°${String(p.m).padStart(2, '0')}′ ${SIGNS[p.s].name}${b.speed < 0 ? ' (retrograde)' : ''}, house ${b.house}</title>`;
+      s += glyphSvg(b.key, gx, gy, 20, col);
+      s += `<text x="${f(dx)}" y="${f(dy)}" font-size="11" fill="${MUTED}" text-anchor="middle" dominant-baseline="central" font-family="Nunito,sans-serif">${p.d}°</text>`;
+      if (b.speed < 0 && b.key !== 'node') s += `<text x="${f(gx + 11)}" y="${f(gy + 9)}" font-size="9" font-weight="700" fill="#ff7a90" font-family="Nunito,sans-serif">R</text>`;
+      s += `</g>`;
+    }
+    s += `<text x="${cx}" y="${cy + 4}" font-size="17" fill="rgba(230,199,106,0.28)" text-anchor="middle" font-family="'Cormorant Garamond',Georgia,serif" font-style="italic">${esc(centerLabel)}</text>`;
+    s += `</svg>`;
+    return s;
+  }
+
+  /* ---------- tables ---------- */
+
+  function positionsHtml(ch) {
+    const angles = [['Ascendant', 'AC', ch.asc, 1], ['Midheaven', 'MC', ch.mc, 10], ['Vertex', 'Vx', ch.vertex, null]]
+      .map(([n, ab, l, h]) => `<tr><td><span class="gl" style="font-size:.78rem;color:var(--gold)">${ab}</span> ${n}</td><td class="pos">${posHtml(l)}</td><td>${h ?? ''}</td><td></td></tr>`).join('');
+    const bodies = ch.bodies.map((b) => {
+      const motion = b.key === 'pof' ? '' : b.speed < 0 ? '<span class="retro">Retrograde</span>' : 'Direct';
+      return `<tr><td>${glyphHtml(b.key)} ${esc(b.name)}</td><td class="pos">${posHtml(b.lon)}</td><td>${b.house}</td><td>${motion}</td></tr>`;
+    }).join('');
+    return `<table><thead><tr><th>Point</th><th>Position</th><th>House</th><th>Motion</th></tr></thead><tbody>${angles}${bodies}</tbody></table>`;
+  }
+
+  function housesHtml(ch) {
+    const row = (i) => `<tr><td>${i + 1}</td><td class="pos">${posHtml(ch.cusps[i])}</td></tr>`;
+    const half = (from) => `<table><thead><tr><th>House</th><th>Cusp</th></tr></thead><tbody>${[0, 1, 2, 3, 4, 5].map((k) => row(from + k)).join('')}</tbody></table>`;
+    return `<div class="two">${half(0)}${half(6)}</div>`;
+  }
+
+  const pointName = (P) => (P.key === 'asc' ? 'Ascendant' : P.key === 'mc' ? 'Midheaven' : `${glyphHtml(P.key)} ${esc(P.name)}`);
+
+  function aspectsHtml(asp) {
+    const sorted = [...asp.aspects].sort((x, y) => x.orb - y.orb);
+    if (!sorted.length) return '<p class="none-found">No aspects within the orbs.</p>';
+    const row = (a) => {
+      const info = ASPECT_INFO[a.aspect];
+      const mv = a.applying === null ? '' : a.applying ? 'Applying' : 'Separating';
+      return `<tr><td>${pointName(asp.points[a.i])}</td><td><span style="color:${info.cl}">●</span> ${info.n}</td><td>${pointName(asp.points[a.j])}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
+    };
+    return `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th><th></th></tr></thead><tbody>${sorted.map(row).join('')}</tbody></table>`;
+  }
+
+  function gridHtml(asp) {
+    const map = {};
+    asp.aspects.forEach((a) => { map[a.i + '-' + a.j] = a; });
+    const head = (P) => (P.key === 'asc' ? 'AC' : P.key === 'mc' ? 'MC' : glyphHtml(P.key));
+    let g = '<table class="agrid"><thead><tr><th></th>' + asp.points.slice(0, -1).map((P) => `<th>${head(P)}</th>`).join('') + '</tr></thead><tbody>';
+    for (let r = 1; r < asp.points.length; r++) {
+      g += `<tr><th>${head(asp.points[r])}</th>`;
+      for (let c = 0; c < asp.points.length - 1; c++) {
+        if (c >= r) { g += '<td class="empty"></td>'; continue; }
+        const a = map[c + '-' + r];
+        g += a
+          ? `<td title="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].cl}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>`
+          : '<td></td>';
+      }
+      g += '</tr>';
+    }
+    return g + '</tbody></table>';
+  }
+
+  function balanceHtml(bal) {
+    const total = Object.values(bal.elements).reduce((a, b) => a + b, 0);
+    const bar = (label, n) => `<div class="bar"><span>${label}</span><div><i style="width:${(n / total) * 100}%"></i></div><b>${n}</b></div>`;
+    return `<div class="bars">${['Fire', 'Earth', 'Air', 'Water'].map((e) => bar(e, bal.elements[e])).join('')}</div>
+    <div class="bars" style="margin-top:16px">${['Cardinal', 'Fixed', 'Mutable'].map((e) => bar(e, bal.modes[e])).join('')}</div>`;
+  }
+
+  /* ---------- tools under the wheel ---------- */
+
+  function wireTools(opt) {
+    opt.svgButton.addEventListener('click', () => {
+      const svg = opt.getSvg();
+      if (!svg) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      a.download = opt.filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+    opt.jsonButton.addEventListener('click', async () => {
+      const data = opt.getData();
+      if (!data) return;
+      const text = JSON.stringify(data, null, 2);
+      const label = opt.jsonButton.textContent;
+      try { await navigator.clipboard.writeText(text); opt.jsonButton.textContent = 'Copied'; }
+      catch {
+        const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); opt.jsonButton.textContent = 'Copied'; } catch { opt.jsonButton.textContent = 'Copy failed'; }
+        ta.remove();
+      }
+      setTimeout(() => { opt.jsonButton.textContent = label; }, 1800);
+    });
+  }
+
+  return { esc, textOf, norm, signOf, fmtDT, fmtLat, fmtLon, posHtml, posPlain, glyphHtml, drawWheel, positionsHtml, housesHtml, aspectsHtml, gridHtml, balanceHtml, wireTools };
+})();

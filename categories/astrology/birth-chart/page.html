@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Birth Chart Calculator</title>
+<meta name="description" content="Free birth chart calculator. Enter your birth date, time and place to see your natal chart wheel, planet positions, houses and aspects." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/astrology/base.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output" id="msg"></div>
+
+  <div class="result-wrap display-none" id="results" aria-live="polite">
+    <div class="result-card">
+      <h2 class="result-title" id="rTitle"></h2>
+      <div id="rNotices"></div>
+      <div class="moment" id="rBig"></div>
+      <div class="moment" id="rMoment"></div>
+
+      <div class="rgrid">
+        <div class="wheel">
+          <div id="wheelBox"></div>
+          <div class="wheel-tools">
+            <button class="tool-btn" type="button" id="dlSvg">Download wheel (SVG)</button>
+            <button class="tool-btn" type="button" id="cpJson">Copy data (JSON)</button>
+          </div>
+        </div>
+        <div>
+          <div class="sect"><h2 class="section-title">Planets and points</h2><div id="rPlanets"></div></div>
+          <div class="sect"><h2 class="section-title">House cusps</h2><div id="rHouses"></div></div>
+        </div>
+      </div>
+
+      <div class="rgrid">
+        <div class="sect"><h2 class="section-title">Aspects</h2><div id="rAspects"></div></div>
+        <div>
+          <div class="sect"><h2 class="section-title">Aspect grid</h2><div id="rGrid" class="grid-wrap"></div></div>
+          <div class="sect"><h2 class="section-title">Elements and modes</h2><div id="rBalance"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="fineprint">The Ascendant, Midheaven and houses depend on your exact birth time. If you are unsure of it, treat those as approximate.</p>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script src="../../../assets/js/astrology/zodiac.js"></script>
+<script src="../../../assets/js/astrology/chart-wheel.js"></script>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const { esc, fmtDT, fmtLat, fmtLon, posPlain } = ChartView;
+
+/* ============================== form ============================== */
+// The form is the shared astrology birth-data form (assets/js/core/forms.js).
+const fields = FormKit.render($('calc-form'), 'birth-data', {
+  submitLabel: 'Calculate birth chart',
+  options: ['house', 'zodiac', 'node', 'aspects'],
+  example: {
+    a_name: 'Example', a_date: '21/03/1988', a_time: '08:15',
+    a_place: 'Dhaka, Dhaka Division, Bangladesh', a_lat: '23.8103', a_lon: '90.4125', a_tz: 'Asia/Dhaka',
+  },
+});
+
+function showMsg(text) {
+  $('msg').innerHTML = text ? `<p>${esc(text)}</p>` : '';
+}
+
+let lastData = null, lastSvg = '';
+
+async function runCalculation(server) {
+  showMsg('');
+  const btn = $('submit-btn');
+  btn.disabled = true; btn.textContent = 'Calculating…';
+  $('results').classList.add('display-none'); // never show an old chart next to a new error
+  try {
+    const data = await callApi(server);
+    FormKit.setTimeZone('a', data.person.tz); // show the detected time zone in the form
+    render(data);
+    $('results').classList.remove('display-none');
+    $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  } catch (err) {
+    showMsg(err.message || String(err));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Calculate birth chart';
+  }
+}
+
+FormKit.wire(fields, {
+  onSubmit: (values, server) => runCalculation(server),
+  onError: showMsg,
+});
+
+const API_URL = '../../../calculate.php?slug=birth-chart';
+const GENERIC_ERROR = 'Something went wrong. Please try again.';
+
+async function callApi(server) {
+  let data;
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST', cache: 'no-store',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(server),
+    });
+    data = await r.json();
+  } catch (err) {
+    throw new Error(GENERIC_ERROR);
+  }
+  if (!data || data.valid !== true) throw new Error(ChartView.textOf((data && data.errorsHtml) || '') || GENERIC_ERROR);
+  return data;
+}
+
+/* ============================== render ============================== */
+function render(data) {
+  lastData = data;
+  const ch = data.chart, m = data.meta, p = data.person;
+  const named = p.name !== 'Birth chart';
+  $('rTitle').textContent = named ? `Birth chart of ${p.name}` : 'Your birth chart';
+  $('rNotices').innerHTML = m.warnings.map((w) => `<div class="notice">${esc(w)}</div>`).join('');
+
+  // Sun, Moon and Rising
+  const lonOf = (key) => (ch.bodies.find((b) => b.key === key) || {}).lon;
+  const big = (label, lon) => lon == null ? '' : `<div><span>${label}</span><b>${posPlain(lon)}</b></div>`;
+  $('rBig').innerHTML = big('Sun sign', lonOf('sun')) + big('Moon sign', lonOf('moon')) + big('Rising sign', ch.asc);
+
+  $('rMoment').innerHTML = `
+    <div><span>Born (local time)</span><b>${fmtDT(p.local)} <small>(${esc(p.tz)}, UTC${esc(p.offset)})</small></b></div>
+    <div><span>Place</span><b>${fmtLat(p.lat)}, ${fmtLon(p.lon)}</b></div>
+    <div><span>Zodiac</span><b>${esc(m.zodiac)}${m.ayanamsa != null ? ` <small>(${m.ayanamsa.toFixed(3)}°)</small>` : ''}</b></div>
+    <div><span>Houses</span><b>${esc(m.houseSystemUsed)}</b></div>`;
+
+  lastSvg = ChartView.drawWheel(ch, data.aspects, 'Natal', 'Birth chart wheel');
+  $('wheelBox').innerHTML = lastSvg;
+  $('rPlanets').innerHTML = ChartView.positionsHtml(ch);
+  $('rHouses').innerHTML = ChartView.housesHtml(ch);
+  $('rAspects').innerHTML = ChartView.aspectsHtml(data.aspects);
+  $('rGrid').innerHTML = ChartView.gridHtml(data.aspects);
+  $('rBalance').innerHTML = ChartView.balanceHtml(data.balance);
+}
+
+ChartView.wireTools({
+  svgButton: $('dlSvg'), jsonButton: $('cpJson'),
+  getSvg: () => lastSvg, getData: () => lastData, filename: 'birth-chart.svg',
+});
+</script>
+</body>
+</html>

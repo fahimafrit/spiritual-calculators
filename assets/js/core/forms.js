@@ -43,6 +43,8 @@
    Layouts 'birth-data' (one person) and 'two-birth-data' (two people)
    render name, date, time, birth-place search with optional manual
    coordinates, and a collapsible "Chart options" block.
+   'birth-date-optional' asks only for the birth date, with the birth
+   time and place optional (the Sun sign calculator).
 
      const fields = FormKit.render(mount, 'two-birth-data', {
        submitLabel: 'Calculate Davison chart',
@@ -89,6 +91,13 @@ const FormKit = (function () {
         { id: 'name', type: 'name', label: 'Name', placeholder: 'Your name', urlParam: 'name' },
       ],
     },
+    // Two names (love calculator).
+    'two-name': {
+      fields: [
+        { id: 'name1', type: 'name', label: 'Your name', placeholder: 'Enter your name', maxlength: 60, urlParam: 'name1' },
+        { id: 'name2', type: 'name', label: 'Their name', placeholder: 'Enter their name', maxlength: 60, urlParam: 'name2' },
+      ],
+    },
     'dob-name': {
       fields: [
         { id: 'date', type: 'date', label: 'Date of birth', placeholder: 'dd/mm/yyyy', urlParam: 'dob' },
@@ -103,6 +112,13 @@ const FormKit = (function () {
     },
     'birth-data': {
       birth: true,
+      people: [{ prefix: 'a', title: 'Birth details', msgLabel: '' }],
+    },
+    // One birth date; the birth time and place are optional (Sun sign).
+    'birth-date-optional': {
+      birth: true,
+      optional: true,
+      parts: ['date', 'time', 'place'],
       people: [{ prefix: 'a', title: 'Birth details', msgLabel: '' }],
     },
     'two-birth-data': {
@@ -143,14 +159,15 @@ const FormKit = (function () {
   const DEFAULT_OPTIONS = ['house', 'zodiac', 'node', 'aspects'];
 
   /* The fields of one person in a birth-data form. */
-  function personFields(person) {
+  function personFields(person, parts, optional) {
     const p = person.prefix;
-    return [
-      { id: p + '_name', type: 'name', label: 'Name', placeholder: 'Optional', maxlength: 60, person },
-      { id: p + '_date', type: 'date', label: 'Birth date', placeholder: 'dd/mm/yyyy', person, row: 'when' },
-      { id: p + '_time', type: 'time', label: 'Birth time (local)', placeholder: 'hh:mm', person, row: 'when' },
-      { id: p + '_place', type: 'place', label: 'Birth place', prefix: p, person },
+    const all = [
+      { part: 'name', id: p + '_name', type: 'name', label: 'Name', placeholder: 'Optional', maxlength: 60, person },
+      { part: 'date', id: p + '_date', type: 'date', label: 'Birth date', placeholder: 'dd/mm/yyyy', person, row: 'when' },
+      { part: 'time', id: p + '_time', type: 'time', label: optional ? 'Birth time (optional)' : 'Birth time (local)', placeholder: 'hh:mm', person, row: 'when' },
+      { part: 'place', id: p + '_place', type: 'place', label: optional ? 'Birth place (optional)' : 'Birth place', prefix: p, person },
     ];
+    return parts ? all.filter((f) => parts.includes(f.part)) : all;
   }
 
   /* ---- Canonical auto "/" date-masking behavior ---------------------
@@ -349,7 +366,7 @@ ${people}
 
     if (layout.birth) {
       const optionKeys = overrides.options || DEFAULT_OPTIONS;
-      const fields = layout.people.flatMap(personFields).concat(
+      const fields = layout.people.flatMap((person) => personFields(person, layout.parts, layout.optional)).concat(
         optionKeys.map((key) => {
           const def = OPTION_FIELDS[key];
           if (!def) throw new Error(`FormKit: unknown option "${key}"`);
@@ -501,7 +518,8 @@ ${people}
   }
 
   /* First missing or malformed required entry, as a message, or ''. */
-  function firstProblem(fields, server) {
+  function firstProblem(fields, server, values, optional) {
+    if (optional) return firstProblemOptional(fields, server, values);
     const say = (person, text) => (person.msgLabel ? `${person.msgLabel}: ${text}` : text.charAt(0).toUpperCase() + text.slice(1));
     for (const f of fields) {
       const p = f.person;
@@ -512,6 +530,27 @@ ${people}
         return say(p, 'search for a birth place or enter latitude and longitude.');
       }
     }
+    return '';
+  }
+
+  /* Optional-time-and-place forms: the date is required and follows the
+     shared date rules; a time is only useful with a place (its time zone). */
+  function firstProblemOptional(fields, server, values) {
+    let time = '', hasPlace = false;
+    for (const f of fields) {
+      if (f.type === 'date') {
+        const r = checkDate(values[f.id], { birth: true });
+        if (r.error) return r.error;
+      } else if (f.type === 'time') {
+        time = server[f.id];
+        if (time !== '' && !TIME_OK.test(time)) return 'Enter the birth time as hh:mm, or leave it empty.';
+      } else if (f.type === 'place') {
+        const lat = server[`${f.prefix}_lat`], lon = server[`${f.prefix}_lon`];
+        if ((lat !== '') !== (lon !== '')) return 'Enter both latitude and longitude, or search for a birth place.';
+        hasPlace = lat !== '' && lon !== '';
+      }
+    }
+    if (time !== '' && !hasPlace) return 'Add a birth place to go with the birth time, or leave the time empty.';
     return '';
   }
 
@@ -629,7 +668,7 @@ ${people}
       if (typeof options.onError === 'function') options.onError('');
       const values = readValues(fields);
       const server = serverValues(fields, values);
-      const problem = firstProblem(fields, server);
+      const problem = firstProblem(fields, server, values, !!(fields.layout && fields.layout.optional));
       if (problem) {
         if (typeof options.onError === 'function') options.onError(problem);
         return;

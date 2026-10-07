@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Love Calculator</title>
+<meta name="description" content="Enter two names to find your love percentage and read what it says about the connection between you." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/astrology/base.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output" id="msg"></div>
+
+  <div class="result-wrap display-none" id="results" aria-live="polite">
+    <div class="result-card">
+      <div class="love-display">
+        <p class="love-names" id="lNames"></p>
+        <span class="love-percent" id="lPercent"></span>
+        <div class="love-meter" aria-hidden="true"><i id="lMeter"></i></div>
+      </div>
+      <div class="reading">
+        <h2 class="reading-title" id="lTitle"></h2>
+        <div id="lReading"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   Love Calculator
+   Two names go to the calculator endpoint, which returns the love
+   percentage and the reading. This page only submits and displays.
+   ════════════════════════════════════════════════════════════════════ */
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const SUBMIT_LABEL = 'Calculate love';
+
+const fields = FormKit.render($('calc-form'), 'two-name', { submitLabel: SUBMIT_LABEL });
+
+function showMsg(html) {
+  $('msg').innerHTML = html || '';
+}
+
+const API_URL = '../../../calculate.php?slug=love-calculator';
+const GENERIC_ERROR = '<p>Something went wrong. Please try again.</p>';
+
+async function runCalculation(values, { updateUrl = true } = {}) {
+  showMsg('');
+  const btn = $('submit-btn');
+  btn.disabled = true; btn.textContent = 'Calculating…';
+  $('results').classList.add('display-none');
+  try {
+    let data;
+    try {
+      const r = await fetch(API_URL, {
+        method: 'POST', cache: 'no-store',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ name1: values.name1, name2: values.name2 }),
+      });
+      data = await r.json();
+    } catch (err) {
+      showMsg(GENERIC_ERROR);
+      return;
+    }
+    if (!data || data.valid !== true) {
+      showMsg((data && data.errorsHtml) || GENERIC_ERROR);
+      return;
+    }
+    $('lNames').textContent = `${data.name1} & ${data.name2}`;
+    $('lPercent').textContent = `${data.percent}%`;
+    $('lMeter').style.width = `${data.percent}%`;
+    $('lTitle').textContent = data.title;
+    $('lReading').innerHTML = data.readingHtml;
+    $('results').classList.remove('display-none');
+    $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    if (updateUrl) FormKit.updateUrlParams(fields, { name1: data.name1, name2: data.name2 });
+  } finally {
+    btn.disabled = false; btn.textContent = SUBMIT_LABEL;
+  }
+}
+
+FormKit.wire(fields, { onSubmit: (values) => runCalculation(values) });
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values, { updateUrl: false }));
+</script>
+</body>
+</html>
