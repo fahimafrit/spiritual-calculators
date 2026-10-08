@@ -322,6 +322,9 @@ ${rows.join('\n')}
     const options = selects.length
       ? `\n    <details class="form-options">
       <summary><span class="summary-closed">Show more settings</span><span class="summary-open">Hide settings</span></summary>
+      <div class="form-options-header">
+        <button type="button" class="reset-settings" id="fk-reset-settings" aria-label="Reset settings"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>Reset settings</button>
+      </div>
       <div class="form-options-grid">
 ${selects.map(fieldHtml).join('\n')}
       </div>
@@ -659,6 +662,16 @@ ${people}
         Object.keys(fields.example).forEach((id) => {
           const el = byId(id);
           if (el) el.value = fields.example[id];
+        });
+      });
+    }
+
+    const resetBtn = byId('fk-reset-settings');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        fields.filter((f) => f.type === 'select').forEach((f) => {
+          const select = byId(f.id);
+          if (select) select.selectedIndex = 0;
         });
       });
     }

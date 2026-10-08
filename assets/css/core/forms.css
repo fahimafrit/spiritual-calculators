@@ -117,7 +117,7 @@
 .form-card--birth {
     display: block;
     padding: 30px 32px;
-    border-radius: 20px;
+    border-radius: 5px;
 }
 
 .form-people {
@@ -163,7 +163,7 @@
 .form-card--birth .field select {
     background: #ffffff;
     border: 1px solid rgba(36, 26, 68, 0.16);
-    border-radius: 10px;
+    border-radius: 5px;
     padding: 10px 12px;
     color: var(--ink);
     font-size: 0.98rem;
@@ -268,7 +268,8 @@
 }
 
 .link-btn:focus-visible,
-.form-options summary:focus-visible {
+.form-options summary:focus-visible,
+.reset-settings:focus-visible {
     outline: 2px solid var(--gold);
     outline-offset: 2px;
 }
@@ -312,6 +313,40 @@
     grid-template-columns: repeat(5, 1fr);
     gap: 14px;
     margin-top: 18px;
+}
+
+.form-options-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.reset-settings {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--ink-soft);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reset-settings svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.reset-settings:hover {
+    opacity: 0.7;
 }
 
 .form-actions {
