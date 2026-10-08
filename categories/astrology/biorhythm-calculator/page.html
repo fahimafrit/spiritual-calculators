@@ -589,6 +589,17 @@ FormKit.wire(fields, {
 
 // A shared link (?dob=dd-mm-yyyy&target=dd-mm-yyyy) fills the form and calculates straight away.
 FormKit.prefillFromUrl(fields, (values) => runCalculation(values, { updateUrl: false }));
+
+// Browser back/forward: recalculate from the URL.
+window.addEventListener('popstate', () => {
+  const params = new URLSearchParams(window.location.search);
+  const dateField = fields.find((f) => f.type === 'date');
+  if (dateField && params.get(dateField.urlParam) != null) {
+    FormKit.prefillFromUrl(fields, (values) => runCalculation(values, { updateUrl: false }));
+  } else {
+    $('results').classList.add('display-none');
+  }
+});
 </script>
 </body>
 </html>

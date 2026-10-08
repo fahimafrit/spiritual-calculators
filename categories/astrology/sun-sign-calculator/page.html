@@ -108,7 +108,7 @@ function render(data) {
   $('sReading').innerHTML = data.readingHtml;
 }
 
-async function runCalculation(server) {
+async function runCalculation(values, server, { updateUrl = true } = {}) {
   showMsg('');
   const btn = $('submit-btn');
   btn.disabled = true; btn.textContent = 'Calculating…';
@@ -118,6 +118,7 @@ async function runCalculation(server) {
     render(data);
     $('results').classList.remove('display-none');
     $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    if (updateUrl) FormKit.updateUrlParams(fields, values);
   } catch (err) {
     showMsg(err.message || String(err));
   } finally {
@@ -126,8 +127,28 @@ async function runCalculation(server) {
 }
 
 FormKit.wire(fields, {
-  onSubmit: (values, server) => runCalculation(server),
+  onSubmit: (values, server) => runCalculation(values, server),
   onError: showMsg,
+});
+
+// A shared link fills the form and calculates straight away.
+FormKit.prefillFromUrl(fields, (values) => {
+  const server = FormKit.serverValues(fields, values);
+  runCalculation(values, server, { updateUrl: false });
+});
+
+// Browser back/forward: recalculate from the URL.
+window.addEventListener('popstate', () => {
+  const params = new URLSearchParams(window.location.search);
+  const dateField = fields.find((f) => f.type === 'date');
+  if (dateField && params.get(dateField.urlParam) != null) {
+    FormKit.prefillFromUrl(fields, (values) => {
+      const server = FormKit.serverValues(fields, values);
+      runCalculation(values, server, { updateUrl: false });
+    });
+  } else {
+    $('results').classList.add('display-none');
+  }
 });
 </script>
 </body>

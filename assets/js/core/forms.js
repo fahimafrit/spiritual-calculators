@@ -162,10 +162,10 @@ const FormKit = (function () {
   function personFields(person, parts, optional) {
     const p = person.prefix;
     const all = [
-      { part: 'name', id: p + '_name', type: 'name', label: 'Name', placeholder: 'Optional', maxlength: 60, person },
-      { part: 'date', id: p + '_date', type: 'date', label: 'Birth date', placeholder: 'dd/mm/yyyy', person, row: 'when' },
-      { part: 'time', id: p + '_time', type: 'time', label: optional ? 'Birth time (optional)' : 'Birth time (local)', placeholder: 'hh:mm', person, row: 'when' },
-      { part: 'place', id: p + '_place', type: 'place', label: optional ? 'Birth place (optional)' : 'Birth place', prefix: p, person },
+      { part: 'name', id: p + '_name', type: 'name', label: 'Name', placeholder: 'Optional', maxlength: 60, person, urlParam: p + '_name' },
+      { part: 'date', id: p + '_date', type: 'date', label: 'Birth date', placeholder: 'dd/mm/yyyy', person, row: 'when', urlParam: p + '_dob' },
+      { part: 'time', id: p + '_time', type: 'time', label: optional ? 'Birth time (optional)' : 'Birth time (local)', placeholder: 'hh:mm', person, row: 'when', urlParam: p + '_time' },
+      { part: 'place', id: p + '_place', type: 'place', label: optional ? 'Birth place (optional)' : 'Birth place', prefix: p, person, urlParam: p + '_place' },
     ];
     return parts ? all.filter((f) => parts.includes(f.part)) : all;
   }
@@ -370,7 +370,7 @@ ${people}
         optionKeys.map((key) => {
           const def = OPTION_FIELDS[key];
           if (!def) throw new Error(`FormKit: unknown option "${key}"`);
-          return Object.assign({ type: 'select', key }, def);
+          return Object.assign({ type: 'select', key, urlParam: def.param }, def);
         })
       );
       fields.layout = layout;
@@ -687,15 +687,44 @@ ${people}
   function prefillFromUrl(fields, onFound) {
     const params = new URLSearchParams(window.location.search);
     const values = {};
+    const isBirth = !!(fields.layout && fields.layout.birth);
 
     for (const field of fields) {
       const raw = params.get(field.urlParam);
-      if (raw == null) return; // require every field's param to be present, same as before
+      if (raw == null) {
+        if (isBirth) {
+          const input = document.getElementById(field.id);
+          if (input) values[field.id] = input.value;
+          continue;
+        }
+        return; // classic layouts: require every field's param
+      }
       values[field.id] = field.type === 'date' ? raw.replace(/-/g, '/') : raw;
+      if (field.type === 'place') {
+        const p = field.prefix;
+        ['lat', 'lon', 'tz'].forEach((k) => {
+          const v = params.get(`${p}_${k}`);
+          if (v != null) values[`${p}_${k}`] = v;
+        });
+      }
+    }
+
+    // Birth-data forms: require at least the date field
+    if (isBirth) {
+      const dateField = fields.find((f) => f.type === 'date');
+      if (!dateField || !values[dateField.id]) return;
     }
 
     fields.forEach((field) => {
-      document.getElementById(field.id).value = values[field.id];
+      const input = document.getElementById(field.id);
+      if (input && values[field.id] != null) input.value = values[field.id];
+      if (field.type === 'place') {
+        const p = field.prefix;
+        ['lat', 'lon', 'tz'].forEach((k) => {
+          const el = document.getElementById(`${p}_${k}`);
+          if (el && values[`${p}_${k}`] != null) el.value = values[`${p}_${k}`];
+        });
+      }
     });
 
     if (typeof onFound === 'function') onFound(values);
@@ -707,14 +736,23 @@ ${people}
      from the URL, nothing is stored server-side). */
   function updateUrlParams(fields, values) {
     const url = new URL(window.location.href);
+    const isBirth = !!(fields.layout && fields.layout.birth);
     fields.forEach((field) => {
       if (!field.urlParam) return;
       const raw = values[field.id];
       if (raw == null) return;
+      if (isBirth && raw === '') return; // skip empty values for birth-data forms
       url.searchParams.set(field.urlParam, field.type === 'date' ? String(raw).replace(/\//g, '-') : raw);
+      if (field.type === 'place') {
+        const p = field.prefix;
+        ['lat', 'lon', 'tz'].forEach((k) => {
+          const v = values[`${p}_${k}`];
+          if (v != null && v !== '') url.searchParams.set(`${p}_${k}`, v);
+        });
+      }
     });
     window.history.pushState({}, '', url);
   }
 
-  return { LAYOUTS, render, wire, maskDateInput, parseDate, checkDate, prefillFromUrl, updateUrlParams, setTimeZone, setPlaceSearch };
+  return { LAYOUTS, render, wire, maskDateInput, parseDate, checkDate, prefillFromUrl, updateUrlParams, setTimeZone, setPlaceSearch, serverValues };
 })();
