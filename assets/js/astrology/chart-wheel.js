@@ -214,12 +214,13 @@ const ChartView = (function () {
 
   function positionsHtml(ch) {
     const angles = [['Ascendant', 'AC', ch.asc, 1], ['Midheaven', 'MC', ch.mc, 10], ['Vertex', 'Vx', ch.vertex, null]]
-      .map(([n, ab, l, h]) => `<tr><td><span class="gl" style="font-size:.78rem;color:var(--gold)">${ab}</span> ${n}</td><td class="pos">${posHtml(l)}</td><td>${h ?? ''}</td><td></td></tr>`).join('');
+      .map(([n, ab, l, h]) => `<tr><td><span class="gl" style="font-size:.78rem;color:var(--gold)">${ab}</span> ${n}</td><td class="pos">${posHtml(l)}</td><td></td></tr>`).join('');
     const bodies = ch.bodies.map((b) => {
-      const motion = b.key === 'pof' ? '' : b.speed < 0 ? '<span class="retro">Retrograde</span>' : 'Direct';
-      return `<tr><td>${glyphHtml(b.key)} ${esc(b.name)}</td><td class="pos">${posHtml(b.lon)}</td><td>${b.house}</td><td>${motion}</td></tr>`;
+      const retro = b.key !== 'pof' && b.speed < 0 ? ' <span class="retro" title="Retrograde">R</span>' : '';
+      return `<tr><td>${glyphHtml(b.key)} ${esc(b.name)}</td><td class="pos">${posHtml(b.lon)}${retro}</td><td>${b.house}</td></tr>`;
     }).join('');
-    return `<table><thead><tr><th>Point</th><th>Position</th><th>House</th><th>Motion</th></tr></thead><tbody>${angles}${bodies}</tbody></table>`;
+    return `<table><thead><tr><th>Point</th><th>Position</th><th>House</th></tr></thead><tbody>${angles}${bodies}</tbody></table>
+    <p class="table-note"><span class="retro">R</span> Retrograde</p>`;
   }
 
   function housesHtml(ch) {
@@ -235,10 +236,12 @@ const ChartView = (function () {
     if (!sorted.length) return '<p class="none-found">No aspects within the orbs.</p>';
     const row = (a) => {
       const info = ASPECT_INFO[a.aspect];
-      const mv = a.applying === null ? '' : a.applying ? 'Applying' : 'Separating';
-      return `<tr><td>${pointName(asp.points[a.i])}</td><td><span style="color:${info.cl}">●</span> ${info.n}</td><td>${pointName(asp.points[a.j])}</td><td>${a.orb.toFixed(2)}°</td><td>${mv}</td></tr>`;
+      const mv = a.applying === null ? '' : a.applying
+        ? ' <span class="aspmove" title="Applying">A</span>' : ' <span class="aspmove" title="Separating">S</span>';
+      return `<tr><td>${pointName(asp.points[a.i])}</td><td><span style="color:${info.cl}">●</span> ${info.n}</td><td>${pointName(asp.points[a.j])}</td><td class="pos">${a.orb.toFixed(2)}°${mv}</td></tr>`;
     };
-    return `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th><th></th></tr></thead><tbody>${sorted.map(row).join('')}</tbody></table>`;
+    return `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th></tr></thead><tbody>${sorted.map(row).join('')}</tbody></table>
+    <p class="table-note"><span class="aspmove">A</span> Applying &nbsp; <span class="aspmove">S</span> Separating</p>`;
   }
 
   function gridHtml(asp) {
