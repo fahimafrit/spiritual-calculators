@@ -371,11 +371,10 @@ function render(data) {
     ['Ascendant', 'AC', ch.asc, 1], ['Midheaven', 'MC', ch.mc, 10], ['Vertex', 'Vx', ch.vertex, null],
   ].map(([n, ab, l, h]) => `<tr><td><span class="gl" style="font-size:.78rem;color:var(--gold)">${ab}</span> ${n}</td><td class="pos">${posHtml(l)}</td><td></td></tr>`).join('');
   const rowsBodies = ch.bodies.map((b) => {
-    const retro = b.key !== 'pof' && b.speed < 0 ? ' <span class="retro" title="Retrograde">R</span>' : '';
+    const retro = b.key !== 'pof' && b.speed < 0 ? ' <span class="retro" data-tip="Retrograde">R</span>' : '';
     return `<tr><td>${glyphHtml(b.key)} ${esc(b.name)}</td><td class="pos">${posHtml(b.lon)}${retro}</td><td>${b.house}</td></tr>`;
   }).join('');
-  $('rPlanets').innerHTML = `<table><thead><tr><th>Point</th><th>Position</th><th>House</th></tr></thead><tbody>${rowsAngles}${rowsBodies}</tbody></table>
-    <p class="table-note"><span class="retro">R</span> Retrograde</p>`;
+  $('rPlanets').innerHTML = `<table><thead><tr><th>Point</th><th>Position</th><th>House</th></tr></thead><tbody>${rowsAngles}${rowsBodies}</tbody></table>`;
 
   // houses
   const hrow = (i) => `<tr><td>${i + 1}</td><td class="pos">${posHtml(ch.cusps[i])}</td></tr>`;
@@ -388,13 +387,12 @@ function render(data) {
     const info = ASPECT_INFO[a.aspect];
     const dot = `<span style="color:${info.cl}">●</span>`;
     const mv = a.applying === null ? '' : a.applying
-      ? ' <span class="aspmove" title="Applying">A</span>' : ' <span class="aspmove" title="Separating">S</span>';
+      ? ' <span class="aspmove" data-tip="Applying">A</span>' : ' <span class="aspmove" data-tip="Separating">S</span>';
     const nm = (P) => (P.key === 'asc' ? 'Ascendant' : P.key === 'mc' ? 'Midheaven' : `${glyphHtml(P.key)} ${esc(P.name)}`);
     return `<tr><td>${nm(asp.points[a.i])}</td><td>${dot} ${info.n}</td><td>${nm(asp.points[a.j])}</td><td class="pos">${a.orb.toFixed(2)}°${mv}</td></tr>`;
   };
   $('rAspects').innerHTML = sorted.length
-    ? `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th></tr></thead><tbody>${sorted.map(arow).join('')}</tbody></table>
-      <p class="table-note"><span class="aspmove">A</span> Applying &nbsp; <span class="aspmove">S</span> Separating</p>`
+    ? `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th></tr></thead><tbody>${sorted.map(arow).join('')}</tbody></table>`
     : '<p class="none-found">No aspects within the orbs.</p>';
 
   // aspect grid (lower triangle)
@@ -407,7 +405,7 @@ function render(data) {
     for (let c = 0; c < asp.points.length - 1; c++) {
       if (c >= r) { g += '<td class="empty"></td>'; continue; }
       const a = map[c + '-' + r];
-      g += a ? `<td title="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].cl}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>` : '<td></td>';
+      g += a ? `<td data-tip="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].cl}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>` : '<td></td>';
     }
     g += '</tr>';
   }

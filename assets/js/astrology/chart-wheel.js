@@ -216,11 +216,10 @@ const ChartView = (function () {
     const angles = [['Ascendant', 'AC', ch.asc, 1], ['Midheaven', 'MC', ch.mc, 10], ['Vertex', 'Vx', ch.vertex, null]]
       .map(([n, ab, l, h]) => `<tr><td><span class="gl" style="font-size:.78rem;color:var(--gold)">${ab}</span> ${n}</td><td class="pos">${posHtml(l)}</td><td></td></tr>`).join('');
     const bodies = ch.bodies.map((b) => {
-      const retro = b.key !== 'pof' && b.speed < 0 ? ' <span class="retro" title="Retrograde">R</span>' : '';
+      const retro = b.key !== 'pof' && b.speed < 0 ? ' <span class="retro" data-tip="Retrograde">R</span>' : '';
       return `<tr><td>${glyphHtml(b.key)} ${esc(b.name)}</td><td class="pos">${posHtml(b.lon)}${retro}</td><td>${b.house}</td></tr>`;
     }).join('');
-    return `<table><thead><tr><th>Point</th><th>Position</th><th>House</th></tr></thead><tbody>${angles}${bodies}</tbody></table>
-    <p class="table-note"><span class="retro">R</span> Retrograde</p>`;
+    return `<table><thead><tr><th>Point</th><th>Position</th><th>House</th></tr></thead><tbody>${angles}${bodies}</tbody></table>`;
   }
 
   function housesHtml(ch) {
@@ -237,11 +236,10 @@ const ChartView = (function () {
     const row = (a) => {
       const info = ASPECT_INFO[a.aspect];
       const mv = a.applying === null ? '' : a.applying
-        ? ' <span class="aspmove" title="Applying">A</span>' : ' <span class="aspmove" title="Separating">S</span>';
+        ? ' <span class="aspmove" data-tip="Applying">A</span>' : ' <span class="aspmove" data-tip="Separating">S</span>';
       return `<tr><td>${pointName(asp.points[a.i])}</td><td><span style="color:${info.cl}">●</span> ${info.n}</td><td>${pointName(asp.points[a.j])}</td><td class="pos">${a.orb.toFixed(2)}°${mv}</td></tr>`;
     };
-    return `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th></tr></thead><tbody>${sorted.map(row).join('')}</tbody></table>
-    <p class="table-note"><span class="aspmove">A</span> Applying &nbsp; <span class="aspmove">S</span> Separating</p>`;
+    return `<table><thead><tr><th>Point</th><th>Aspect</th><th>Point</th><th>Orb</th></tr></thead><tbody>${sorted.map(row).join('')}</tbody></table>`;
   }
 
   function gridHtml(asp) {
@@ -255,7 +253,7 @@ const ChartView = (function () {
         if (c >= r) { g += '<td class="empty"></td>'; continue; }
         const a = map[c + '-' + r];
         g += a
-          ? `<td title="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].cl}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>`
+          ? `<td data-tip="${esc(asp.points[a.i].name)} ${ASPECT_INFO[a.aspect].n} ${esc(asp.points[a.j].name)}, orb ${a.orb.toFixed(1)}°" style="color:${ASPECT_INFO[a.aspect].cl}"><span class="gl">${ASPECT_INFO[a.aspect].s}</span></td>`
           : '<td></td>';
       }
       g += '</tr>';

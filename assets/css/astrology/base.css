@@ -175,7 +175,7 @@ body { margin: 0; }
     gap: 0 26px;
 }
 
-.grid-wrap { overflow-x: auto; }
+.grid-wrap { overflow: visible; }
 
 /* ── 6. Tables, glyphs, aspect grid, balance bars ──────── */
 .container table {
@@ -202,7 +202,49 @@ body { margin: 0; }
 }
 
 td.pos { white-space: nowrap; }
-.retro { color: var(--alert); font-weight: 800; }
+.retro { color: #e74c3c; font-weight: 800; position: relative; cursor: help; }
+.retro::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: #1a1a2e;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.retro:hover::after { opacity: 1; }
+
+[data-tip] { position: relative; cursor: help; }
+[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: #1a1a2e;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+[data-tip]:hover::after { opacity: 1; }
 
 .aspmove {
     color: var(--ink-muted);
