@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lo Shu Grid Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/base.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/lo-shu-grid.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output"></div>
+
+  <div class="result-wrap loshu-container display-none">
+    <div class="result-card">
+      <div class="output-personal-date"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Your Driver and Conductor Numbers</h2>
+      <div id="loshu-core"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Your Lo Shu Grid</h2>
+      <div id="loshu-grid"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Present, Missing and Repeated Numbers</h2>
+      <div id="loshu-summary"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Your Planes and Yogs</h2>
+      <div id="loshu-lines"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">What Your Driver and Conductor Numbers Reveal</h2>
+      <div class="interpretation-card" id="loshu-core-reading"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">What Each Number in Your Grid Reveals</h2>
+      <div class="interpretation-card" id="loshu-numbers-reading"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">What Your Planes and Yogs Reveal</h2>
+      <div class="interpretation-card" id="loshu-lines-reading"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM / UI WIRING
+   All calculation and interpretation logic lives server-side, reached
+   through the dispatcher (calculate.php?slug=lo-shu-grid-calculator).
+   This page only submits the date and renders whatever HTML fragments
+   the server returns.
+   ════════════════════════════════════════════════════════════════════ */
+
+const fields = FormKit.render(document.getElementById('calc-form'), 'dob');
+const container = document.querySelector('.loshu-container');
+const errorOutput = document.querySelector('.error-output');
+const outputDate = document.querySelector('.output-personal-date');
+
+const SLOTS = {
+  'loshu-core': 'coreHtml',
+  'loshu-grid': 'gridHtml',
+  'loshu-summary': 'summaryHtml',
+  'loshu-lines': 'linesHtml',
+  'loshu-core-reading': 'coreReadingHtml',
+  'loshu-numbers-reading': 'numbersReadingHtml',
+  'loshu-lines-reading': 'linesReadingHtml',
+};
+
+async function runCalculation(calculationDate, { updateUrl = true } = {}) {
+  outputDate.innerHTML = '';
+  errorOutput.innerHTML = '';
+
+  let data;
+  try {
+    const res = await fetch('../../../calculate.php?slug=lo-shu-grid-calculator', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'date=' + encodeURIComponent(calculationDate),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
+    container.classList.add('display-none');
+    return;
+  }
+
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.textContent = data.headerText;
+
+  Object.keys(SLOTS).forEach((id) => {
+    document.getElementById(id).innerHTML = data[SLOTS[id]];
+  });
+
+  container.classList.remove('display-none');
+  container.scrollIntoView({ behavior: 'smooth' });
+
+  // Same page, no reload — just swap the shareable URL in place.
+  if (updateUrl) {
+    FormKit.updateUrlParams(fields, { date: calculationDate });
+  }
+}
+
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values.date),
+});
+
+// If the page is opened with a shared link (?dob=DD-MM-YYYY), fill the
+// input and calculate immediately — no click required.
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values.date, { updateUrl: false }));
+
+</script>
+</body>
+</html>

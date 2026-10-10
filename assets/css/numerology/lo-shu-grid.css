@@ -1,0 +1,194 @@
+/* ============================================================
+   assets/css/numerology/lo-shu-grid.css
+   Styles used only by the Lo Shu Grid calculator page. Loaded
+   after core/forms.css and numerology/base.css, and relies on
+   the design tokens defined in base.css.
+   ============================================================ */
+
+/* ── Driver / Conductor cards ─────────────────────────── */
+.loshu-core {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 0 0 4px;
+}
+.loshu-core-card {
+    text-align: center;
+    padding: 16px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    background: rgba(36, 26, 68, 0.035);
+}
+.loshu-core-label {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.loshu-core-value {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 38px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* ── The 3x3 grid ─────────────────────────────────────── */
+.loshu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    max-width: 330px;
+    margin: 0 auto;
+}
+.loshu-cell {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1.5px solid var(--line-soft);
+    overflow: hidden;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+.loshu-cell.is-filled {
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    border-color: transparent;
+    box-shadow: 0 8px 20px rgba(46, 26, 99, 0.22);
+}
+.loshu-digits {
+    font-weight: 900;
+    font-size: clamp(22px, 6vw, 32px);
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    word-break: break-all;
+    text-align: center;
+    padding: 0 4px;
+}
+.loshu-cell.is-empty { background: rgba(36, 26, 68, 0.035); }
+.loshu-empty {
+    font-weight: 800;
+    font-size: clamp(18px, 5vw, 24px);
+    color: var(--ink-faint);
+    opacity: 0.55;
+}
+
+/* ── Planes and yogs ──────────────────────────────────── */
+.loshu-group-title {
+    margin: 22px 0 10px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.loshu-group-title:first-child { margin-top: 0; }
+
+.loshu-lines {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.loshu-line {
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 14px 14px 12px;
+    background: rgba(36, 26, 68, 0.035);
+}
+.loshu-line p { margin: 0; }
+.loshu-line-name { font-weight: 800; font-size: 15.5px; color: var(--ink); }
+.loshu-line-numbers {
+    margin-top: 2px;
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--violet-soft);
+    letter-spacing: 0.05em;
+}
+.loshu-line-theme { margin-top: 4px; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.loshu-line-status {
+    margin-top: 10px;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--line-soft);
+    color: var(--ink-soft);
+}
+.loshu-line.is-complete { background: rgba(63, 159, 106, 0.08); border-color: rgba(63, 159, 106, 0.35); }
+.loshu-line.is-complete .loshu-line-status { color: #2e7d54; border-color: rgba(63, 159, 106, 0.45); }
+.loshu-line.is-empty { background: rgba(192, 57, 43, 0.05); border-color: rgba(192, 57, 43, 0.28); }
+.loshu-line.is-empty .loshu-line-status { color: #c0392b; border-color: rgba(192, 57, 43, 0.4); }
+
+@media (max-width: 420px) {
+    .loshu-core { gap: 10px; }
+    .loshu-grid { gap: 6px; }
+    .loshu-lines { grid-template-columns: 1fr; }
+}
+
+/* ── Readings: short heading + conspicuous status badge ── */
+.loshu-reading {
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    border-left-width: 5px;
+    background: #ffffff;
+}
+.loshu-reading:last-child { margin-bottom: 0; }
+.loshu-reading p { margin: 0 0 8px; }
+.loshu-reading p:last-child { margin-bottom: 0; }
+
+.loshu-reading-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 4px;
+}
+.loshu-reading-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.loshu-reading-theme {
+    font-size: 13.5px !important;
+    font-weight: 700;
+    line-height: 1.4 !important;
+    color: var(--ink-faint) !important;
+}
+
+.loshu-badge {
+    flex: none;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: #ffffff;
+    white-space: nowrap;
+}
+.loshu-badge.is-present { background: #2e7d54; }
+.loshu-badge.is-missing { background: #c0392b; }
+.loshu-badge.is-repeated { background: #2bb2c0; }
+
+.loshu-reading.is-present { border-left-color: #2e7d54; }
+.loshu-reading.is-missing { border-left-color: #c0392b; background: rgba(192, 57, 43, 0.03); }
+.loshu-reading.is-repeated { border-left-color: #2bb2c0; background: rgba(169, 120, 47, 0.05); }
+
+@media (max-width: 420px) {
+    .loshu-reading { padding: 12px 12px; }
+    .loshu-reading-title { font-size: 16.5px; }
+    .loshu-badge { font-size: 11px; padding: 4px 10px; }
+}

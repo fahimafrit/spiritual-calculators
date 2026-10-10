@@ -14,6 +14,7 @@
     "personality-number": { "category": "numerology" },
     "birthday-number": { "category": "numerology" },
     "life-path-compatibility": { "category": "numerology" },
+    "lo-shu-grid-calculator": { "category": "numerology" },
     "davison-chart": { "category": "astrology" },
     "birth-chart": { "category": "astrology" },
     "love-calculator": { "category": "astrology" }
