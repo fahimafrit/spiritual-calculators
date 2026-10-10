@@ -15,6 +15,9 @@
      - Enter-key-submits
      - Reading/writing the shareable-link URL params (?dob=, ?name=,
        ?dob1=&dob2=, ...)
+     - Browser back/forward: when the URL changes through the browser's
+       navigation buttons, the form is refilled and the result is
+       recalculated from the URL (no manual refresh needed)
      - Birth-data forms: city search, manual coordinates, time zone,
        required-field checks and the chart options (house system, ...)
 
@@ -37,6 +40,15 @@
 
      // inside runCalculation, once a result is shown:
      FormKit.updateUrlParams(fields, { date: calculationDate, name });
+
+   prefillFromUrl() also handles the browser's back and forward buttons:
+   whenever the URL changes that way, the form is refilled from the URL
+   and the same callback runs again. If the visitor goes back to a URL
+   with no calculation in it (the empty form), the page reloads so the
+   old result disappears. A calculator that wants to clear its result
+   itself instead can pass a third argument:
+
+     FormKit.prefillFromUrl(fields, onFound, () => hideResult());
 
    ── Birth-data layouts (astrology) ───────────────────────────────────
 
@@ -692,12 +704,27 @@ ${people}
     return { submitBtn };
   }
 
-  /* ---- prefillFromUrl(fields, onFound) --------------------------------
-     If every field's URL param is present (e.g. ?dob=12-03-1990 or
-     ?dob1=...&dob2=...), fills the inputs and calls onFound(values) so
-     the calculator can run the calculation immediately — the shared
-     "open a link, see your result with no click required" behavior. */
-  function prefillFromUrl(fields, onFound) {
+  /* ════════ Shareable URL + browser back/forward ═════════════════════ */
+
+  /* The calculator that last called prefillFromUrl(): its fields and
+     callbacks, so the browser's back/forward buttons can refill the
+     form and recalculate. */
+  let urlBinding = null;
+
+  /* The query string the page last showed a result for. A back/forward
+     step that leaves it unchanged (for example a #hash jump) is ignored. */
+  let lastSearch = window.location.search;
+
+  /* Set when a back/forward step has just been handled here. A calculator
+     page that still carries its own popstate listener and calls
+     prefillFromUrl() from it is skipped for that same step, so the
+     calculation never runs twice. */
+  let popGuard = { href: '', at: 0 };
+
+  /* Reads the field values out of the current URL. Returns null when the
+     URL carries no calculation (classic layouts: every field's param must
+     be present; birth-data layouts: at least the date). */
+  function readUrlValues(fields) {
     const params = new URLSearchParams(window.location.search);
     const values = {};
     const isBirth = !!(fields.layout && fields.layout.birth);
@@ -706,18 +733,31 @@ ${people}
       const raw = params.get(field.urlParam);
       if (raw == null) {
         if (isBirth) {
-          const input = document.getElementById(field.id);
-          if (input) values[field.id] = input.value;
+          // updateUrlParams() leaves empty values out, so a missing param
+          // means an empty field. A missing option keeps its current choice.
+          if (field.type === 'select') {
+            const input = document.getElementById(field.id);
+            if (input) values[field.id] = input.value;
+          } else {
+            values[field.id] = '';
+          }
+          if (field.type === 'place') {
+            const p = field.prefix;
+            ['lat', 'lon', 'tz'].forEach((k) => {
+              const v = params.get(`${p}_${k}`);
+              values[`${p}_${k}`] = v != null ? v : '';
+            });
+          }
           continue;
         }
-        return; // classic layouts: require every field's param
+        return null; // classic layouts: require every field's param
       }
       values[field.id] = field.type === 'date' ? raw.replace(/-/g, '/') : raw;
       if (field.type === 'place') {
         const p = field.prefix;
         ['lat', 'lon', 'tz'].forEach((k) => {
           const v = params.get(`${p}_${k}`);
-          if (v != null) values[`${p}_${k}`] = v;
+          values[`${p}_${k}`] = v != null ? v : '';
         });
       }
     }
@@ -725,9 +765,14 @@ ${people}
     // Birth-data forms: require at least the date field
     if (isBirth) {
       const dateField = fields.find((f) => f.type === 'date');
-      if (!dateField || !values[dateField.id]) return;
+      if (!dateField || !values[dateField.id]) return null;
     }
 
+    return values;
+  }
+
+  /* Puts URL values into the form inputs. */
+  function fillInputs(fields, values) {
     fields.forEach((field) => {
       const input = document.getElementById(field.id);
       if (input && values[field.id] != null) input.value = values[field.id];
@@ -739,14 +784,55 @@ ${people}
         });
       }
     });
+  }
 
+  /* ---- prefillFromUrl(fields, onFound, onClear) -----------------------
+     If every field's URL param is present (e.g. ?dob=12-03-1990 or
+     ?dob1=...&dob2=...), fills the inputs and calls onFound(values) so
+     the calculator can run the calculation immediately — the shared
+     "open a link, see your result with no click required" behavior.
+
+     It also keeps listening to the browser's back and forward buttons:
+     each time the URL changes that way, the inputs are refilled from the
+     new URL and onFound(values) runs again, so the result always matches
+     the address bar. When the new URL holds no calculation (the empty
+     form), onClear() is called if given; otherwise the page reloads. */
+  function prefillFromUrl(fields, onFound, onClear) {
+    // Called by a page's own popstate listener for a step already handled.
+    if (popGuard.href === window.location.href && Date.now() - popGuard.at < 250) return;
+
+    urlBinding = { fields, onFound, onClear };
+    lastSearch = window.location.search;
+
+    const values = readUrlValues(fields);
+    if (!values) return;
+
+    fillInputs(fields, values);
     if (typeof onFound === 'function') onFound(values);
   }
+
+  window.addEventListener('popstate', () => {
+    if (!urlBinding) return;
+    if (window.location.search === lastSearch) return;
+    lastSearch = window.location.search;
+    popGuard = { href: window.location.href, at: Date.now() };
+
+    const values = readUrlValues(urlBinding.fields);
+    if (values) {
+      fillInputs(urlBinding.fields, values);
+      if (typeof urlBinding.onFound === 'function') urlBinding.onFound(values);
+    } else if (typeof urlBinding.onClear === 'function') {
+      urlBinding.onClear();
+    } else {
+      window.location.reload();
+    }
+  });
 
   /* ---- updateUrlParams(fields, values) --------------------------------
      Swaps the shareable-link URL params in place after a successful
      calculation (no reload — everything is recalculated client-side
-     from the URL, nothing is stored server-side). */
+     from the URL, nothing is stored server-side). Calculating the same
+     thing twice does not add a second identical history entry. */
   function updateUrlParams(fields, values) {
     const url = new URL(window.location.href);
     const isBirth = !!(fields.layout && fields.layout.birth);
@@ -754,17 +840,22 @@ ${people}
       if (!field.urlParam) return;
       const raw = values[field.id];
       if (raw == null) return;
-      if (isBirth && raw === '') return; // skip empty values for birth-data forms
-      url.searchParams.set(field.urlParam, field.type === 'date' ? String(raw).replace(/\//g, '-') : raw);
+      if (isBirth && raw === '') {
+        url.searchParams.delete(field.urlParam); // an empty value must not linger from an earlier result
+      } else {
+        url.searchParams.set(field.urlParam, field.type === 'date' ? String(raw).replace(/\//g, '-') : raw);
+      }
       if (field.type === 'place') {
         const p = field.prefix;
         ['lat', 'lon', 'tz'].forEach((k) => {
           const v = values[`${p}_${k}`];
           if (v != null && v !== '') url.searchParams.set(`${p}_${k}`, v);
+          else url.searchParams.delete(`${p}_${k}`);
         });
       }
     });
-    window.history.pushState({}, '', url);
+    if (url.href !== window.location.href) window.history.pushState({}, '', url);
+    lastSearch = window.location.search;
   }
 
   return { LAYOUTS, render, wire, maskDateInput, parseDate, checkDate, prefillFromUrl, updateUrlParams, setTimeZone, setPlaceSearch, serverValues };
