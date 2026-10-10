@@ -1,10 +1,9 @@
 <?php
 declare(strict_types=1);
 
-/* Pair data for the Life Path Compatibility Calculator.
-   Keyed by the two single-digit root numbers, lowest first ("3-5").
-   Master numbers (11, 22, 33) use their root digit (2, 4, 6) for the
-   lookup. Server-side only: never included from a browser request. */
+/* Interpretation content for the Attitude Number Calculator.
+   Keyed by the final number (1-9). Server-side only:
+   never included from a browser request directly. */
 
 if (!defined('SPIRITUAL_APP')) {
     http_response_code(403);
@@ -12,103 +11,85 @@ if (!defined('SPIRITUAL_APP')) {
 }
 
 return [
-    'scores' => [
-        '1-1' => 65,
-        '1-2' => 60,
-        '1-3' => 85,
-        '1-4' => 60,
-        '1-5' => 90,
-        '1-6' => 60,
-        '1-7' => 80,
-        '1-8' => 65,
-        '1-9' => 70,
-        '2-2' => 70,
-        '2-3' => 65,
-        '2-4' => 80,
-        '2-5' => 55,
-        '2-6' => 90,
-        '2-7' => 55,
-        '2-8' => 85,
-        '2-9' => 80,
-        '3-3' => 70,
-        '3-4' => 50,
-        '3-5' => 90,
-        '3-6' => 80,
-        '3-7' => 65,
-        '3-8' => 50,
-        '3-9' => 90,
-        '4-4' => 70,
-        '4-5' => 55,
-        '4-6' => 85,
-        '4-7' => 60,
-        '4-8' => 90,
-        '4-9' => 65,
-        '5-5' => 70,
-        '5-6' => 55,
-        '5-7' => 85,
-        '5-8' => 55,
-        '5-9' => 75,
-        '6-6' => 75,
-        '6-7' => 60,
-        '6-8' => 75,
-        '6-9' => 90,
-        '7-7' => 65,
-        '7-8' => 60,
-        '7-9' => 80,
-        '8-8' => 70,
-        '8-9' => 60,
-        '9-9' => 70,
+    '1' => [
+        'title' => 'The Independent Achiever',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 1, you meet life head-on: confident, self-reliant, and ready to take charge before anyone asks.'],
+            ['Strengths', 'Self-confidence and courage are your greatest assets. You make decisions quickly, trust your own judgment, and keep moving when others hesitate. Your assertiveness gives you natural authority, and people often follow your lead when pressure rises. Few things intimidate you for long.'],
+            ['Challenges', 'Your strong will can turn into stubbornness or arrogance when you feel challenged. You may resist advice, take on too much alone, or struggle to admit mistakes. Learning to listen turns your determination into wiser, more flexible leadership.'],
+            ['Career & Relationships', 'Careers involving leadership, entrepreneurship, management, or independent work suit you best. In relationships, you value respect and freedom, and you thrive with partners who admire your strength while also encouraging you to share your softer side.'],
+        ],
     ],
-    'readings' => [
-        '1-1' => ['title' => 'Two Leaders, One Direction', 'paragraphs' => ['You recognise each other\'s drive and independence at once. Because you both want to lead, decisions can turn into contests, so the bond lasts when each of you owns a clear area and learns to yield on the rest.']],
-        '1-2' => ['title' => 'The Leader and the Diplomat', 'paragraphs' => ['The 1 supplies direction and the 2 supplies tact and sensitivity. Trouble starts when the 1 steamrolls or the 2 swallows their own needs; it works when the 1 listens and the 2 speaks up early.']],
-        '1-3' => ['title' => 'Spark Meets Spotlight', 'paragraphs' => ['This is an energetic, optimistic pairing. The 3\'s playfulness lifts the 1\'s drive, and the 1 helps the 3 finish what they start. Watch for the 1\'s bluntness and the 3\'s scattered attention.']],
-        '1-4' => ['title' => 'Vision Meets Structure', 'paragraphs' => ['The 1 starts things and the 4 builds them to last, and you share a strong work ethic. Friction appears when the 1 wants to change course and the 4 wants to keep to the plan.']],
-        '1-5' => ['title' => 'Two Free Spirits', 'paragraphs' => ['You are adventurous, independent and mutually stimulating, with little possessiveness between you. The risk is restlessness and a reluctance to settle on long-term commitments.']],
-        '1-6' => ['title' => 'Independence Meets Devotion', 'paragraphs' => ['The 6 offers a caring home and the 1 offers ambition and drive. The 6 may feel neglected while the 1 may feel managed, so clear appreciation and breathing room matter.']],
-        '1-7' => ['title' => 'The Doer and the Thinker', 'paragraphs' => ['You respect each other\'s independence, and the 7\'s depth balances the 1\'s action. Distance can grow if neither of you reaches out first.']],
-        '1-8' => ['title' => 'Two Power Players', 'paragraphs' => ['Ambition and competence make you a formidable team, especially in shared projects. Both of you want control, so power struggles are the main thing to manage.']],
-        '1-9' => ['title' => 'The Pioneer and the Humanitarian', 'paragraphs' => ['The 1 drives forward while the 9 brings perspective and compassion. The 9\'s wider ideals can sit uneasily with the 1\'s focus on personal goals.']],
-        '2-2' => ['title' => 'A Gentle Mirror', 'paragraphs' => ['This is a tender, intuitive and peaceful bond. Because you both avoid conflict, small resentments can go unspoken and decisions can stall.']],
-        '2-3' => ['title' => 'Tenderness Meets Play', 'paragraphs' => ['The 3 brings lightness and the 2 brings warmth. The 2\'s sensitivity can be bruised by the 3\'s careless remarks, so kindness in how things are said goes a long way.']],
-        '2-4' => ['title' => 'Steady and Supportive', 'paragraphs' => ['Loyalty, patience and practicality make this a comfortable, dependable match. Keep affection and novelty alive so routine does not take over.']],
-        '2-5' => ['title' => 'Calm Meets Motion', 'paragraphs' => ['The 2 wants closeness and security while the 5 wants freedom and change. It works with honest negotiation about space and togetherness.']],
-        '2-6' => ['title' => 'Natural Nurturers', 'paragraphs' => ['One of the most harmonious pairings, built on shared devotion to home and family. The risk is over-giving without being asked and neglecting your own needs.']],
-        '2-7' => ['title' => 'Sensitivity and Solitude', 'paragraphs' => ['The 2 craves closeness and the 7 needs space. It becomes profound when the 7 learns to share their inner world and the 2 learns to give room.']],
-        '2-8' => ['title' => 'Heart and Strategy', 'paragraphs' => ['The 8 brings drive and security, and the 2 brings support and diplomacy. Balance of power is the key question, so both voices need to count.']],
-        '2-9' => ['title' => 'Compassion Doubled', 'paragraphs' => ['You are both caring and idealistic, and you understand each other\'s generosity. The 9\'s wide focus may leave the 2 wanting more personal attention.']],
-        '3-3' => ['title' => 'Double the Sparkle', 'paragraphs' => ['Fun, expressive and social, you bring out each other\'s creativity. Practical matters and deeper emotional conversations are easy to postpone.']],
-        '3-4' => ['title' => 'Spontaneous Meets Structured', 'paragraphs' => ['You keep very different rhythms: the 3 loosens up the 4 and the 4 grounds the 3. Each can see the other as irresponsible or rigid unless you value what the other adds.']],
-        '3-5' => ['title' => 'Adventure and Joy', 'paragraphs' => ['Lively, curious and sociable, this pairing rarely gets dull. Long-term responsibilities and follow-through are where it can slip.']],
-        '3-6' => ['title' => 'Creativity and Care', 'paragraphs' => ['Warm, expressive and family-minded, you create a loving atmosphere. The 6\'s sense of duty can clash with the 3\'s wish for freedom.']],
-        '3-7' => ['title' => 'Social Butterfly, Quiet Seeker', 'paragraphs' => ['The 3 draws the 7 out and the 7 gives the 3 depth. Differences in how much socialising each of you needs have to be respected.']],
-        '3-8' => ['title' => 'Sparkle Meets Ambition', 'paragraphs' => ['The 8 focuses on achievement while the 3 focuses on enjoyment, which can cause clashes over money and priorities. It complements when each respects the other\'s strengths.']],
-        '3-9' => ['title' => 'Creative Meets Visionary', 'paragraphs' => ['Inspiring, imaginative and generous, you encourage each other\'s big ideas. Your energy can scatter, so you need something to ground it.']],
-        '4-4' => ['title' => 'Foundation Builders', 'paragraphs' => ['Dependable, loyal and practical, you build a stable life together. Rigidity and routine are the risks, so make room for spontaneity.']],
-        '4-5' => ['title' => 'Stability Meets Freedom', 'paragraphs' => ['The 4 wants routine and the 5 wants variety, so this tension sits at the centre of the bond. It works with explicit compromise on both sides.']],
-        '4-6' => ['title' => 'Home Builders', 'paragraphs' => ['Responsible, loyal and family-focused, you create a secure home. Duty can crowd out play, so remember to enjoy each other.']],
-        '4-7' => ['title' => 'Serious Minds', 'paragraphs' => ['You share a serious approach to life, with the 7 analytical and the 4 practical. The relationship can become reserved and emotionally quiet unless you talk openly.']],
-        '4-8' => ['title' => 'Partners in Building', 'paragraphs' => ['Shared ambition, discipline and practicality make this a powerful long-term match. Work can crowd out intimacy if you do not protect time together.']],
-        '4-9' => ['title' => 'Practical Meets Idealistic', 'paragraphs' => ['The 4 is grounded and the 9 is expansive, so your priorities often differ. Patience and respect for each other\'s outlook are needed.']],
-        '5-5' => ['title' => 'Wild and Free', 'paragraphs' => ['Exciting and spontaneous, you give each other plenty of freedom. Responsibilities and commitment need deliberate attention because neither of you naturally anchors the relationship.']],
-        '5-6' => ['title' => 'Movement Meets Home', 'paragraphs' => ['The 5 wants change and adventure while the 6 wants a settled home. The relationship asks you to keep negotiating between movement and stability.']],
-        '5-7' => ['title' => 'Explorers', 'paragraphs' => ['Two curious minds, the 5 exploring outward and the 7 exploring inward. You stimulate each other intellectually as long as you give one another freedom.']],
-        '5-8' => ['title' => 'Freedom Meets Control', 'paragraphs' => ['The 8 wants structure and control while the 5 resists being managed. Mutual respect for each other\'s style is essential.']],
-        '5-9' => ['title' => 'Curious and Worldly', 'paragraphs' => ['Open-minded, adventurous and tolerant, you share a wide view of life. You may both avoid settling down, so decide together what stability looks like.']],
-        '6-6' => ['title' => 'Double Devotion', 'paragraphs' => ['A warm, loving home comes naturally. Over-caretaking, control and perfectionism are the risks, and each of you needs to let the other be cared for.']],
-        '6-7' => ['title' => 'Heart and Mind', 'paragraphs' => ['The 6 is emotional and home-centred while the 7 is private and analytical. The 6 may feel shut out unless the 7 makes the effort to share.']],
-        '6-8' => ['title' => 'Home and Success', 'paragraphs' => ['The 8 provides and the 6 nurtures, a classic and effective division. The 8\'s workload and the 6\'s need for attention have to be balanced.']],
-        '6-9' => ['title' => 'Love at Every Scale', 'paragraphs' => ['Generous, compassionate and idealistic, you care for each other and for the wider world. Avoid martyrdom and make sure your closeness stays personal.']],
-        '7-7' => ['title' => 'Two Deep Thinkers', 'paragraphs' => ['You understand each other\'s need for quiet and ideas. The danger is emotional distance and long silences where nobody reaches out.']],
-        '7-8' => ['title' => 'Mind and Might', 'paragraphs' => ['The 7 is reflective and the 8 is decisive, and you respect each other\'s competence. Material and spiritual priorities can pull in different directions.']],
-        '7-9' => ['title' => 'Seekers Together', 'paragraphs' => ['Spiritual and thoughtful, you share a search for meaning. You may drift from everyday practicalities, so keep one foot in daily life.']],
-        '8-8' => ['title' => 'Titans Together', 'paragraphs' => ['Ambitious, powerful and successful, you push each other to achieve. Control and competition are the challenge, so decide who leads in which area.']],
-        '8-9' => ['title' => 'Ambition Meets Idealism', 'paragraphs' => ['The 8 pursues material goals and the 9 pursues humanitarian ones. A shared purpose lets you combine the two instead of pulling apart.']],
-        '9-9' => ['title' => 'Shared Ideals', 'paragraphs' => ['Generous, understanding and compassionate, you share a broad outlook. You may give so much to the world that you neglect each other, and endings can be hard for both of you.']],
+    '2' => [
+        'title' => 'The Understanding Diplomat',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 2, you respond with sensitivity and tact, reading the mood of a situation before you decide how to act. Gentle strength is your signature.'],
+            ['Strengths', 'Empathy and diplomacy are your gifts. You listen well, notice what people leave unsaid, and look for solutions that leave everyone feeling respected. Your calm, cooperative nature makes you a trusted peacemaker in tense or emotional situations.'],
+            ['Challenges', 'Your sensitivity can make criticism feel heavy, and your wish for harmony may lead you to avoid necessary conflict. You might hesitate over decisions or put others first until you feel overlooked. Speaking honestly protects both your peace and your relationships.'],
+            ['Career & Relationships', 'Counseling, teaching, human resources, mediation, and team-based roles let your strengths shine. In love and friendship, you offer loyalty and tenderness, and you flourish with people who value your kindness and encourage you to voice your own needs.'],
+        ],
     ],
-    'masterNotes' => [
-        '11' => 'Because one of you carries a master number 11, the relationship has an extra layer: an 11 moves between intuitive, high-voltage insight and the gentler, partnership-focused energy of its root 2.',
-        '22' => 'Because one of you carries a master number 22, the relationship has an extra layer: a 22 moves between large-scale vision and the practical, steady energy of its root 4.',
-        '33' => 'Because one of you carries a master number 33, the relationship has an extra layer: a 33 moves between selfless, healing devotion and the caring, home-centred energy of its root 6.',
+    '3' => [
+        'title' => 'The Cheerful Creator',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 3, you meet life with humor, imagination, and a natural desire to connect and express yourself.'],
+            ['Strengths', 'Optimism and creativity define your approach. You find the bright side quickly, communicate with charm, and make people feel included. Your enthusiasm is contagious, and you often turn difficult moments into something lighter and more hopeful. People remember how you made them feel.'],
+            ['Challenges', 'Your energy can scatter across too many interests, and you may avoid serious issues by joking or staying on the surface. Boredom comes quickly. Choosing a few goals and facing uncomfortable feelings honestly helps your talents grow deeper and last longer.'],
+            ['Career & Relationships', 'Writing, speaking, design, entertainment, marketing, and teaching suit you well. In relationships, you bring warmth, fun, and affection, and you do best with partners who appreciate your expressiveness and give you the freedom to create.'],
+        ],
+    ],
+    '4' => [
+        'title' => 'The Dependable Anchor',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 4, you respond with steadiness, preferring a clear plan and practical action over drama or guesswork.'],
+            ['Strengths', 'Honesty, loyalty, and reliability stand out in you. You work patiently, keep your promises, and handle responsibility without complaint. People trust you in a crisis because you stay calm, focus on what\'s practical, and follow through to the end. Stability is what you offer without trying.'],
+            ['Challenges', 'Your love of order can harden into rigidity, and unexpected changes may feel threatening. You might work too hard or insist that your way is the only right one. Staying open to new methods keeps your reliability from becoming resistance.'],
+            ['Career & Relationships', 'Engineering, administration, finance, construction, project management, and any structured field fit you. In relationships, you show love through loyalty and consistent support, and you thrive with partners who value commitment and respect your need for stability.'],
+        ],
+    ],
+    '5' => [
+        'title' => 'The Bold Adventurer',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 5, you respond with courage and curiosity, treating change as an invitation instead of a threat. You rarely wait for permission to try something new.'],
+            ['Strengths', 'Adaptability, boldness, and sociability are your strengths. You think quickly, welcome new experiences, and stay flexible when plans collapse. Your lively, outgoing nature helps you connect with almost anyone and find opportunity in unfamiliar situations.'],
+            ['Challenges', 'Restlessness can pull you away from commitments, and you may take risks without thinking through the consequences. Routine may feel suffocating, which can leave projects or relationships unfinished. Pausing to plan before leaping helps your freedom work in your favor.'],
+            ['Career & Relationships', 'Careers in travel, sales, media, communication, consulting, or entrepreneurship keep you energized. In relationships, you bring excitement and spontaneity, and you do best with partners who enjoy adventure and trust you to value freedom without losing loyalty.'],
+        ],
+    ],
+    '6' => [
+        'title' => 'The Devoted Protector',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 6, you respond with care, asking first how people are doing and what they need to feel safe.'],
+            ['Strengths', 'Responsibility, warmth, and trustworthiness shape your approach. You value close relationships, create harmony wherever you go, and show up for people when it counts. Others rely on your steady kindness and your instinct to protect and support. Your home and your circle matter deeply to you.'],
+            ['Challenges', 'You may take on too much responsibility, trying to fix problems that belong to others. Care can slip into control, and worry can follow you home. Setting healthy boundaries lets your generosity stay genuine instead of exhausting.'],
+            ['Career & Relationships', 'Healthcare, teaching, counseling, hospitality, design, and community work make good use of your nature. In love and family life, you are devoted and dependable, and you flourish with people who appreciate your care and return it generously.'],
+        ],
+    ],
+    '7' => [
+        'title' => 'The Thoughtful Analyst',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 7, you pause and observe first, turning to thought and reflection before you decide what to do.'],
+            ['Strengths', 'Analysis, intuition, and a love of learning are your strengths. You study problems carefully, notice details others miss, and arrive at well-considered conclusions. Your calm, thoughtful approach gives you wisdom that people respect and often seek. Solitude helps you recharge and think clearly.'],
+            ['Challenges', 'Your reflective nature can slide into overthinking, secrecy, or emotional distance. You may withdraw when stressed or doubt what you can\'t prove. Sharing your thoughts and feelings with trusted people keeps your inner world from becoming isolating.'],
+            ['Career & Relationships', 'Research, science, technology, writing, psychology, and specialized fields suit you best. In relationships, you value depth and honesty over small talk, and you thrive with partners who respect your need for quiet while patiently inviting you to open up.'],
+        ],
+    ],
+    '8' => [
+        'title' => 'The Determined Powerhouse',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With an 8, you respond with drive and focus, treating obstacles as problems to be solved and goals to be reached.'],
+            ['Strengths', 'Ambition, discipline, and dedication define you. You commit fully to what you care about, manage resources wisely, and stay composed under pressure. Your strength and organizational skill make you a natural leader in demanding environments. Setbacks rarely shake your determination for long.'],
+            ['Challenges', 'Your intensity can lead to workaholism, control issues, or measuring your worth by success alone. You may struggle to relax or to trust others with responsibility. Balancing achievement with rest and connection keeps your power healthy and sustainable.'],
+            ['Career & Relationships', 'Business, finance, management, law, real estate, and executive roles reward your abilities. In relationships, you show love through providing and protecting, and you do best with partners who admire your ambition while reminding you to slow down.'],
+        ],
+    ],
+    '9' => [
+        'title' => 'The Compassionate Humanitarian',
+        'sections' => [
+            ['Overview', 'Your Attitude Number, found from your birth month and day, shows how you instinctively respond to situations and challenges. With a 9, you respond with understanding and a wide perspective, thinking about how choices affect more than just yourself.'],
+            ['Strengths', 'Compassion, wisdom, and generosity guide your attitude. You forgive easily, think of the bigger picture, and inspire people with your idealism. Your prudent, open-minded approach helps you stay balanced when situations become emotional or complicated. Your outlook helps others feel less alone.'],
+            ['Challenges', 'Your idealism can lead to disappointment, and your generosity may leave you giving more than you have. Letting go of the past or of people may feel difficult. Practicing healthy detachment helps you keep serving without losing yourself.'],
+            ['Career & Relationships', 'Teaching, healing, charity work, the arts, and international or humanitarian careers suit you well. In relationships, you are loving, forgiving, and supportive, and you flourish with people who share your values and care for you in return.'],
+        ],
     ],
 ];
