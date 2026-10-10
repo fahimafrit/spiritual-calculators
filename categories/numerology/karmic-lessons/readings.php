@@ -2,9 +2,8 @@
 declare(strict_types=1);
 
 /* Interpretation content for the Karmic Lessons Calculator.
-   Keyed by the missing number (1-9) plus 'none' for the full-spectrum
-   reading. Server-side only: never included from a browser request
-   directly. */
+   Keyed by the missing number (1-9). Server-side only: never
+   included from a browser request directly. */
 
 if (!defined('SPIRITUAL_APP')) {
     http_response_code(403);
@@ -13,6 +12,7 @@ if (!defined('SPIRITUAL_APP')) {
 
 return [
     '1' => [
+        'label' => 'Karmic Lesson 1',
         'title' => 'The Lesson of Independence',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 1 means the number 1 is missing from the letters of your birth name. This points to growth around self-confidence, initiative, and independence, qualities you are here to build through experience instead of inheriting effortlessly.'],
@@ -22,6 +22,7 @@ return [
         ],
     ],
     '2' => [
+        'label' => 'Karmic Lesson 2',
         'title' => 'The Lesson of Cooperation',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 2 means the number 2 is missing from your birth name. This points to growth around patience, partnership, sensitivity, and diplomacy, qualities you are here to build gradually through your relationships and daily interactions.'],
@@ -31,6 +32,7 @@ return [
         ],
     ],
     '3' => [
+        'label' => 'Karmic Lesson 3',
         'title' => 'The Lesson of Self-Expression',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 3 means the number 3 is missing from your birth name. This points to growth around communication, creativity, optimism, and authentic expression, qualities you are here to develop by sharing your inner world more openly.'],
@@ -40,6 +42,7 @@ return [
         ],
     ],
     '4' => [
+        'label' => 'Karmic Lesson 4',
         'title' => 'The Lesson of Discipline',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 4 means the number 4 is missing from your birth name. This points to growth around order, reliability, patience, and practical effort, qualities you are here to build through structure and consistent habits.'],
@@ -49,6 +52,7 @@ return [
         ],
     ],
     '5' => [
+        'label' => 'Karmic Lesson 5',
         'title' => 'The Lesson of Responsible Freedom',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 5 means the number 5 is missing from your birth name. This points to growth around adaptability, moderation, variety, and the responsible use of freedom, qualities you are here to develop through change and experience.'],
@@ -58,6 +62,7 @@ return [
         ],
     ],
     '6' => [
+        'label' => 'Karmic Lesson 6',
         'title' => 'The Lesson of Responsibility and Care',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 6 means the number 6 is missing from your birth name. This points to growth around love, service, commitment, and responsibility toward others, qualities you are here to develop through family, community, and close relationships.'],
@@ -67,6 +72,7 @@ return [
         ],
     ],
     '7' => [
+        'label' => 'Karmic Lesson 7',
         'title' => 'The Lesson of Inner Understanding',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 7 means the number 7 is missing from your birth name. This points to growth around reflection, analysis, learning, and the search for deeper understanding, qualities you are here to develop through quiet inner work.'],
@@ -76,6 +82,7 @@ return [
         ],
     ],
     '8' => [
+        'label' => 'Karmic Lesson 8',
         'title' => 'The Lesson of Personal Power',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 8 means the number 8 is missing from your birth name. This points to growth around ambition, authority, material responsibility, and the ethical use of power, qualities you are here to develop through practical experience.'],
@@ -85,23 +92,13 @@ return [
         ],
     ],
     '9' => [
+        'label' => 'Karmic Lesson 9',
         'title' => 'The Lesson of Compassion and Completion',
         'sections' => [
             ['Core Theme', 'Karmic Lesson 9 means the number 9 is missing from your birth name. This points to growth around compassion, generosity, broad perspective, and letting go, qualities you are here to develop by looking beyond your own concerns. Your heart is being asked to grow wider.'],
             ['Strengths to Develop', 'You are developing empathy, tolerance, forgiveness, idealism, and concern for others. With time you learn to see situations from other people\'s viewpoints, release old resentments, and contribute to something larger than your personal goals. Letting go becomes an act of strength.'],
             ['Challenges', 'Narrowness, holding grudges, difficulty releasing the past, or giving without regard for personal limits may appear. You might cling to old hurts, or pour yourself out until nothing remains. Healthy generosity needs healthy boundaries. Forgiveness is often the hardest and most freeing step.'],
             ['Life Lesson', 'Your lesson is to care beyond yourself while accepting endings and maintaining self-respect. When you forgive and release what is finished, you make room for compassion that is both generous and sustainable.'],
-        ],
-    ],
-    'none' => [
-        'title' => 'No Karmic Lessons: The Full Spectrum',
-        'sections' => [
-            ['Essence', 'All nine numbers appear in your name, so you have no missing lesson. This is uncommon, and it usually means a long name.'],
-            ['Strengths', 'You have access to every energy, and few situations feel entirely foreign. You can adapt to many people and roles.'],
-            ['Challenges', 'With all numbers present, you may have no clear focus or lose sight of what matters most. Look at which numbers appear most often, since repeated numbers show where your energy concentrates.'],
-            ['Love', 'You can relate to many types of people, but you may lack a clear sense of what you need. Take time to define it.'],
-            ['Career', 'Wide open. Let your Life Path and Destiny numbers guide your choices.'],
-            ['Life lesson', 'Having every tool doesn\'t mean using them all at once. Choose your emphasis.'],
         ],
     ],
 ];
