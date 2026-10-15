@@ -15,7 +15,10 @@ if (!defined('SPIRITUAL_APP')) {
                   excess (three or more times), missing (absent)
    driver[n]    : reading for the Driver Number (1-9)
    conductor[n] : reading for the Conductor Number (1-9)
-   lines[key]   : name, numbers, theme, complete, missing
+   lines[key]   : name, numbers, theme, and one text per situation —
+                  complete (all 3 numbers present),
+                  partial (1 or 2 of 3 present),
+                  missing (none of the 3 present)
    ════════════════════════════════════════════════════════════════════ */
 
 return [
@@ -115,6 +118,7 @@ return [
             'numbers' => [4, 9, 2],
             'theme' => 'Intellect, memory and planning',
             'complete' => 'The Mind Plane is complete. You think ahead, remember well and are good at planning. Strategy and clear reasoning are real strengths for you.',
+            'partial' => 'The Mind Plane is only partly formed. You have some of its strengths in planning, memory and reasoning, while the rest takes conscious effort. Writing things down and keeping simple routines for important tasks will help you fill the gap.',
             'missing' => 'The Mind Plane is empty. Planning, memory and concentration may take extra effort. Writing things down, making lists and building a routine for important tasks will help.',
         ],
         'emotional' => [
@@ -122,6 +126,7 @@ return [
             'numbers' => [3, 5, 7],
             'theme' => 'Feeling, intuition and inner life',
             'complete' => 'The Emotional Plane is complete. You are in touch with your feelings, intuitive and sensitive to the emotional atmosphere around you. You tend to be steady in relationships.',
+            'partial' => 'The Emotional Plane is only partly formed. You can connect with your feelings and the moods of others in some situations, but not always with ease. Honest conversations and creative outlets will help you build a steadier emotional footing.',
             'missing' => 'The Emotional Plane is empty. You may find it hard to name or express what you feel, or tend to analyse feelings rather than experience them. Creative outlets and honest conversations can help.',
         ],
         'practical' => [
@@ -129,6 +134,7 @@ return [
             'numbers' => [8, 1, 6],
             'theme' => 'Money, action and material life',
             'complete' => 'The Practical Plane is complete. You are grounded and good at turning ideas into results. Handling money, work and everyday responsibilities tends to come comfortably to you.',
+            'partial' => 'The Practical Plane is only partly formed. You can turn ideas into results in some areas of life, while others need more attention. Small, consistent habits around money and work will help you build a steadier, more reliable base.',
             'missing' => 'The Practical Plane is empty. Turning ideas into steady action may be a challenge. Small, consistent habits and clear goals for money and work will help you build this side.',
         ],
         'thought' => [
@@ -136,6 +142,7 @@ return [
             'numbers' => [4, 3, 8],
             'theme' => 'Generating and processing ideas',
             'complete' => 'The Thought Plane is complete. You turn ideas into organised thought easily. You tend to be a careful, imaginative thinker who can follow a line of reasoning from beginning to end.',
+            'partial' => 'The Thought Plane is only partly formed. Your thinking is clear and imaginative in some areas and less organised in others. Slowing down and working through problems step by step will help you develop a more consistent way of reasoning.',
             'missing' => 'The Thought Plane is empty. Ideas may come faster than you can organise them, or you may doubt your own thinking. Slowing down and working through problems step by step will help.',
         ],
         'will' => [
@@ -143,6 +150,7 @@ return [
             'numbers' => [9, 5, 1],
             'theme' => 'Willpower, direction and inner drive',
             'complete' => 'The Will Plane is complete. You have strong determination and a clear sense of direction. Once you decide on a goal, you tend to keep going even when progress is slow.',
+            'partial' => 'The Will Plane is only partly formed. You have determination and a sense of direction at times, though your drive may fade when progress is slow. Setting small goals and finishing them will help you build steady willpower.',
             'missing' => 'The Will Plane is empty. Staying motivated and following through may be difficult, especially when others do not support you. Setting small goals and finishing them builds this strength over time.',
         ],
         'action' => [
@@ -150,21 +158,24 @@ return [
             'numbers' => [2, 7, 6],
             'theme' => 'Execution, completion and results',
             'complete' => 'The Action Plane is complete. You finish what you start. Where others plan many things, you tend to deliver results and keep your commitments.',
+            'partial' => 'The Action Plane is only partly formed. You often begin well, but finishing everything you start may take extra effort. Clear deadlines and short, focused bursts of work will help you carry more of your plans through to results.',
             'missing' => 'The Action Plane is empty. You may be full of plans yet find it hard to begin or complete them. Setting deadlines and working in short focused bursts can help you move ideas into action.',
         ],
         'golden' => [
-            'name' => 'Golden Yog',
+            'name' => 'Golden Plane',
             'numbers' => [4, 5, 6],
             'theme' => 'Prosperity, stability and recognition',
-            'complete' => 'The Golden Yog is formed. Traditionally this is a favourable pattern linked with stability, steady prosperity and the ability to build a comfortable, respected life through your own efforts.',
-            'missing' => 'The Golden Yog is empty. Prosperity and stability may need to be built with extra patience and planning. Steady saving, careful decisions and consistent effort work in your favour.',
+            'complete' => 'The Golden Plane is complete. Traditionally this is a favourable pattern linked with stability, steady prosperity and the ability to build a comfortable, respected life through your own efforts.',
+            'partial' => 'The Golden Plane is only partly formed. Some of the stability and prosperity it represents is within reach, and the rest builds through patience and planning. Steady saving and consistent effort will help you complete the pattern over time.',
+            'missing' => 'The Golden Plane is empty. Prosperity and stability may need to be built with extra patience and planning. Steady saving, careful decisions and consistent effort work in your favour.',
         ],
         'silver' => [
-            'name' => 'Silver Yog',
+            'name' => 'Silver Plane',
             'numbers' => [2, 5, 8],
             'theme' => 'Intuition, balance and good judgement',
-            'complete' => 'The Silver Yog is formed. Traditionally this is a favourable pattern linked with sound judgement, intuition and the ability to keep emotion and practicality in balance.',
-            'missing' => 'The Silver Yog is empty. Balancing feeling and practicality may take more effort, and you may second-guess your instincts. Reflecting before big decisions will help you trust your judgement.',
+            'complete' => 'The Silver Plane is complete. Traditionally this is a favourable pattern linked with sound judgement, intuition and the ability to keep emotion and practicality in balance.',
+            'partial' => 'The Silver Plane is only partly formed. You have some of the intuition and balanced judgement it represents, while the rest takes practice. Reflecting before big decisions will help you trust your instincts and balance feeling with practicality.',
+            'missing' => 'The Silver Plane is empty. Balancing feeling and practicality may take more effort, and you may second-guess your instincts. Reflecting before big decisions will help you trust your judgement.',
         ],
     ],
 ];

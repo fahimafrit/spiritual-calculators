@@ -81,7 +81,7 @@
     opacity: 0.55;
 }
 
-/* ── Planes and yogs ──────────────────────────────────── */
+/* ── Planes ───────────────────────────────────────────── */
 .loshu-group-title {
     margin: 22px 0 10px;
     font-size: 12px;
@@ -180,10 +180,12 @@
     white-space: nowrap;
 }
 .loshu-badge.is-present { background: #2e7d54; }
+.loshu-badge.is-partial { background: #b26a00; }
 .loshu-badge.is-missing { background: #c0392b; }
 .loshu-badge.is-repeated { background: #2bb2c0; }
 
 .loshu-reading.is-present { border-left-color: #2e7d54; }
+.loshu-reading.is-partial { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.04); }
 .loshu-reading.is-missing { border-left-color: #c0392b; background: rgba(192, 57, 43, 0.03); }
 .loshu-reading.is-repeated { border-left-color: #2bb2c0; background: rgba(169, 120, 47, 0.05); }
 

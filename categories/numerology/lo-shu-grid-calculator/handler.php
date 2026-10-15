@@ -30,13 +30,11 @@ return function (array $input) use ($loShuData): array {
 
     ['day' => $day, 'month' => $month, 'year' => $year] = $parsed;
 
-    /* ── Fixed layout and lines ─────────────────────────────────── */
+    /* ── Fixed layout and planes ────────────────────────────────── */
     $rows = [[4, 9, 2], [3, 5, 7], [8, 1, 6]];
-    $lineGroups = [
-        'Horizontal planes' => ['mind', 'emotional', 'practical'],
-        'Vertical planes'   => ['thought', 'will', 'action'],
-        'Diagonal yogs'     => ['golden', 'silver'],
-    ];
+    // All eight lines are presented to the user simply as "planes".
+    // Display order: horizontal, vertical, then diagonal.
+    $planeKeys = ['mind', 'emotional', 'practical', 'thought', 'will', 'action', 'golden', 'silver'];
 
     /* ── Calculation ────────────────────────────────────────────── */
     $dateDigits = str_replace('0', '', sprintf('%02d%02d%04d', $day, $month, $year));
@@ -68,6 +66,36 @@ return function (array $input) use ($loShuData): array {
         }
     }
 
+    /* ── Plane status: which of its 3 numbers are present ───────── */
+    $planeHave = [];      // key => how many of its 3 numbers are present
+    $planePresentNums = []; // key => its numbers that are present
+    $planeMissingNums = []; // key => its numbers that are missing
+    foreach ($planeKeys as $key) {
+        $planePresentNums[$key] = [];
+        $planeMissingNums[$key] = [];
+        foreach ($loShuData['lines'][$key]['numbers'] as $n) {
+            if ($counts[$n] > 0) {
+                $planePresentNums[$key][] = $n;
+            } else {
+                $planeMissingNums[$key][] = $n;
+            }
+        }
+        $planeHave[$key] = count($planePresentNums[$key]);
+    }
+
+    // A plane is present when at least one of its numbers is in the grid, missing when none is.
+    $presentPlanes = [];
+    $missingPlanes = [];
+    foreach ($planeKeys as $key) {
+        if ($planeHave[$key] > 0) {
+            $presentPlanes[] = $key;
+        } else {
+            $missingPlanes[] = $key;
+        }
+    }
+    // Complete planes first, then partial ones (2 of 3 before 1 of 3); ties keep display order.
+    usort($presentPlanes, fn(string $a, string $b): int => $planeHave[$b] <=> $planeHave[$a]);
+
     /* ── Grid ───────────────────────────────────────────────────── */
     $gridHtml = '<div class="loshu-grid" role="table" aria-label="Lo Shu Grid">';
     foreach ($rows as $row) {
@@ -83,141 +111,127 @@ return function (array $input) use ($loShuData): array {
     }
     $gridHtml .= '</div>';
 
-    /* ── Driver / Conductor cards ───────────────────────────────── */
-    $coreHtml = '<div class="loshu-core">'
-        . '<div class="loshu-core-card"><p class="loshu-core-label">Driver Number</p>'
-        . '<p class="loshu-core-value">' . $driver . '</p></div>'
-        . '<div class="loshu-core-card"><p class="loshu-core-label">Conductor Number</p>'
-        . '<p class="loshu-core-value">' . $conductor . '</p></div>'
-        . '</div>';
-
-    /* ── Present / missing / repeated summary ───────────────────── */
+    /* ── Grid at a glance: numbers and planes in one card ───────── */
     $repeatedText = [];
     foreach ($repeated as $n) {
         $repeatedText[] = $n . ' (' . $counts[$n] . ' times)';
     }
+
+    // Plane names for the summary; present planes show how many of their 3 numbers are in the grid.
+    $describePlanes = function (array $keys, bool $showCount) use ($loShuData, $planeHave): string {
+        if (empty($keys)) {
+            return 'None';
+        }
+        $parts = [];
+        foreach ($keys as $key) {
+            $name = $loShuData['lines'][$key]['name'];
+            $parts[] = $showCount ? $name . ' (' . $planeHave[$key] . ' of 3)' : $name;
+        }
+        return implode(', ', $parts);
+    };
+
     $summaryHtml = '<div class="process-card">'
         . renderValueLine('Present numbers', htmlspecialchars(implode(', ', $present) ?: 'None'))
         . renderValueLine('Missing numbers', htmlspecialchars(implode(', ', $missing) ?: 'None'))
         . renderValueLine('Repeated numbers', htmlspecialchars(implode(', ', $repeatedText) ?: 'None'))
+        . renderValueLine('Present planes', htmlspecialchars($describePlanes($presentPlanes, true)))
+        . renderValueLine('Missing planes', htmlspecialchars($describePlanes($missingPlanes, false)))
         . '</div>';
 
-    /* ── Lines (planes and yogs) ────────────────────────────────── */
-    $lineState = [];
-    foreach ($loShuData['lines'] as $key => $line) {
-        $have = 0;
-        foreach ($line['numbers'] as $n) {
-            if ($counts[$n] > 0) {
-                $have++;
-            }
+    /* ── Reading helpers ────────────────────────────────────────── */
+    $renderReading = function (string $title, string $tag, string $state, string $theme, string $text): string {
+        return '<div class="loshu-reading ' . $state . '">'
+            . '<div class="loshu-reading-head">'
+            . '<span class="loshu-reading-title">' . htmlspecialchars($title) . '</span>'
+            . '<span class="loshu-badge ' . $state . '">' . htmlspecialchars($tag) . '</span>'
+            . '</div>'
+            . '<p class="loshu-reading-theme">' . htmlspecialchars($theme) . '</p>'
+            . '<p>' . htmlspecialchars($text) . '</p>'
+            . '</div>';
+    };
+
+    // A status group: sub-heading plus its cards. An empty group renders nothing.
+    $renderGroup = function (string $label, string $cardsHtml): string {
+        if ($cardsHtml === '') {
+            return '';
         }
-        $lineState[$key] = $have;
-    }
+        return '<h3 class="loshu-group-title">' . htmlspecialchars($label) . '</h3>' . $cardsHtml;
+    };
 
-    $linesHtml = '';
-    foreach ($lineGroups as $groupLabel => $keys) {
-        $linesHtml .= '<h3 class="loshu-group-title">' . htmlspecialchars($groupLabel) . '</h3><div class="loshu-lines">';
-        foreach ($keys as $key) {
-            $line = $loShuData['lines'][$key];
-            $have = $lineState[$key];
-            if ($have === 3) {
-                $class = 'is-complete';
-                $status = 'Complete';
-            } elseif ($have === 0) {
-                $class = 'is-empty';
-                $status = 'Empty';
-            } else {
-                $class = 'is-partial';
-                $status = $have . ' of 3';
-            }
-            $linesHtml .= '<div class="loshu-line ' . $class . '">'
-                . '<p class="loshu-line-name">' . htmlspecialchars($line['name']) . '</p>'
-                . '<p class="loshu-line-numbers">' . htmlspecialchars(implode(' · ', $line['numbers'])) . '</p>'
-                . '<p class="loshu-line-theme">' . htmlspecialchars($line['theme']) . '</p>'
-                . '<p class="loshu-line-status">' . htmlspecialchars($status) . '</p>'
-                . '</div>';
-        }
-        $linesHtml .= '</div>';
-    }
-
-    /* ── Readings ───────────────────────────────────────────────── */
-    $coreReadingHtml = '<p><strong>Driver Number ' . $driver . '</strong></p>'
-        . '<p>' . htmlspecialchars($loShuData['driver'][$driver]) . '</p>'
-        . '<p><strong>Conductor Number ' . $conductor . '</strong></p>'
-        . '<p>' . htmlspecialchars($loShuData['conductor'][$conductor]) . '</p>';
-
-    $numbersReadingHtml = '';
+    /* ── Readings: numbers — present first, then missing ────────── */
+    $presentCards = '';
+    $missingCards = '';
     for ($n = 1; $n <= 9; $n++) {
         $entry = $loShuData['numbers'][$n];
         $count = $counts[$n];
         if ($count === 0) {
-            $text = $entry['missing'];
-            $tag = 'Missing';
-            $state = 'is-missing';
+            $missingCards .= $renderReading('Number ' . $n, 'Missing', 'is-missing', $entry['title'], $entry['missing']);
         } elseif ($count === 1) {
-            $text = $entry['present'];
-            $tag = 'Present';
-            $state = 'is-present';
+            $presentCards .= $renderReading('Number ' . $n, 'Present', 'is-present', $entry['title'], $entry['present']);
         } elseif ($count === 2) {
-            $text = $entry['double'];
-            $tag = 'Repeated 2×';
-            $state = 'is-repeated';
+            $presentCards .= $renderReading('Number ' . $n, 'Repeated 2×', 'is-repeated', $entry['title'], $entry['double']);
         } else {
-            $text = $entry['excess'];
-            $tag = 'Repeated ' . $count . '×';
-            $state = 'is-repeated';
+            $presentCards .= $renderReading('Number ' . $n, 'Repeated ' . $count . '×', 'is-repeated', $entry['title'], $entry['excess']);
         }
-        $numbersReadingHtml .= '<div class="loshu-reading ' . $state . '">'
-            . '<div class="loshu-reading-head">'
-            . '<span class="loshu-reading-title">Number ' . $n . '</span>'
-            . '<span class="loshu-badge ' . $state . '">' . htmlspecialchars($tag) . '</span>'
-            . '</div>'
-            . '<p class="loshu-reading-theme">' . htmlspecialchars($entry['title']) . '</p>'
-            . '<p>' . htmlspecialchars($text) . '</p>'
-            . '</div>';
+    }
+    $numbersReadingHtml = $renderGroup('Present numbers', $presentCards)
+        . $renderGroup('Missing numbers', $missingCards);
+
+    /* ── Readings: planes — present (complete, then partial), then missing ── */
+    $presentPlaneCards = '';
+    foreach ($presentPlanes as $key) {
+        $line = $loShuData['lines'][$key];
+        $have = $planeHave[$key];
+        if ($have === 3) {
+            $presentPlaneCards .= $renderReading(
+                $line['name'],
+                'Complete',
+                'is-present',
+                implode(' · ', $line['numbers']),
+                $line['complete']
+            );
+        } else {
+            $presentPlaneCards .= $renderReading(
+                $line['name'],
+                $have . ' of 3',
+                'is-partial',
+                'Present: ' . implode(', ', $planePresentNums[$key])
+                    . ' · Missing: ' . implode(', ', $planeMissingNums[$key]),
+                $line['partial']
+            );
+        }
     }
 
-    $linesReadingHtml = '';
-    foreach ($lineGroups as $keys) {
-        foreach ($keys as $key) {
-            $line = $loShuData['lines'][$key];
-            $have = $lineState[$key];
-            if ($have === 3) {
-                $text = $line['complete'];
-                $tag = 'Complete';
-                $state = 'is-present';
-            } elseif ($have === 0) {
-                $text = $line['missing'];
-                $tag = 'Empty';
-                $state = 'is-missing';
-            } else {
-                continue;
-            }
-            $linesReadingHtml .= '<div class="loshu-reading ' . $state . '">'
-                . '<div class="loshu-reading-head">'
-                . '<span class="loshu-reading-title">' . htmlspecialchars($line['name']) . '</span>'
-                . '<span class="loshu-badge ' . $state . '">' . htmlspecialchars($tag) . '</span>'
-                . '</div>'
-                . '<p class="loshu-reading-theme">' . htmlspecialchars(implode(' · ', $line['numbers'])) . '</p>'
-                . '<p>' . htmlspecialchars($text) . '</p>'
-                . '</div>';
-        }
+    $missingPlaneCards = '';
+    foreach ($missingPlanes as $key) {
+        $line = $loShuData['lines'][$key];
+        $missingPlaneCards .= $renderReading(
+            $line['name'],
+            'Missing',
+            'is-missing',
+            implode(' · ', $line['numbers']),
+            $line['missing']
+        );
     }
-    if ($linesReadingHtml === '') {
-        $linesReadingHtml = '<p>None of the planes or yogs is fully complete or fully empty in your grid. Every line holds a mixture of present and missing numbers, which points to a balanced chart with no single extreme.</p>';
-    }
+
+    $planesReadingHtml = $renderGroup('Present planes', $presentPlaneCards)
+        . $renderGroup('Missing planes', $missingPlaneCards);
+
+    /* ── Readings: Driver and Conductor ─────────────────────────── */
+    $coreReadingHtml = '<p><strong>Driver Number ' . $driver . ' (Psychic Number)</strong></p>'
+        . '<p>' . htmlspecialchars($loShuData['driver'][$driver]) . '</p>'
+        . '<p><strong>Conductor Number ' . $conductor . ' (Destiny Number)</strong></p>'
+        . '<p>' . htmlspecialchars($loShuData['conductor'][$conductor]) . '</p>';
 
     return [
         'valid' => true,
         'headerText' => 'Date of Birth: ' . formatLongDate($day, $month, $year),
         'driver' => $driver,
         'conductor' => $conductor,
-        'coreHtml' => $coreHtml,
         'gridHtml' => $gridHtml,
         'summaryHtml' => $summaryHtml,
-        'linesHtml' => $linesHtml,
-        'coreReadingHtml' => $coreReadingHtml,
         'numbersReadingHtml' => $numbersReadingHtml,
-        'linesReadingHtml' => $linesReadingHtml,
+        'planesReadingHtml' => $planesReadingHtml,
+        'coreReadingHtml' => $coreReadingHtml,
     ];
 };

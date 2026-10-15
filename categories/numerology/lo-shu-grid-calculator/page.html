@@ -24,32 +24,24 @@
       <div class="output-personal-date"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title">Your Driver and Conductor Numbers</h2>
-      <div id="loshu-core"></div>
-      <hr class="section-divider" />
-
       <h2 class="section-title">Your Lo Shu Grid</h2>
       <div id="loshu-grid"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title">Present, Missing and Repeated Numbers</h2>
+      <h2 class="section-title">Your Grid at a Glance</h2>
       <div id="loshu-summary"></div>
-      <hr class="section-divider" />
-
-      <h2 class="section-title">Your Planes and Yogs</h2>
-      <div id="loshu-lines"></div>
-      <hr class="section-divider" />
-
-      <h2 class="section-title">What Your Driver and Conductor Numbers Reveal</h2>
-      <div class="interpretation-card" id="loshu-core-reading"></div>
       <hr class="section-divider" />
 
       <h2 class="section-title">What Each Number in Your Grid Reveals</h2>
       <div class="interpretation-card" id="loshu-numbers-reading"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title">What Your Planes and Yogs Reveal</h2>
-      <div class="interpretation-card" id="loshu-lines-reading"></div>
+      <h2 class="section-title">What Your Planes Reveal</h2>
+      <div class="interpretation-card" id="loshu-planes-reading"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">What Your Driver and Conductor Numbers Reveal</h2>
+      <div class="interpretation-card" id="loshu-core-reading"></div>
     </div>
   </div>
 </div>
@@ -72,13 +64,11 @@ const errorOutput = document.querySelector('.error-output');
 const outputDate = document.querySelector('.output-personal-date');
 
 const SLOTS = {
-  'loshu-core': 'coreHtml',
   'loshu-grid': 'gridHtml',
   'loshu-summary': 'summaryHtml',
-  'loshu-lines': 'linesHtml',
-  'loshu-core-reading': 'coreReadingHtml',
   'loshu-numbers-reading': 'numbersReadingHtml',
-  'loshu-lines-reading': 'linesReadingHtml',
+  'loshu-planes-reading': 'planesReadingHtml',
+  'loshu-core-reading': 'coreReadingHtml',
 };
 
 async function runCalculation(calculationDate, { updateUrl = true } = {}) {
