@@ -18,6 +18,7 @@
     "mobile-number": { "category": "numerology" },
     "davison-chart": { "category": "astrology" },
     "birth-chart": { "category": "astrology" },
-    "love-calculator": { "category": "astrology" }
+    "love-calculator": { "category": "astrology" },
+    "pinnacle-numbers-calculator": { "category": "numerology" }
   }
 }

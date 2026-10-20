@@ -1,0 +1,228 @@
+/* ============================================================
+   assets/css/numerology/pinnacle-numbers.css
+   Styles used only by the Pinnacle Numbers calculator page. Loaded
+   after core/forms.css and numerology/base.css, and relies on
+   the design tokens defined in base.css.
+   ============================================================ */
+
+/* ── The four pinnacle cards ──────────────────────────── */
+.pinnacle-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 0 0 4px;
+}
+.pinnacle-card {
+    text-align: center;
+    padding: 16px 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    background: rgba(36, 26, 68, 0.035);
+}
+.pinnacle-card p { margin: 0; }
+.pinnacle-card.is-current {
+    border: 1.5px solid var(--violet-mid);
+    background: rgba(46, 26, 99, 0.06);
+    box-shadow: 0 8px 20px rgba(46, 26, 99, 0.14);
+}
+.pinnacle-card-label {
+    margin: 0 0 6px !important;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.pinnacle-card-value {
+    font-size: clamp(30px, 4vw, 38px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.pinnacle-card-age {
+    margin-top: 10px !important;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.pinnacle-card-years {
+    margin-top: 2px !important;
+    font-size: 13px;
+    color: var(--ink-soft);
+}
+.pinnacle-here {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+}
+.pinnacle-note {
+    margin: 14px 0 0;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+}
+
+/* ── Readings: one card per pinnacle ──────────────────── */
+.pinnacle-reading {
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    border-left: 5px solid var(--violet-soft);
+    background: #ffffff;
+}
+.pinnacle-reading:last-child { margin-bottom: 0; }
+.pinnacle-reading.is-current {
+    border-left-color: var(--violet-mid);
+    background: rgba(46, 26, 99, 0.04);
+}
+.pinnacle-reading p { margin: 0 0 8px; }
+.pinnacle-reading p:last-child { margin-bottom: 0; }
+
+.pinnacle-reading-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 4px;
+}
+.pinnacle-reading-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.pinnacle-reading-theme {
+    font-size: 13.5px !important;
+    font-weight: 700;
+    line-height: 1.4 !important;
+    color: var(--ink-faint) !important;
+}
+.pinnacle-reading-intro {
+    font-size: 14px;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--ink-soft);
+}
+.pinnacle-reading-headline {
+    margin-top: 14px !important;
+    font-size: 19px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: var(--violet-deep);
+}
+
+/* Work, love and inner life: three small panels under each story */
+.pinnacle-areas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+.pinnacle-area {
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line-soft);
+    background: #ffffff;
+}
+.pinnacle-reading .pinnacle-area p { margin: 0; }
+.pinnacle-area-label {
+    margin-bottom: 4px !important;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.pinnacle-area-text {
+    font-size: 14.5px;
+    line-height: 1.55;
+}
+
+/* The three short points under each story */
+.pinnacle-points {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+.pinnacle-point {
+    margin: 0 !important;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border-left: 4px solid var(--line-soft);
+    background: rgba(36, 26, 68, 0.03);
+}
+.pinnacle-point-label {
+    display: block;
+    margin: 0 0 3px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.pinnacle-point-text {
+    display: block;
+    font-size: 15px;
+    line-height: 1.55;
+}
+.pinnacle-point.is-opportunity { border-left-color: #2e7d54; background: rgba(63, 159, 106, 0.07); }
+.pinnacle-point.is-opportunity .pinnacle-point-label { color: #2e7d54; }
+.pinnacle-point.is-watch { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.06); }
+.pinnacle-point.is-watch .pinnacle-point-label { color: #b26a00; }
+.pinnacle-point.is-advice { border-left-color: var(--violet-mid); background: rgba(46, 26, 99, 0.05); }
+.pinnacle-point.is-advice .pinnacle-point-label { color: var(--violet-mid); }
+
+/* ── Life in Four Chapters ────────────────────────────── */
+.pinnacle-journey p { margin: 0 0 10px; }
+.pinnacle-journey p:last-child { margin-bottom: 0; }
+.pinnacle-turns {
+    margin: 0 0 12px;
+    padding-left: 20px;
+}
+.pinnacle-turns li { margin: 0 0 6px; line-height: 1.5; }
+.pinnacle-now {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border-left: 4px solid var(--violet-mid);
+    background: rgba(46, 26, 99, 0.05);
+    font-weight: 700;
+}
+
+.pinnacle-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+.pinnacle-badge {
+    flex: none;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: #ffffff;
+    white-space: nowrap;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+}
+.pinnacle-badge.is-here {
+    background: #2e7d54;
+}
+
+@media (max-width: 420px) {
+    .pinnacle-cards { gap: 10px; }
+    .pinnacle-reading { padding: 12px 12px; }
+    .pinnacle-reading-title { font-size: 16.5px; }
+    .pinnacle-badge { font-size: 11px; padding: 4px 10px; }
+}
