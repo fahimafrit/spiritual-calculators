@@ -108,96 +108,50 @@
     line-height: 1.4 !important;
     color: var(--ink-faint) !important;
 }
-.pinnacle-reading-intro {
-    font-size: 14px;
-    line-height: 1.5;
+.pinnacle-reading-about {
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
     font-style: italic;
     color: var(--ink-soft);
 }
-.pinnacle-reading-headline {
-    margin-top: 14px !important;
-    font-size: 19px;
+.pinnacle-headline {
+    margin: 14px 0 8px;
+    font-size: 20px;
     font-weight: 900;
-    line-height: 1.3;
-    color: var(--violet-deep);
+    line-height: 1.25;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
-
-/* Work, love and inner life: three small panels under each story */
-.pinnacle-areas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 10px;
-    margin-top: 12px;
-}
-.pinnacle-area {
-    padding: 11px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--line-soft);
-    background: #ffffff;
-}
-.pinnacle-reading .pinnacle-area p { margin: 0; }
-.pinnacle-area-label {
-    margin-bottom: 4px !important;
-    font-size: 11px;
-    font-weight: 900;
+.pinnacle-block-title {
+    margin: 16px 0 6px !important;
+    font-size: 12px;
+    font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--gold);
 }
-.pinnacle-area-text {
-    font-size: 14.5px;
-    line-height: 1.55;
-}
-
-/* The three short points under each story */
-.pinnacle-points {
-    display: grid;
-    gap: 8px;
-    margin-top: 12px;
-}
-.pinnacle-point {
-    margin: 0 !important;
-    padding: 10px 12px;
-    border-radius: 10px;
-    border-left: 4px solid var(--line-soft);
-    background: rgba(36, 26, 68, 0.03);
-}
-.pinnacle-point-label {
-    display: block;
-    margin: 0 0 3px;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
-.pinnacle-point-text {
-    display: block;
-    font-size: 15px;
-    line-height: 1.55;
-}
-.pinnacle-point.is-opportunity { border-left-color: #2e7d54; background: rgba(63, 159, 106, 0.07); }
-.pinnacle-point.is-opportunity .pinnacle-point-label { color: #2e7d54; }
-.pinnacle-point.is-watch { border-left-color: #b26a00; background: rgba(178, 106, 0, 0.06); }
-.pinnacle-point.is-watch .pinnacle-point-label { color: #b26a00; }
-.pinnacle-point.is-advice { border-left-color: var(--violet-mid); background: rgba(46, 26, 99, 0.05); }
-.pinnacle-point.is-advice .pinnacle-point-label { color: var(--violet-mid); }
-
-/* ── Life in Four Chapters ────────────────────────────── */
-.pinnacle-journey p { margin: 0 0 10px; }
-.pinnacle-journey p:last-child { margin-bottom: 0; }
-.pinnacle-turns {
-    margin: 0 0 12px;
+.pinnacle-list {
+    margin: 0 0 4px;
     padding-left: 20px;
 }
-.pinnacle-turns li { margin: 0 0 6px; line-height: 1.5; }
-.pinnacle-now {
-    padding: 10px 12px;
-    border-radius: 10px;
-    border-left: 4px solid var(--violet-mid);
-    background: rgba(46, 26, 99, 0.05);
-    font-weight: 700;
+.pinnacle-list li {
+    margin: 0 0 5px;
+    line-height: 1.5;
 }
+.pinnacle-list li:last-child { margin-bottom: 0; }
+.pinnacle-now {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(46, 26, 99, 0.2);
+    background: rgba(46, 26, 99, 0.05);
+}
+.pinnacle-now .pinnacle-block-title { margin-top: 0 !important; }
+.pinnacle-now p:last-child { margin: 0; }
 
+/* ── Badges ───────────────────────────────────────────── */
 .pinnacle-badges {
     display: flex;
     flex-wrap: wrap;
@@ -216,13 +170,18 @@
     white-space: nowrap;
     background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
 }
-.pinnacle-badge.is-here {
-    background: #2e7d54;
-}
+.pinnacle-badge.is-here { background: #2e7d54; }
+.pinnacle-badge.is-done { background: #8a8499; }
+.pinnacle-badge.is-ahead { background: #b26a00; }
+
+/* ── Your Pinnacles Together ──────────────────────────── */
+.pinnacle-together p { margin: 0 0 10px; }
+.pinnacle-together p:last-child { margin-bottom: 0; }
 
 @media (max-width: 420px) {
     .pinnacle-cards { gap: 10px; }
     .pinnacle-reading { padding: 12px 12px; }
     .pinnacle-reading-title { font-size: 16.5px; }
+    .pinnacle-headline { font-size: 18px; }
     .pinnacle-badge { font-size: 11px; padding: 4px 10px; }
 }

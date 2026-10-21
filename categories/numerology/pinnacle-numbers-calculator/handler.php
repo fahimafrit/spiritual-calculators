@@ -101,7 +101,6 @@ return function (array $input) use ($pinnacleData): array {
     }
 
     $ordinals = [1 => 'First', 2 => 'Second', 3 => 'Third', 4 => 'Fourth'];
-    $masters = [11, 22, 33];
 
     /* ── Cards ──────────────────────────────────────────────────── */
     $pinnaclesHtml = '<div class="pinnacle-cards">';
@@ -118,86 +117,6 @@ return function (array $input) use ($pinnacleData): array {
         . '<p class="pinnacle-note">Your Life Path Number is '
         . $esc(formatDisplayNumber($lifePathNumber))
         . ', so your First Pinnacle lasts until age ' . $firstEnd . '.</p>';
-
-    /* ── Life in Four Chapters: an overview built from the numbers ── */
-    $join = function (array $items): string {
-        $count = count($items);
-        if ($count <= 1) {
-            return implode('', $items);
-        }
-        return implode(', ', array_slice($items, 0, -1)) . ' and ' . $items[$count - 1];
-    };
-    $keyword = fn(int $i): string => $pinnacleData['keywords'][$numbers[$i]];
-    $shown = fn(int $i): string => formatDisplayNumber($numbers[$i]);
-
-    $overview = 'Your four pinnacles begin with ' . $keyword(1) . ' (' . $shown(1) . '), move through '
-        . $keyword(2) . ' (' . $shown(2) . ') and ' . $keyword(3) . ' (' . $shown(3)
-        . '), and settle into ' . $keyword(4) . ' (' . $shown(4) . ').';
-
-    $turns = '';
-    foreach ([1, 2, 3] as $i) {
-        $when = 'Age ' . $starts[$i + 1] . ' (' . ($year + $starts[$i + 1]) . '): ';
-        if ($numbers[$i] === $numbers[$i + 1]) {
-            $turns .= '<li>' . $esc($when . $keyword($i) . ' carries on into a new chapter of life.') . '</li>';
-        } else {
-            $turns .= '<li>' . $esc($when . 'from ' . $keyword($i) . ' to ' . $keyword($i + 1) . '.') . '</li>';
-        }
-    }
-
-    // Numbers that return, listed in order of first appearance.
-    $where = [];
-    foreach ([1, 2, 3, 4] as $i) {
-        $where[$numbers[$i]][] = $ordinals[$i];
-    }
-    $returns = '';
-    foreach ($where as $number => $stages) {
-        if (count($stages) >= 2) {
-            $returns .= '<p>' . $esc(
-                'Number ' . formatDisplayNumber($number) . ' appears in your ' . $join($stages)
-                . ' Pinnacles, so the themes of ' . $pinnacleData['keywords'][$number]
-                . ' run through your life rather than belonging to a single chapter.'
-            ) . '</p>';
-        }
-    }
-
-    $masterNotes = '';
-    $masterAt = array_values(array_filter([1, 2, 3, 4], fn(int $i): bool => in_array($numbers[$i], $masters, true)));
-    if (count($masterAt) === 1) {
-        $i = $masterAt[0];
-        $masterNotes = '<p>' . $esc(
-            'Your ' . $ordinals[$i] . ' Pinnacle carries the master number ' . $shown($i)
-            . '. Master numbers bring heightened potential and heightened pressure, and the '
-            . reduceToSingleDigit($numbers[$i])
-            . ' always remains available as a steadier way to express the same energy.'
-        ) . '</p>';
-    } elseif (count($masterAt) > 1) {
-        $masterNotes = '<p>' . $esc(
-            'Your ' . $join(array_map(fn(int $i): string => $ordinals[$i], $masterAt))
-            . ' Pinnacles carry master numbers (' . $join(array_map($shown, $masterAt))
-            . '). Master numbers bring heightened potential and heightened pressure, and the single digits behind them ('
-            . $join(array_map(fn(int $i): string => (string) reduceToSingleDigit($numbers[$i]), $masterAt))
-            . ') always remain available as a steadier way to express the same energy.'
-        ) . '</p>';
-    }
-
-    if ($current < 4) {
-        $yearsLeft = $starts[$current + 1] - $age;
-        $now_ = 'Right now you are in your ' . $ordinals[$current] . ' Pinnacle, the '
-            . $pinnacleData['stages'][$current]['name'] . ', at age ' . $age
-            . '. Your next chapter begins at age ' . $starts[$current + 1] . ' in '
-            . ($year + $starts[$current + 1]) . ', about ' . $yearsLeft
-            . ($yearsLeft === 1 ? ' year' : ' years') . ' from now.';
-    } else {
-        $now_ = 'Right now you are in your Fourth Pinnacle, the ' . $pinnacleData['stages'][4]['name']
-            . ', at age ' . $age . '. It continues for the rest of your life.';
-    }
-
-    $journeyHtml = '<p>' . $esc($overview) . '</p>'
-        . '<p>' . $esc('Each change is usually felt gradually, in the months around your birthday, rather than overnight.') . '</p>'
-        . '<ul class="pinnacle-turns">' . $turns . '</ul>'
-        . $returns
-        . $masterNotes
-        . '<p class="pinnacle-now">' . $esc($now_) . '</p>';
 
     /* ── Calculation steps ──────────────────────────────────────── */
     // One labelled line: "a + b = total", then the reduction steps if the total needed reducing.
@@ -233,62 +152,122 @@ return function (array $input) use ($pinnacleData): array {
     $processHtml = '<div class="process-card">' . implode('', $lines) . '</div>';
 
     /* ── Readings: the four pinnacles in order ──────────────────── */
-    $areas = [
-        'work' => 'Work and money',
-        'love' => 'Love and relationships',
-        'inner' => 'Inner life',
-    ];
-    $points = [
-        'opportunity' => ['is-opportunity', 'What opens up'],
-        'watch' => ['is-watch', 'What to watch for'],
-        'advice' => ['is-advice', 'How to make the most of it'],
-    ];
+    $renderList = function (string $title, array $items) use ($esc): string {
+        return '<p class="pinnacle-block-title">' . $esc($title) . '</p>'
+            . '<ul class="pinnacle-list">'
+            . implode('', array_map(fn(string $item): string => '<li>' . $esc($item) . '</li>', $items))
+            . '</ul>';
+    };
 
     $readingsHtml = '';
     foreach ([1, 2, 3, 4] as $i) {
         $stage = $pinnacleData['stages'][$i];
-        $entry = $pinnacleData['readings'][$i][$numbers[$i]] ?? null;
+        $reading = $pinnacleData['readings'][$numbers[$i]][$i] ?? null;
         $isCurrent = $i === $current;
+
+        if ($isCurrent) {
+            $statusClass = 'is-here';
+            $statusText = 'You are here';
+        } elseif ($i < $current) {
+            $statusClass = 'is-done';
+            $statusText = 'Completed';
+        } else {
+            $statusClass = 'is-ahead';
+            $statusText = 'Still ahead';
+        }
 
         $readingsHtml .= '<div class="pinnacle-reading' . ($isCurrent ? ' is-current' : '') . '">'
             . '<div class="pinnacle-reading-head">'
             . '<span class="pinnacle-reading-title">' . $ordinals[$i] . ' Pinnacle</span>'
             . '<span class="pinnacle-badges">'
-            . ($isCurrent ? '<span class="pinnacle-badge is-here">You are here</span>' : '')
+            . '<span class="pinnacle-badge ' . $statusClass . '">' . $statusText . '</span>'
             . '<span class="pinnacle-badge">Number ' . $esc(formatDisplayNumber($numbers[$i])) . '</span>'
             . '</span>'
             . '</div>'
             . '<p class="pinnacle-reading-theme">' . $esc($stage['name'] . ' · ' . $ageText[$i] . ' · ' . $yearText[$i]) . '</p>'
-            . '<p class="pinnacle-reading-intro">' . $esc($stage['intro']) . '</p>';
+            . '<p class="pinnacle-reading-about">' . $esc($stage['about']) . '</p>';
 
-        if ($entry !== null) {
-            $readingsHtml .= '<p class="pinnacle-reading-headline">' . $esc($entry['headline']) . '</p>'
-                . '<p class="pinnacle-reading-story">' . $esc($entry['story']) . '</p>'
-                . '<div class="pinnacle-areas">';
-            foreach ($areas as $field => $label) {
-                $readingsHtml .= '<div class="pinnacle-area">'
-                    . '<p class="pinnacle-area-label">' . $esc($label) . '</p>'
-                    . '<p class="pinnacle-area-text">' . $esc($entry[$field]) . '</p>'
-                    . '</div>';
-            }
-            $readingsHtml .= '</div><div class="pinnacle-points">';
-            foreach ($points as $field => [$class, $label]) {
-                $readingsHtml .= '<p class="pinnacle-point ' . $class . '">'
-                    . '<span class="pinnacle-point-label">' . $esc($label) . '</span>'
-                    . '<span class="pinnacle-point-text">' . $esc($entry[$field]) . '</span>'
-                    . '</p>';
-            }
-            $readingsHtml .= '</div>';
+        if ($reading !== null) {
+            $readingsHtml .= '<h3 class="pinnacle-headline">' . $esc($reading['headline']) . '</h3>'
+                . '<p>' . $esc($reading['story']) . '</p>'
+                . $renderList('Strengths to draw on', $reading['strengths'])
+                . $renderList('What to watch for', $reading['watch'])
+                . $renderList('How to make the most of it', $reading['guidance']);
         }
+
+        // For the pinnacle the person is in now: what comes next.
+        if ($isCurrent) {
+            if ($i < 4) {
+                $nextStart = $starts[$i + 1];
+                $inYears = max(1, $nextStart - $age);
+                $nextMeta = $pinnacleData['numbers'][$numbers[$i + 1]] ?? null;
+                $nowText = 'Your ' . $ordinals[$i + 1] . ' Pinnacle begins at age ' . $nextStart
+                    . ', in about ' . $inYears . ($inYears === 1 ? ' year' : ' years')
+                    . ' (around ' . ($year + $nextStart) . ').'
+                    . ($nextMeta !== null
+                        ? ' It carries the energy of ' . formatDisplayNumber($numbers[$i + 1]) . ' and brings ' . $nextMeta['arrival'] . '.'
+                        : '');
+            } else {
+                $nowText = 'The Fourth Pinnacle is your final cycle, and it carries on from here. Everything it offers is yours to shape.';
+            }
+            $readingsHtml .= '<div class="pinnacle-now"><p class="pinnacle-block-title">Right now</p><p>' . $esc($nowText) . '</p></div>';
+        }
+
         $readingsHtml .= '</div>';
+    }
+
+    /* ── Your Pinnacles Together ────────────────────────────────── */
+    $meta = $pinnacleData['numbers'];
+    $joinList = function (array $items): string {
+        if (count($items) <= 1) {
+            return implode('', $items);
+        }
+        return implode(', ', array_slice($items, 0, -1)) . ' and ' . $items[array_key_last($items)];
+    };
+
+    $keywords = array_map(fn(int $n): string => $meta[$n]['keyword'] ?? '', $numbers);
+    $togetherHtml = '<p>Your four chapters move through ' . $esc($keywords[1]) . ', then ' . $esc($keywords[2])
+        . ', then ' . $esc($keywords[3]) . ', and finally ' . $esc($keywords[4]) . '.</p>';
+
+    // A number that appears in more than one pinnacle.
+    $positionsByNumber = [];
+    foreach ($numbers as $i => $n) {
+        $positionsByNumber[$n][] = $i;
+    }
+    foreach ($positionsByNumber as $n => $positions) {
+        if (count($positions) < 2) {
+            continue;
+        }
+        $names = array_map(fn(int $i): string => $ordinals[$i], $positions);
+        $togetherHtml .= '<p>The ' . $esc(formatDisplayNumber($n)) . ' appears in your ' . $joinList($names) . ' Pinnacles. '
+            . (count($positions) === 2
+                ? 'When a number returns, its theme of ' . $esc($meta[$n]['keyword'] ?? '') . ' comes back for a second look, usually with more experience behind you than the first time.'
+                : 'When a number keeps returning, its theme of ' . $esc($meta[$n]['keyword'] ?? '') . ' is one of the central threads of your life, met again with more experience each time.')
+            . '</p>';
+    }
+
+    // Master numbers among the four pinnacles.
+    $masterPositions = [];
+    $masterDisplays = [];
+    foreach ($numbers as $i => $n) {
+        if (in_array($n, [11, 22, 33], true)) {
+            $masterPositions[] = $ordinals[$i];
+            $masterDisplays[$n] = formatDisplayNumber($n);
+        }
+    }
+    if (!empty($masterPositions)) {
+        $togetherHtml .= '<p>Your ' . $joinList($masterPositions) . (count($masterPositions) === 1 ? ' Pinnacle carries' : ' Pinnacles carry')
+            . ' a master number (' . $esc(implode(', ', array_values($masterDisplays))) . '). '
+            . 'Master chapters offer more potential and more pressure than usual. Each one also holds the steadier energy of its single-digit root, '
+            . 'which you can lean on whenever the intensity feels like too much.</p>';
     }
 
     return [
         'valid' => true,
         'headerText' => 'Date of Birth: ' . formatLongDate($day, $month, $year),
         'pinnaclesHtml' => $pinnaclesHtml,
-        'journeyHtml' => $journeyHtml,
         'processHtml' => $processHtml,
         'readingsHtml' => $readingsHtml,
+        'togetherHtml' => $togetherHtml,
     ];
 };

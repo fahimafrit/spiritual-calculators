@@ -28,16 +28,16 @@
       <div id="pinnacle-cards"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title">Your Life in Four Chapters</h2>
-      <div class="interpretation-card pinnacle-journey" id="pinnacle-journey"></div>
-      <hr class="section-divider" />
-
       <h2 class="section-title">How Your Pinnacle Numbers Are Calculated</h2>
       <div id="pinnacle-process"></div>
       <hr class="section-divider" />
 
       <h2 class="section-title">What Each Pinnacle Reveals</h2>
       <div class="interpretation-card" id="pinnacle-readings"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Your Pinnacles Together</h2>
+      <div class="interpretation-card pinnacle-together" id="pinnacle-together"></div>
     </div>
   </div>
 </div>
@@ -61,9 +61,9 @@ const outputDate = document.querySelector('.output-personal-date');
 
 const SLOTS = {
   'pinnacle-cards': 'pinnaclesHtml',
-  'pinnacle-journey': 'journeyHtml',
   'pinnacle-process': 'processHtml',
   'pinnacle-readings': 'readingsHtml',
+  'pinnacle-together': 'togetherHtml',
 };
 
 async function runCalculation(calculationDate, { updateUrl = true } = {}) {
