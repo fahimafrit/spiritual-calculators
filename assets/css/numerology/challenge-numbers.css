@@ -1,0 +1,201 @@
+/* ============================================================
+   assets/css/numerology/challenge-numbers.css
+   Styles used only by the Challenge Numbers calculator page. Loaded
+   after core/forms.css and numerology/base.css, and relies on
+   the design tokens defined in base.css.
+   ============================================================ */
+
+/* ── The four challenge cards ──────────────────────────── */
+.challenge-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 0 0 4px;
+}
+.challenge-card {
+    text-align: center;
+    padding: 16px 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    background: rgba(36, 26, 68, 0.035);
+}
+.challenge-card p { margin: 0; }
+.challenge-card.is-current {
+    border: 1.5px solid var(--violet-mid);
+    background: rgba(46, 26, 99, 0.06);
+    box-shadow: 0 8px 20px rgba(46, 26, 99, 0.14);
+}
+.challenge-card-label {
+    margin: 0 0 6px !important;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.challenge-card-value {
+    font-size: clamp(30px, 4vw, 38px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.challenge-card-age {
+    margin-top: 10px !important;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.challenge-card-years {
+    margin-top: 2px !important;
+    font-size: 13px;
+    color: var(--ink-soft);
+}
+.challenge-here {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+}
+.challenge-main {
+    display: inline-block;
+    margin: 10px 4px 0 0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--violet-deep);
+    border: 1.5px solid var(--violet-mid);
+}
+.challenge-note {
+    margin: 14px 0 0;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+}
+
+/* ── Readings: one card per challenge ──────────────────── */
+.challenge-reading {
+    margin: 0 0 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    border-left: 5px solid var(--violet-soft);
+    background: #ffffff;
+}
+.challenge-reading:last-child { margin-bottom: 0; }
+.challenge-reading.is-current {
+    border-left-color: var(--violet-mid);
+    background: rgba(46, 26, 99, 0.04);
+}
+.challenge-reading p { margin: 0 0 8px; }
+.challenge-reading p:last-child { margin-bottom: 0; }
+
+.challenge-reading-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 4px;
+}
+.challenge-reading-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.challenge-reading-theme {
+    font-size: 13.5px !important;
+    font-weight: 700;
+    line-height: 1.4 !important;
+    color: var(--ink-faint) !important;
+}
+.challenge-headline {
+    margin: 14px 0 8px;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.25;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.challenge-block-title {
+    margin: 16px 0 6px !important;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.challenge-list {
+    margin: 0 0 4px;
+    padding-left: 20px;
+}
+.challenge-list li {
+    margin: 0 0 5px;
+    line-height: 1.5;
+}
+.challenge-list li:last-child { margin-bottom: 0; }
+
+/* ── Badges ───────────────────────────────────────────── */
+.challenge-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+.challenge-badge {
+    flex: none;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+    color: #ffffff;
+    white-space: nowrap;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+}
+.challenge-badge.is-here { background: #2e7d54; }
+.challenge-badge.is-done { background: #8a8499; }
+.challenge-badge.is-ahead { background: #b26a00; }
+
+/* ── Stage introduction, "Right now" box ──────────────── */
+.challenge-reading-about {
+    font-size: 13.5px !important;
+    line-height: 1.5 !important;
+    font-style: italic;
+    color: var(--ink-soft);
+}
+.challenge-now {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(46, 26, 99, 0.2);
+    background: rgba(46, 26, 99, 0.05);
+}
+.challenge-now .challenge-block-title { margin-top: 0 !important; }
+.challenge-now p:last-child { margin: 0; }
+
+/* ── Your Challenges Together ─────────────────────────── */
+.challenge-together p { margin: 0 0 10px; }
+.challenge-together p:last-child { margin-bottom: 0; }
+
+@media (max-width: 420px) {
+    .challenge-cards { gap: 10px; }
+    .challenge-reading { padding: 12px 12px; }
+    .challenge-reading-title { font-size: 16.5px; }
+    .challenge-headline { font-size: 18px; }
+    .challenge-badge { font-size: 11px; padding: 4px 10px; }
+}

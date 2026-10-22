@@ -19,6 +19,7 @@
     "davison-chart": { "category": "astrology" },
     "birth-chart": { "category": "astrology" },
     "love-calculator": { "category": "astrology" },
+    "challenge-numbers-calculator": { "category": "numerology" },
     "pinnacle-numbers-calculator": { "category": "numerology" }
   }
 }
