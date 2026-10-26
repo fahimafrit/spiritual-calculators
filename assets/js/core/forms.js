@@ -122,6 +122,16 @@ const FormKit = (function () {
         { id: 'date2', type: 'date', label: 'Date of birth', placeholder: 'Partner 2', focusPlaceholder: 'dd/mm/yyyy', urlParam: 'dob2' },
       ],
     },
+    // A wedding date (it may lie in the future) plus both partners' birth
+    // dates, which are optional (Wedding Date Numerology). A field marked
+    // optional may be left empty and its URL param may be missing.
+    'wedding-date': {
+      fields: [
+        { id: 'wedding', type: 'date', label: 'Wedding date', placeholder: 'dd/mm/yyyy', urlParam: 'wedding' },
+        { id: 'date1', type: 'date', label: 'Partner 1 birth date (optional)', placeholder: 'dd/mm/yyyy', urlParam: 'dob1', optional: true },
+        { id: 'date2', type: 'date', label: 'Partner 2 birth date (optional)', placeholder: 'dd/mm/yyyy', urlParam: 'dob2', optional: true },
+      ],
+    },
     'birth-data': {
       birth: true,
       people: [{ prefix: 'a', title: 'Birth details', msgLabel: '' }],
@@ -750,7 +760,12 @@ ${people}
           }
           continue;
         }
-        return null; // classic layouts: require every field's param
+        // classic layouts: require every field's param, except fields marked optional
+        if (field.optional) {
+          values[field.id] = '';
+          continue;
+        }
+        return null;
       }
       values[field.id] = field.type === 'date' ? raw.replace(/-/g, '/') : raw;
       if (field.type === 'place') {
@@ -840,7 +855,7 @@ ${people}
       if (!field.urlParam) return;
       const raw = values[field.id];
       if (raw == null) return;
-      if (isBirth && raw === '') {
+      if ((isBirth || field.optional) && raw === '') {
         url.searchParams.delete(field.urlParam); // an empty value must not linger from an earlier result
       } else {
         url.searchParams.set(field.urlParam, field.type === 'date' ? String(raw).replace(/\//g, '-') : raw);

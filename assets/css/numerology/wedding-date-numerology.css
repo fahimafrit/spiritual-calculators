@@ -1,0 +1,193 @@
+/* ============================================================
+   assets/css/numerology/wedding-date-numerology.css
+   Styles used only by the Wedding Date Numerology calculator
+   page. Loaded after core/forms.css and numerology/base.css,
+   and relies on the design tokens defined in base.css.
+   ============================================================ */
+
+/* Fit tiers: one colour set shared by chips, labels and swatches */
+.wedding-container {
+    --tier-excellent: #2e7d54;
+    --tier-strong: #5b8a2e;
+    --tier-moderate: #b26a00;
+    --tier-care: #a8423a;
+}
+
+/* ── Couple cards ─────────────────────────────────────── */
+.wedding-couple {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+.wedding-card {
+    text-align: center;
+    padding: 16px 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line-soft);
+    background: rgba(36, 26, 68, 0.035);
+}
+.wedding-card p { margin: 0; }
+.wedding-card-marriage {
+    border: 1.5px solid var(--violet-mid);
+    background: rgba(46, 26, 99, 0.06);
+}
+.wedding-card-label {
+    margin-bottom: 6px !important;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+}
+.wedding-card-value {
+    font-size: clamp(30px, 4vw, 38px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.wedding-card-date {
+    margin-top: 10px !important;
+    font-size: 13px;
+    color: var(--ink-soft);
+}
+.wedding-card-fit {
+    margin-top: 6px !important;
+    font-size: 13px;
+    font-weight: 800;
+}
+.wedding-card-fit.tier-excellent { color: var(--tier-excellent); }
+.wedding-card-fit.tier-strong { color: var(--tier-strong); }
+.wedding-card-fit.tier-moderate { color: var(--tier-moderate); }
+.wedding-card-fit.tier-care { color: var(--tier-care); }
+
+/* ── Overall fit ──────────────────────────────────────── */
+.wedding-harmony-title { margin-top: 26px; }
+.wedding-harmony { text-align: center; }
+.wedding-harmony-value {
+    margin: 0;
+    font-size: clamp(34px, 5vw, 44px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.wedding-harmony-level {
+    margin: 8px 0 14px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--gold);
+}
+.wedding-harmony-level.tier-excellent { color: var(--tier-excellent); }
+.wedding-harmony-level.tier-strong { color: var(--tier-strong); }
+.wedding-harmony-level.tier-moderate { color: var(--tier-moderate); }
+.wedding-harmony-level.tier-care { color: var(--tier-care); }
+.wedding-bar {
+    height: 10px;
+    max-width: 360px;
+    margin: 0 auto;
+    border-radius: 999px;
+    background: rgba(36, 26, 68, 0.10);
+    overflow: hidden;
+}
+.wedding-bar-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+    transition: width .6s ease;
+}
+
+/* ── Process: gap between the stacked cards ───────────── */
+.wedding-process-gap { margin-top: 14px; }
+
+/* ── Readings (filled in separately from the calculator) ─ */
+.wedding-headline {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1.25;
+    background: linear-gradient(135deg, var(--violet-mid), var(--violet-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.wedding-block-title {
+    margin: 16px 0 6px !important;
+    font-size: 12px !important;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold) !important;
+}
+.wedding-list { margin: 0 0 4px; padding-left: 20px; }
+.wedding-list li { margin: 0 0 5px; line-height: 1.5; }
+.wedding-list li:last-child { margin-bottom: 0; }
+
+/* ── The wedding month ────────────────────────────────── */
+.wedding-days {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.wedding-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 7px 4px 6px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line-soft);
+    background: rgba(36, 26, 68, 0.035);
+    font-variant-numeric: tabular-nums;
+}
+.wedding-day-num { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.wedding-day-val { margin-top: 2px; font-size: 17px; font-weight: 900; color: var(--violet-deep); }
+.wedding-day.tier-excellent { background: rgba(46, 125, 84, 0.16); border-color: rgba(46, 125, 84, 0.45); }
+.wedding-day.tier-strong { background: rgba(91, 138, 46, 0.14); border-color: rgba(91, 138, 46, 0.40); }
+.wedding-day.tier-moderate { background: rgba(178, 106, 0, 0.12); border-color: rgba(178, 106, 0, 0.38); }
+.wedding-day.tier-care { background: rgba(168, 66, 58, 0.12); border-color: rgba(168, 66, 58, 0.38); }
+.wedding-day.is-chosen {
+    border: 2.5px solid var(--violet-mid);
+    box-shadow: 0 6px 14px rgba(46, 26, 99, 0.22);
+}
+.wedding-month-note {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--ink-soft);
+}
+.wedding-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 16px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: var(--ink-soft);
+}
+.wedding-legend li { display: flex; align-items: center; gap: 6px; }
+.wedding-swatch { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid transparent; }
+.wedding-swatch.tier-excellent { background: rgba(46, 125, 84, 0.16); border-color: rgba(46, 125, 84, 0.45); }
+.wedding-swatch.tier-strong { background: rgba(91, 138, 46, 0.14); border-color: rgba(91, 138, 46, 0.40); }
+.wedding-swatch.tier-moderate { background: rgba(178, 106, 0, 0.12); border-color: rgba(178, 106, 0, 0.38); }
+.wedding-swatch.tier-care { background: rgba(168, 66, 58, 0.12); border-color: rgba(168, 66, 58, 0.38); }
+
+@media (max-width: 520px) {
+    .wedding-card-marriage { grid-column: 1 / -1; }
+}
+
+@media (max-width: 420px) {
+    .wedding-days { grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; }
+    .wedding-day-val { font-size: 15px; }
+    .wedding-couple { gap: 10px; }
+}

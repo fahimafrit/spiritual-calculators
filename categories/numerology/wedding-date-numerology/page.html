@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wedding Date Numerology Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="../../../assets/css/core/forms.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/base.css" />
+<link rel="stylesheet" href="../../../assets/css/numerology/wedding-date-numerology.css" />
+</head>
+
+<body>
+
+<div class="container">
+  <div class="form-card" id="calc-form"></div>
+  <div class="error-output"></div>
+
+  <div class="result-wrap wedding-container display-none">
+    <div class="result-card">
+      <div class="output-personal-date"></div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title tight">Your Wedding Date Number</h2>
+      <div class="result-number-display">
+        <p class="num-value" id="num-value"></p>
+      </div>
+
+      <div id="couple-section" class="display-none">
+        <hr class="section-divider" />
+        <h2 class="section-title">Your Numbers as a Couple</h2>
+        <div class="wedding-couple">
+          <div class="wedding-card">
+            <p class="wedding-card-label">Partner 1 Life Path</p>
+            <p class="wedding-card-value" id="p1-value"></p>
+            <p class="wedding-card-date" id="p1-date"></p>
+            <p class="wedding-card-fit" id="p1-fit"></p>
+          </div>
+          <div class="wedding-card">
+            <p class="wedding-card-label">Partner 2 Life Path</p>
+            <p class="wedding-card-value" id="p2-value"></p>
+            <p class="wedding-card-date" id="p2-date"></p>
+            <p class="wedding-card-fit" id="p2-fit"></p>
+          </div>
+          <div class="wedding-card wedding-card-marriage">
+            <p class="wedding-card-label">Marriage Number</p>
+            <p class="wedding-card-value" id="marriage-value"></p>
+            <p class="wedding-card-date">Life Path 1 + Life Path 2</p>
+          </div>
+        </div>
+
+        <h2 class="section-title wedding-harmony-title">How Well the Date Fits You</h2>
+        <div class="wedding-harmony">
+          <p class="wedding-harmony-value" id="overall-value"></p>
+          <p class="wedding-harmony-level" id="overall-level"></p>
+          <div class="wedding-bar"><div class="wedding-bar-fill" id="overall-fill"></div></div>
+        </div>
+      </div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title">Calculation Process</h2>
+      <div id="process-lines"></div>
+      <div id="couple-process"></div>
+
+      <div id="readings-section" class="display-none">
+        <hr class="section-divider" />
+        <h2 class="section-title">What Your Wedding Date Means</h2>
+        <div class="interpretation-card wedding-readings" id="interpretation"></div>
+      </div>
+      <hr class="section-divider" />
+
+      <h2 class="section-title" id="month-title"></h2>
+      <div id="month-days"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/js/core/forms.js"></script>
+<script>
+'use strict';
+
+/* ════════════════════════════════════════════════════════════════════
+   FORM / UI WIRING
+   All calculation and interpretation logic lives server-side, reached
+   through the dispatcher (calculate.php?slug=wedding-date-numerology).
+   This page only submits the dates and renders what the server returns.
+   ════════════════════════════════════════════════════════════════════ */
+
+const fields = FormKit.render(document.getElementById('calc-form'), 'wedding-date', {
+  submitLabel: 'Calculate wedding date',
+});
+const container = document.querySelector('.wedding-container');
+const errorOutput = document.querySelector('.error-output');
+const outputDate = document.querySelector('.output-personal-date');
+
+const $ = (id) => document.getElementById(id);
+
+async function runCalculation(values, { updateUrl = true } = {}) {
+  outputDate.textContent = '';
+  errorOutput.innerHTML = '';
+
+  let data;
+  try {
+    const res = await fetch('../../../calculate.php?slug=wedding-date-numerology', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'wedding=' + encodeURIComponent(values.wedding)
+        + '&date1=' + encodeURIComponent(values.date1 || '')
+        + '&date2=' + encodeURIComponent(values.date2 || ''),
+    });
+    data = await res.json();
+  } catch (err) {
+    errorOutput.innerHTML = '<p>Something went wrong. Please try again.</p>';
+    container.classList.add('display-none');
+    return;
+  }
+
+  if (!data.valid) {
+    errorOutput.innerHTML = data.errorsHtml;
+    container.classList.add('display-none');
+    return;
+  }
+
+  outputDate.textContent = data.headerText;
+  $('num-value').textContent = data.numValue;
+  $('process-lines').innerHTML = data.processHtml;
+  $('couple-process').innerHTML = data.coupleProcessHtml || '';
+  $('month-title').textContent = data.monthTitle;
+  $('month-days').innerHTML = data.monthHtml;
+
+  const readings = $('readings-section');
+  $('interpretation').innerHTML = data.readingsHtml || '';
+  readings.classList.toggle('display-none', !data.readingsHtml);
+
+  const coupleSection = $('couple-section');
+  coupleSection.classList.toggle('display-none', !data.hasCouple);
+  if (data.hasCouple) {
+    const c = data.couple;
+    [['p1', c.person1], ['p2', c.person2]].forEach(([id, person]) => {
+      $(id + '-value').textContent = person.numValue;
+      $(id + '-date').textContent = person.dateText;
+      $(id + '-fit').textContent = person.tierLabel + ' · ' + person.score + '%';
+      $(id + '-fit').className = 'wedding-card-fit tier-' + person.tier;
+    });
+    $('marriage-value').textContent = c.marriageValue;
+    $('overall-value').textContent = c.overall + '%';
+    $('overall-level').textContent = c.overallLabel;
+    $('overall-level').className = 'wedding-harmony-level tier-' + c.overallTier;
+    const fill = $('overall-fill');
+    fill.style.width = '0';
+    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = c.overall + '%'; }));
+  }
+
+  container.classList.remove('display-none');
+  container.scrollIntoView({ behavior: 'smooth' });
+
+  // Same page, no reload — just swap the shareable URL in place.
+  if (updateUrl) {
+    FormKit.updateUrlParams(fields, { wedding: values.wedding, date1: values.date1 || '', date2: values.date2 || '' });
+  }
+}
+
+FormKit.wire(fields, {
+  onSubmit: (values) => runCalculation(values),
+});
+
+// A shared link (?wedding=DD-MM-YYYY, plus &dob1= and &dob2= when the
+// partners' birth dates were entered) calculates immediately.
+FormKit.prefillFromUrl(fields, (values) => runCalculation(values, { updateUrl: false }));
+
+</script>
+</body>
+</html>

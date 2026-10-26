@@ -20,6 +20,7 @@
     "birth-chart": { "category": "astrology" },
     "love-calculator": { "category": "astrology" },
     "challenge-numbers-calculator": { "category": "numerology" },
+    "wedding-date-numerology": { "category": "numerology" },
     "pinnacle-numbers-calculator": { "category": "numerology" }
   }
 }
