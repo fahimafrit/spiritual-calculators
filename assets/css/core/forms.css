@@ -108,6 +108,39 @@
     display: none !important;
 }
 
+/* ── Stacked forms ────────────────────────────────────────────────────
+   Layouts marked stacked (FormKit 'wedding-date') show their fields in
+   one column instead of side by side. A .field-note is an explanation
+   shown above a field. A .field--follow field belongs with the one
+   above it, so it sits closer (two birth dates under one label). */
+
+.form-card--stacked {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.form-card--stacked .field {
+    flex: none;
+    min-width: 0;
+}
+
+.form-card--stacked .field--follow {
+    margin-top: -8px;
+}
+
+.field-note {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+}
+
+.field-note strong {
+    color: var(--ink);
+}
+
 /* ── Birth-data forms (astrology) ─────────────────────────────────────
    One or two people (name, date, time, birth place, coordinates) plus
    a collapsible block of chart options. Built by FormKit's

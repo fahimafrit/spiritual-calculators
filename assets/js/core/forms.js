@@ -122,14 +122,27 @@ const FormKit = (function () {
         { id: 'date2', type: 'date', label: 'Date of birth', placeholder: 'Partner 2', focusPlaceholder: 'dd/mm/yyyy', urlParam: 'dob2' },
       ],
     },
-    // A wedding date (it may lie in the future) plus both partners' birth
-    // dates, which are optional (Wedding Date Numerology). A field marked
-    // optional may be left empty and its URL param may be missing.
+    // A wedding date (it may lie in the future), then a short explanation of
+    // what the two optional birth dates add, then the two birth dates under
+    // one shared label (Wedding Date Numerology). Optional behavior: a field
+    // marked optional may be left empty and its URL param may be missing.
+    // Layout-only options: stacked (fields in one column), note (an
+    // explanation shown above a field), follow (a field that belongs with
+    // the one above it, so it sits closer), ariaLabel (screen-reader name
+    // for a field that has no visible label).
     'wedding-date': {
+      stacked: true,
       fields: [
         { id: 'wedding', type: 'date', label: 'Wedding date', placeholder: 'dd/mm/yyyy', urlParam: 'wedding' },
-        { id: 'date1', type: 'date', label: 'Partner 1 birth date (optional)', placeholder: 'dd/mm/yyyy', urlParam: 'dob1', optional: true },
-        { id: 'date2', type: 'date', label: 'Partner 2 birth date (optional)', placeholder: 'dd/mm/yyyy', urlParam: 'dob2', optional: true },
+        {
+          id: 'date1', type: 'date', label: 'Birth date (optional)', ariaLabel: 'Partner 1 birth date (optional)',
+          placeholder: 'Partner 1', focusPlaceholder: 'dd/mm/yyyy', urlParam: 'dob1', optional: true,
+          note: '<strong>Enter birthdates for personalized result:</strong>',
+        },
+        {
+          id: 'date2', type: 'date', label: '', ariaLabel: 'Partner 2 birth date (optional)',
+          placeholder: 'Partner 2', focusPlaceholder: 'dd/mm/yyyy', urlParam: 'dob2', optional: true, follow: true,
+        },
       ],
     },
     'birth-data': {
@@ -270,9 +283,11 @@ const FormKit = (function () {
   /* ---- Field markup -------------------------------------------------- */
   function fieldHtml(field) {
     if (field.type === 'date') {
-      return `    <div class="field">
-      <label for="${field.id}">${field.label}</label>
-      <input id="${field.id}" type="text" placeholder="${field.placeholder}" maxlength="10" autocomplete="off" inputmode="numeric" />
+      const note = field.note ? `    <p class="field-note">${field.note}</p>\n` : '';
+      const label = field.label ? `\n      <label for="${field.id}">${field.label}</label>` : '';
+      const aria = field.ariaLabel ? ` aria-label="${field.ariaLabel}"` : '';
+      return `${note}    <div class="${field.follow ? 'field field--follow' : 'field'}">${label}
+      <input id="${field.id}" type="text" placeholder="${field.placeholder}" maxlength="10" autocomplete="off" inputmode="numeric"${aria} />
     </div>`;
     }
     if (field.type === 'time') {
@@ -406,6 +421,7 @@ ${people}
     }
 
     const fields = layout.fields.map((f) => Object.assign({}, f, overrides[f.id] || {}));
+    if (layout.stacked) mountEl.classList.add('form-card--stacked');
 
     mountEl.innerHTML = fields.map(fieldHtml).join('\n') + `\n    <button id="submit-btn">${submitLabel}</button>`;
 
