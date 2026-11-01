@@ -195,7 +195,7 @@ body {
 
 .age-band-label {
     font-family: 'Nunito', sans-serif;
-    font-size: 11px;
+    font-size: 10.2px;
     font-weight: 800;
     fill: #000000;
     text-anchor: middle;
@@ -211,10 +211,10 @@ body {
 
 .age-band-label-minor {
     font-family: 'Nunito', sans-serif;
-    font-size: 8.5px;
+    font-size: 9.6px;
     font-weight: 800;
     fill: #000000;
-    text-anchor: middle;
+    text-anchor: end;
 }
 
 
@@ -222,6 +222,7 @@ body {
     font-size: 6px;
     font-weight: 700;
     fill: #000000;
+    text-anchor: start;
 }
 
 
@@ -239,7 +240,7 @@ body {
 
 .year-fraction-label {
     font-family: 'Nunito', sans-serif;
-    font-size: 6.3px;
+    font-size: 5.8px;
     fill: #000000;
     text-anchor: middle;
 }
