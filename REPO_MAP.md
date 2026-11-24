@@ -32,6 +32,7 @@ spiritual-calculators/
 │   │   ├── soul-urge-number/  # page.html, handler.php, readings.php
 │   │   ├── personality-number/ # page.html, handler.php, readings.php
 │   │   ├── birthday-number/   # page.html, handler.php, readings.php
+│   │   ├── lucky-number/      # page.html, handler.php, readings.php
 │   │   └── life-path-compatibility/  # page.html, handler.php
 │   └── destiny-matrix/
 │       ├── _shared/           # engine.php, compatibility-engine.php, karmic-engine.php, reading-builder.php, readings/ (PHP-wrapped JSON)
