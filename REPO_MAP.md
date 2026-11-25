@@ -32,6 +32,7 @@ spiritual-calculators/
 │   │   ├── soul-urge-number/  # page.html, handler.php, readings.php
 │   │   ├── personality-number/ # page.html, handler.php, readings.php
 │   │   ├── birthday-number/   # page.html, handler.php, readings.php
+│   │   ├── lucky-number/      # page.html, handler.php, readings.php
 │   │   └── life-path-compatibility/  # page.html, handler.php
 │   └── destiny-matrix/
 │       ├── _shared/           # engine.php, compatibility-engine.php, karmic-engine.php, reading-builder.php, readings/ (PHP-wrapped JSON)
@@ -134,6 +135,7 @@ Optional keys: `"folder"` (when folder ≠ slug), `"file"` (when handler file �
 | numerology | soul-urge-number | categories/numerology/soul-urge-number/ | soul-urge-number | built | Pythagorean |
 | numerology | personality-number | categories/numerology/personality-number/ | personality-number | built | Pythagorean |
 | numerology | birthday-number | categories/numerology/birthday-number/ | birthday-number | built | Pythagorean |
+| numerology | lucky-number | categories/numerology/lucky-number/ | lucky-number | built | Pythagorean (Life Path + Destiny, reduced to 1-9) |
 | numerology | life-path-compatibility | categories/numerology/life-path-compatibility/ | life-path-compatibility | built | Pythagorean |
 | destiny-matrix | destiny-matrix | categories/destiny-matrix/destiny-matrix/ | destiny-matrix | built | DM engine |
 | destiny-matrix | compatibility-matrix | categories/destiny-matrix/compatibility-matrix/ | compatibility-matrix | built | CM engine |
