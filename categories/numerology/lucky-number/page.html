@@ -23,17 +23,15 @@
       <div class="output-personal-date"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title tight">Your Lucky Number</h2>
-      <div class="result-number-display">
-        <p class="num-value" id="num-value"></p>
-      </div>
+      <h2 class="section-title tight">Your Lucky Numbers</h2>
+      <div class="process-card" id="numbers-list"></div>
       <hr class="section-divider" />
 
       <h2 class="section-title">Calculation Process</h2>
       <div class="process-card" id="process-lines"></div>
       <hr class="section-divider" />
 
-      <h2 class="section-title">What Your Lucky Number Reveals</h2>
+      <h2 class="section-title">What Your Lucky Numbers Reveal</h2>
       <div class="interpretation-card" id="interpretation"></div>
     </div>
   </div>
@@ -88,7 +86,7 @@ async function runCalculation(date, name, { updateUrl = true } = {}) {
   container.classList.remove('display-none');
   container.scrollIntoView({ behavior: 'smooth' });
 
-  document.getElementById('num-value').textContent = data.numValue;
+  document.getElementById('numbers-list').innerHTML = data.numbersHtml;
   document.getElementById('process-lines').innerHTML = data.processLinesHtml;
   document.getElementById('interpretation').innerHTML = data.interpretationHtml;
 

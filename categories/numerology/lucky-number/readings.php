@@ -2,8 +2,9 @@
 declare(strict_types=1);
 
 /* Condensed interpretation content for the Lucky Number Calculator.
-   Keyed by the final Lucky Number (always a single digit, 1-9). One
-   short block of 1-2 paragraphs per number -- no sub-sections/accordion.
+   Keyed by a single digit (1-9). Master numbers (11, 22, 33) and the
+   day of birth resolve through their root digit before the lookup.
+   One short block of 1-2 paragraphs per number -- no sub-sections/accordion.
    Server-side only: never included from a browser request directly. */
 
 if (!defined('SPIRITUAL_APP')) {

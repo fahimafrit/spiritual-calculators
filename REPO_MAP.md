@@ -135,7 +135,7 @@ Optional keys: `"folder"` (when folder â‰  slug), `"file"` (when handler file â‰
 | numerology | soul-urge-number | categories/numerology/soul-urge-number/ | soul-urge-number | built | Pythagorean |
 | numerology | personality-number | categories/numerology/personality-number/ | personality-number | built | Pythagorean |
 | numerology | birthday-number | categories/numerology/birthday-number/ | birthday-number | built | Pythagorean |
-| numerology | lucky-number | categories/numerology/lucky-number/ | lucky-number | built | Pythagorean (Life Path + Destiny, reduced to 1-9) |
+| numerology | lucky-number | categories/numerology/lucky-number/ | lucky-number | built | Pythagorean (list: Life Path, Birthday, Destiny, Soul Urge, Personality) |
 | numerology | life-path-compatibility | categories/numerology/life-path-compatibility/ | life-path-compatibility | built | Pythagorean |
 | destiny-matrix | destiny-matrix | categories/destiny-matrix/destiny-matrix/ | destiny-matrix | built | DM engine |
 | destiny-matrix | compatibility-matrix | categories/destiny-matrix/compatibility-matrix/ | compatibility-matrix | built | CM engine |
