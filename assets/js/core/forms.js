@@ -98,6 +98,14 @@ const FormKit = (function () {
         { id: 'date', type: 'date', label: 'Date of birth', placeholder: 'dd/mm/yyyy', urlParam: 'dob' },
       ],
     },
+    // A date of birth plus the year to calculate for (Personal Year). The
+    // page fills the year field with the current year after rendering.
+    'dob-year': {
+      fields: [
+        { id: 'date', type: 'date', label: 'Date of birth', placeholder: 'dd/mm/yyyy', urlParam: 'dob' },
+        { id: 'year', type: 'name', label: 'Year', placeholder: 'yyyy', maxlength: 4, urlParam: 'year' },
+      ],
+    },
     name: {
       fields: [
         { id: 'name', type: 'name', label: 'Name', placeholder: 'Your name', urlParam: 'name' },
