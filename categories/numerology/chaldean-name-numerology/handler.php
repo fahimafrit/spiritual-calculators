@@ -9,7 +9,7 @@ if (!defined('SPIRITUAL_APP')) {
 /* ════════════════════════════════════════════════════════════════════
    CHALDEAN NAME NUMEROLOGY — HANDLER
    Input:  { name: "Full Name" }
-   Chaldean letter values (1-8, never 9). Result: the Name Number as a
+   Chaldean letter values (1-8, never 9). Result: the Destiny Number (Name Number) as a
    Compound Number and its Reduced Number (e.g. 30/3), plus the Soul
    Urge (vowels) and Personality (consonants) numbers. No master
    numbers. Output: the rendered result fragments only — never the
@@ -72,7 +72,7 @@ return function (array $input) use ($chaldeanData): array {
         $lines[] = renderValueLine('Compound Number', (string) $total);
         $lines[] = renderValueLine('Reduced Number', renderSteps(array_slice($result['steps'], 1)));
     }
-    $lines[] = renderFinalLine('Chaldean Name Number (Destiny Number): ' . $display);
+    $lines[] = renderFinalLine('Chaldean Destiny Number (Name Number): ' . $display);
 
     /* Soul Urge (vowels) and Personality (consonants). A name without
        vowels or consonants simply omits that number. */
@@ -83,7 +83,13 @@ return function (array $input) use ($chaldeanData): array {
 
     $numberLines = [];
     $aliases = ['Soul Urge Number' => "Soul Urge Number (Heart's Desire Number)"];
-    $roles = ['Name Number' => $reduced];
+    /* Heading text per role, in the same form the results show it. */
+    $roles = [
+        'Destiny Number' => [
+            'digit' => $reduced,
+            'heading' => 'Destiny Number ' . $reduced,
+        ],
+    ];
 
     foreach ($secondary as $label => $part) {
         if ($part['breakdown'] === []) {
@@ -92,22 +98,22 @@ return function (array $input) use ($chaldeanData): array {
         $partDisplay = formatChaldeanNumber($part['total'], $part['number']);
         $numberLines[] = renderValueLine($aliases[$label] ?? $label, htmlspecialchars($partDisplay));
         $lines[] = chaldeanWorkingLine($label === 'Soul Urge Number' ? 'Soul Urge (vowels)' : 'Personality (consonants)', $part);
-        $roles[$label] = $part['number'];
+        $roles[$label] = ['digit' => $part['number'], 'heading' => $label . ' ' . $partDisplay];
     }
 
-    /* Readings: the Name Number's compound reading first (10-52 only),
+    /* Readings: the Destiny Number's compound reading first (10-52 only),
        then one reading per distinct reduced digit, headed by every role
        that digit covers. */
     $readings = [];
 
     if ($total >= 10 && $total <= 52) {
-        $readings[] = '<p class="process-label">Name Number ' . $total . '</p>'
+        $readings[] = '<p class="process-label">Compound Number ' . $total . '</p>'
             . renderReading($chaldeanData['compound'][(string) $total] ?? null);
     }
 
     $groups = [];
-    foreach ($roles as $label => $digit) {
-        $groups[$digit][] = $label . ' ' . $digit;
+    foreach ($roles as $role) {
+        $groups[$role['digit']][] = $role['heading'];
     }
     foreach ($groups as $digit => $covered) {
         $readings[] = '<p class="process-label">' . htmlspecialchars(implode(' · ', $covered)) . '</p>'
@@ -116,7 +122,7 @@ return function (array $input) use ($chaldeanData): array {
 
     return [
         'valid' => true,
-        'headerText' => htmlspecialchars(titleCase($name)) . "'s Chaldean Name Number",
+        'headerText' => htmlspecialchars(titleCase($name)) . "'s Chaldean Destiny Number",
         'numValue' => $display,
         'numbersHtml' => implode('', $numberLines),
         'processLinesHtml' => implode('', $lines),

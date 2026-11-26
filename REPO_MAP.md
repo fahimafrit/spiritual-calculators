@@ -151,7 +151,7 @@ Optional keys: `"folder"` (when folder â‰  slug), `"file"` (when handler file â‰
 | numerology | challenge-numbers-calculator | categories/numerology/challenge-numbers-calculator/ | challenge-numbers-calculator | built | Pythagorean |
 | numerology | wedding-date-numerology | categories/numerology/wedding-date-numerology/ | wedding-date-numerology | built | Pythagorean |
 | numerology | pinnacle-numbers-calculator | categories/numerology/pinnacle-numbers-calculator/ | pinnacle-numbers-calculator | built | Pythagorean |
-| numerology | chaldean-name-numerology | categories/numerology/chaldean-name-numerology/ | chaldean-name-numerology | built | Chaldean (Name Number, Soul Urge, Personality; compound 10-52 and reduced 1-9) |
+| numerology | chaldean-name-numerology | categories/numerology/chaldean-name-numerology/ | chaldean-name-numerology | built | Chaldean (Destiny Number (Name Number), Soul Urge, Personality; compound 10-52 and reduced 1-9) |
 | destiny-matrix | destiny-matrix | categories/destiny-matrix/destiny-matrix/ | destiny-matrix | built | DM engine |
 | destiny-matrix | compatibility-matrix | categories/destiny-matrix/compatibility-matrix/ | compatibility-matrix | built | CM engine |
 | destiny-matrix | karmic-tail | categories/destiny-matrix/karmic-tail/ | karmic-tail | built | KT engine |
