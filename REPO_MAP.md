@@ -22,7 +22,7 @@ spiritual-calculators/
 │   │   ├── love-calculator/   # page.html, handler.php, readings.php
 │   │   └── random-zodiac-sign-generator/  # page.html (no handler — client-side only)
 │   ├── numerology/
-│   │   ├── _shared/           # engine.php, render.php, name-calculator.php
+│   │   ├── _shared/           # engine.php, render.php, name-calculator.php, chaldean-engine.php
 │   │   ├── life-path-number/  # page.html, handler.php, readings.php
 │   │   ├── attitude-number/   # page.html, handler.php, readings.php
 │   │   ├── destiny-number/    # page.html, handler.php, readings.php
@@ -33,6 +33,13 @@ spiritual-calculators/
 │   │   ├── personality-number/ # page.html, handler.php, readings.php
 │   │   ├── birthday-number/   # page.html, handler.php, readings.php
 │   │   ├── lucky-number/      # page.html, handler.php, readings.php
+│   │   ├── chaldean-name-numerology/  # page.html, handler.php, readings.php
+│   │   ├── challenge-numbers-calculator/  # page.html, handler.php, readings.php
+│   │   ├── lo-shu-grid-calculator/  # page.html, handler.php, readings.php
+│   │   ├── mobile-number/     # page.html, handler.php, readings.php
+│   │   ├── house-number-numerology/  # page.html, handler.php, readings.php
+│   │   ├── wedding-date-numerology/  # page.html, handler.php, readings.php
+│   │   ├── pinnacle-numbers-calculator/  # page.html, handler.php, readings.php
 │   │   └── life-path-compatibility/  # page.html, handler.php
 │   └── destiny-matrix/
 │       ├── _shared/           # engine.php, compatibility-engine.php, karmic-engine.php, reading-builder.php, readings/ (PHP-wrapped JSON)
@@ -110,6 +117,7 @@ Optional keys: `"folder"` (when folder ≠ slug), `"file"` (when handler file �
 | `categories/numerology/_shared/engine.php` | All numerology calculators | Pythagorean numerology math |
 | `categories/numerology/_shared/render.php` | All numerology calculators | Shared HTML rendering |
 | `categories/numerology/_shared/name-calculator.php` | All numerology calculators | Name → number conversion |
+| `categories/numerology/_shared/chaldean-engine.php` | chaldean-name-numerology | Chaldean letter values and name reduction (kept separate from the Pythagorean engine) |
 | `categories/destiny-matrix/_shared/engine.php` | DM, compatibility-matrix, karmic-tail | DM calculation engine |
 | `categories/destiny-matrix/_shared/compatibility-engine.php` | compatibility-matrix | Compatibility math |
 | `categories/destiny-matrix/_shared/karmic-engine.php` | karmic-tail | Karmic tail math |
@@ -137,6 +145,13 @@ Optional keys: `"folder"` (when folder ≠ slug), `"file"` (when handler file �
 | numerology | birthday-number | categories/numerology/birthday-number/ | birthday-number | built | Pythagorean |
 | numerology | lucky-number | categories/numerology/lucky-number/ | lucky-number | built | Pythagorean (list: Life Path, Birthday, Destiny, Soul Urge, Personality) |
 | numerology | life-path-compatibility | categories/numerology/life-path-compatibility/ | life-path-compatibility | built | Pythagorean |
+| numerology | lo-shu-grid-calculator | categories/numerology/lo-shu-grid-calculator/ | lo-shu-grid-calculator | built | Pythagorean |
+| numerology | mobile-number | categories/numerology/mobile-number/ | mobile-number | built | Pythagorean |
+| numerology | house-number-numerology | categories/numerology/house-number-numerology/ | house-number-numerology | built | Pythagorean |
+| numerology | challenge-numbers-calculator | categories/numerology/challenge-numbers-calculator/ | challenge-numbers-calculator | built | Pythagorean |
+| numerology | wedding-date-numerology | categories/numerology/wedding-date-numerology/ | wedding-date-numerology | built | Pythagorean |
+| numerology | pinnacle-numbers-calculator | categories/numerology/pinnacle-numbers-calculator/ | pinnacle-numbers-calculator | built | Pythagorean |
+| numerology | chaldean-name-numerology | categories/numerology/chaldean-name-numerology/ | chaldean-name-numerology | built | Chaldean (Name Number, Soul Urge, Personality; compound 10-52 and reduced 1-9) |
 | destiny-matrix | destiny-matrix | categories/destiny-matrix/destiny-matrix/ | destiny-matrix | built | DM engine |
 | destiny-matrix | compatibility-matrix | categories/destiny-matrix/compatibility-matrix/ | compatibility-matrix | built | CM engine |
 | destiny-matrix | karmic-tail | categories/destiny-matrix/karmic-tail/ | karmic-tail | built | KT engine |
