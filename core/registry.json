@@ -25,6 +25,7 @@
     "pinnacle-numbers-calculator": { "category": "numerology" },
     "lucky-number": {"category": "numerology"},
     "chaldean-name-numerology": { "category": "numerology" },
-    "personal-year-number": { "category": "numerology" }
+    "personal-year-number": { "category": "numerology" },
+    "personal-month-number": { "category": "numerology" }
   }
 }

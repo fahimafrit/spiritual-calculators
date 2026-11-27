@@ -106,6 +106,16 @@ const FormKit = (function () {
         { id: 'year', type: 'name', label: 'Year', placeholder: 'yyyy', maxlength: 4, urlParam: 'year' },
       ],
     },
+    // A date of birth plus the month and year to calculate for (Personal
+    // Month). The page sets the month and year to the current ones after
+    // rendering.
+    'dob-month-year': {
+      fields: [
+        { id: 'date', type: 'date', label: 'Date of birth', placeholder: 'dd/mm/yyyy', urlParam: 'dob' },
+        { id: 'month', type: 'select', label: 'Month', urlParam: 'month', choices: [['1', 'January'], ['2', 'February'], ['3', 'March'], ['4', 'April'], ['5', 'May'], ['6', 'June'], ['7', 'July'], ['8', 'August'], ['9', 'September'], ['10', 'October'], ['11', 'November'], ['12', 'December']] },
+        { id: 'year', type: 'name', label: 'Year', placeholder: 'yyyy', maxlength: 4, urlParam: 'year' },
+      ],
+    },
     name: {
       fields: [
         { id: 'name', type: 'name', label: 'Name', placeholder: 'Your name', urlParam: 'name' },
